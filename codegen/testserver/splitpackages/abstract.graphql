@@ -1,0 +1,28 @@
+extend type Query {
+	abstractUnion: AbstractUnion
+	abstractInterface: AbstractInterface
+}
+
+union AbstractUnion = UnionMemberA | UnionMemberB
+
+type UnionMemberA {
+	a: String!
+}
+
+type UnionMemberB {
+	b: Int!
+}
+
+interface AbstractInterface {
+	id: ID!
+}
+
+type InterfaceMemberA implements AbstractInterface {
+	id: ID!
+	a: String!
+}
+
+type InterfaceMemberB implements AbstractInterface {
+	id: ID!
+	b: Int!
+}

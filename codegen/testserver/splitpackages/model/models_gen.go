@@ -12,6 +12,15 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 )
 
+type AbstractInterface interface {
+	IsAbstractInterface()
+	GetID() string
+}
+
+type AbstractUnion interface {
+	IsAbstractUnion()
+}
+
 type InnerDirectives struct {
 	Message string `json:"message"`
 }
@@ -31,6 +40,22 @@ type InputDirectives struct {
 type InputDirectivesWithArgs struct {
 	Text string `json:"text"`
 }
+
+type InterfaceMemberA struct {
+	ID string `json:"id"`
+	A  string `json:"a"`
+}
+
+func (InterfaceMemberA) IsAbstractInterface() {}
+func (this InterfaceMemberA) GetID() string   { return this.ID }
+
+type InterfaceMemberB struct {
+	ID string `json:"id"`
+	B  int    `json:"b"`
+}
+
+func (InterfaceMemberB) IsAbstractInterface() {}
+func (this InterfaceMemberB) GetID() string   { return this.ID }
 
 type ListFieldInput struct {
 	Items []*string `json:"items,omitempty"`
@@ -76,6 +101,18 @@ type Slices struct {
 
 type Subscription struct {
 }
+
+type UnionMemberA struct {
+	A string `json:"a"`
+}
+
+func (UnionMemberA) IsAbstractUnion() {}
+
+type UnionMemberB struct {
+	B int `json:"b"`
+}
+
+func (UnionMemberB) IsAbstractUnion() {}
 
 type Status string
 

@@ -610,6 +610,30 @@ func (ec *executionContext) _{{$object.Name}}(ctx context.Context, sel ast.Selec
 	{{- end }}
 {{- end }}
 
+{{- /* Abstract types (interface/union) are owned by no shard, yet shard codecs */}}
+{{- /* resolve them through LookupObject. Only the gateway sees every            */}}
+{{- /* implementor, so it registers the one handler.                             */}}
+{{- if .Interfaces }}
+func init() {
+{{- range $interface := .Interfaces }}
+	shardruntime.RegisterObject({{ $.Scope | quote }}, {{ $interface.Name | quote }}, func(ctx context.Context, oec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, obj any) graphql.Marshaler {
+		ec := oec.(*executionContext)
+		switch typed := obj.(type) {
+		case nil:
+			return graphql.Null
+		case {{ $interface.Type | ref }}:
+			return {{$.ECDot}}_{{$interface.Name}}(ctx, {{$.ECArg}}sel, typed)
+		default:
+			if typedObj, ok := obj.(graphql.Marshaler); ok {
+				return typedObj
+			}
+			panic(fmt.Errorf("unexpected type %T; non-generated variants of {{$interface.Name}} must implement graphql.Marshaler", obj))
+		}
+	})
+{{- end }}
+}
+{{- end }}
+
 {{- /* Register resolver invokers — only for IsResolver fields */}}
 func init() {
 	scope := {{ $.Scope | quote }}

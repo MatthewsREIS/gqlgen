@@ -66,6 +66,16 @@ type DirectiveRoot struct {
 }
 
 type ComplexityRoot struct {
+	InterfaceMemberA struct {
+		A  func(childComplexity int) int
+		ID func(childComplexity int) int
+	}
+
+	InterfaceMemberB struct {
+		B  func(childComplexity int) int
+		ID func(childComplexity int) int
+	}
+
 	Mutation struct {
 		Greet          func(childComplexity int, name string) int
 		PingFromExtras func(childComplexity int) int
@@ -86,6 +96,8 @@ type ComplexityRoot struct {
 	}
 
 	Query struct {
+		AbstractInterface                func(childComplexity int) int
+		AbstractUnion                    func(childComplexity int) int
 		DirectiveArg                     func(childComplexity int, arg string) int
 		DirectiveDouble                  func(childComplexity int) int
 		DirectiveField                   func(childComplexity int) int
@@ -126,6 +138,14 @@ type ComplexityRoot struct {
 		DirectiveNullableArg   func(childComplexity int, arg *int, arg2 *int, arg3 *string) int
 		DirectiveUnimplemented func(childComplexity int) int
 	}
+
+	UnionMemberA struct {
+		A func(childComplexity int) int
+	}
+
+	UnionMemberB struct {
+		B func(childComplexity int) int
+	}
 }
 
 type MutationResolver interface {
@@ -134,6 +154,8 @@ type MutationResolver interface {
 }
 type QueryResolver interface {
 	Hello(ctx context.Context, name string) (string, error)
+	AbstractUnion(ctx context.Context) (model.AbstractUnion, error)
+	AbstractInterface(ctx context.Context) (model.AbstractInterface, error)
 	DirectiveArg(ctx context.Context, arg string) (*string, error)
 	DirectiveNullableArg(ctx context.Context, arg *int, arg2 *int, arg3 *string) (*string, error)
 	DirectiveSingleNullableArg(ctx context.Context, arg1 *string) (*string, error)
@@ -192,6 +214,34 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 	_ = ec
 	switch typeName + "." + field {
 
+	case "InterfaceMemberA.a":
+		if e.complexity.InterfaceMemberA.A == nil {
+			break
+		}
+
+		return e.complexity.InterfaceMemberA.A(childComplexity), true
+
+	case "InterfaceMemberA.id":
+		if e.complexity.InterfaceMemberA.ID == nil {
+			break
+		}
+
+		return e.complexity.InterfaceMemberA.ID(childComplexity), true
+
+	case "InterfaceMemberB.b":
+		if e.complexity.InterfaceMemberB.B == nil {
+			break
+		}
+
+		return e.complexity.InterfaceMemberB.B(childComplexity), true
+
+	case "InterfaceMemberB.id":
+		if e.complexity.InterfaceMemberB.ID == nil {
+			break
+		}
+
+		return e.complexity.InterfaceMemberB.ID(childComplexity), true
+
 	case "Mutation.greet":
 		if e.complexity.Mutation.Greet == nil {
 			break
@@ -249,6 +299,20 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.PtrToSliceContainer.PtrToSlice(childComplexity), true
+
+	case "Query.abstractInterface":
+		if e.complexity.Query.AbstractInterface == nil {
+			break
+		}
+
+		return e.complexity.Query.AbstractInterface(childComplexity), true
+
+	case "Query.abstractUnion":
+		if e.complexity.Query.AbstractUnion == nil {
+			break
+		}
+
+		return e.complexity.Query.AbstractUnion(childComplexity), true
 
 	case "Query.directiveArg":
 		if e.complexity.Query.DirectiveArg == nil {
@@ -651,6 +715,20 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Subscription.DirectiveUnimplemented(childComplexity), true
+
+	case "UnionMemberA.a":
+		if e.complexity.UnionMemberA.A == nil {
+			break
+		}
+
+		return e.complexity.UnionMemberA.A(childComplexity), true
+
+	case "UnionMemberB.b":
+		if e.complexity.UnionMemberB.B == nil {
+			break
+		}
+
+		return e.complexity.UnionMemberB.B(childComplexity), true
 
 	}
 	return 0, false
@@ -1164,6 +1242,21 @@ func (ec *executionContext) _subscriptionMiddleware(ctx context.Context, obj *as
 	}
 }
 
+func (ec *executionContext) _InterfaceMemberA(ctx context.Context, sel ast.SelectionSet, obj *model.InterfaceMemberA) graphql.Marshaler {
+	handler, ok := shardruntime.LookupObject("github.com/99designs/gqlgen/codegen/testserver/splitpackages", "InterfaceMemberA")
+	if !ok {
+		panic(fmt.Sprintf("missing object shard handler for %s", "InterfaceMemberA"))
+	}
+	return handler(ctx, ec, sel, obj)
+}
+func (ec *executionContext) _InterfaceMemberB(ctx context.Context, sel ast.SelectionSet, obj *model.InterfaceMemberB) graphql.Marshaler {
+	handler, ok := shardruntime.LookupObject("github.com/99designs/gqlgen/codegen/testserver/splitpackages", "InterfaceMemberB")
+	if !ok {
+		panic(fmt.Sprintf("missing object shard handler for %s", "InterfaceMemberB"))
+	}
+	return handler(ctx, ec, sel, obj)
+}
+
 var mutationImplementors = []string{"Mutation"}
 
 func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet) graphql.Marshaler {
@@ -1277,6 +1370,20 @@ func (ec *executionContext) _Subscription(ctx context.Context, sel ast.Selection
 	}
 	return ec.ResolveStreamField(ctx, "Subscription", fields[0].Name, fields[0], nil)
 }
+func (ec *executionContext) _UnionMemberA(ctx context.Context, sel ast.SelectionSet, obj *model.UnionMemberA) graphql.Marshaler {
+	handler, ok := shardruntime.LookupObject("github.com/99designs/gqlgen/codegen/testserver/splitpackages", "UnionMemberA")
+	if !ok {
+		panic(fmt.Sprintf("missing object shard handler for %s", "UnionMemberA"))
+	}
+	return handler(ctx, ec, sel, obj)
+}
+func (ec *executionContext) _UnionMemberB(ctx context.Context, sel ast.SelectionSet, obj *model.UnionMemberB) graphql.Marshaler {
+	handler, ok := shardruntime.LookupObject("github.com/99designs/gqlgen/codegen/testserver/splitpackages", "UnionMemberB")
+	if !ok {
+		panic(fmt.Sprintf("missing object shard handler for %s", "UnionMemberB"))
+	}
+	return handler(ctx, ec, sel, obj)
+}
 func (ec *executionContext) ___Directive(ctx context.Context, sel ast.SelectionSet, obj *introspection.Directive) graphql.Marshaler {
 	handler, ok := shardruntime.LookupObject("github.com/99designs/gqlgen/codegen/testserver/splitpackages", "__Directive")
 	if !ok {
@@ -1320,6 +1427,36 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 	return handler(ctx, ec, sel, obj)
 }
 func init() {
+	shardruntime.RegisterObject("github.com/99designs/gqlgen/codegen/testserver/splitpackages", "AbstractInterface", func(ctx context.Context, oec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, obj any) graphql.Marshaler {
+		ec := oec.(*executionContext)
+		switch typed := obj.(type) {
+		case nil:
+			return graphql.Null
+		case model.AbstractInterface:
+			return ec._AbstractInterface(ctx, sel, typed)
+		default:
+			if typedObj, ok := obj.(graphql.Marshaler); ok {
+				return typedObj
+			}
+			panic(fmt.Errorf("unexpected type %T; non-generated variants of AbstractInterface must implement graphql.Marshaler", obj))
+		}
+	})
+	shardruntime.RegisterObject("github.com/99designs/gqlgen/codegen/testserver/splitpackages", "AbstractUnion", func(ctx context.Context, oec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, obj any) graphql.Marshaler {
+		ec := oec.(*executionContext)
+		switch typed := obj.(type) {
+		case nil:
+			return graphql.Null
+		case model.AbstractUnion:
+			return ec._AbstractUnion(ctx, sel, typed)
+		default:
+			if typedObj, ok := obj.(graphql.Marshaler); ok {
+				return typedObj
+			}
+			panic(fmt.Errorf("unexpected type %T; non-generated variants of AbstractUnion must implement graphql.Marshaler", obj))
+		}
+	})
+}
+func init() {
 	scope := "github.com/99designs/gqlgen/codegen/testserver/splitpackages"
 	_ = scope
 	shardruntime.RegisterResolverInvoker(scope, "Mutation", "greet", func(ctx context.Context, oec shardruntime.ObjectExecutionContext, obj any) (any, error) {
@@ -1339,6 +1476,18 @@ func init() {
 		fc := graphql.GetFieldContext(ctx)
 		_ = fc
 		return ec.resolvers.Query().Hello(ctx, fc.Args["name"].(string))
+	})
+	shardruntime.RegisterResolverInvoker(scope, "Query", "abstractUnion", func(ctx context.Context, oec shardruntime.ObjectExecutionContext, obj any) (any, error) {
+		ec := oec.(*executionContext)
+		fc := graphql.GetFieldContext(ctx)
+		_ = fc
+		return ec.resolvers.Query().AbstractUnion(ctx)
+	})
+	shardruntime.RegisterResolverInvoker(scope, "Query", "abstractInterface", func(ctx context.Context, oec shardruntime.ObjectExecutionContext, obj any) (any, error) {
+		ec := oec.(*executionContext)
+		fc := graphql.GetFieldContext(ctx)
+		_ = fc
+		return ec.resolvers.Query().AbstractInterface(ctx)
 	})
 	shardruntime.RegisterResolverInvoker(scope, "Query", "directiveArg", func(ctx context.Context, oec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 		ec := oec.(*executionContext)
@@ -1530,7 +1679,7 @@ func init() {
 	})
 }
 
-//go:embed "directive.graphql" "extras.graphql" "hybrid_input.graphql" "lists.graphql" "omittable_input.graphql" "schema.graphql"
+//go:embed "abstract.graphql" "directive.graphql" "extras.graphql" "hybrid_input.graphql" "lists.graphql" "omittable_input.graphql" "schema.graphql"
 var sourcesFS embed.FS
 
 func sourceData(filename string) string {
@@ -1542,6 +1691,7 @@ func sourceData(filename string) string {
 }
 
 var sources = []*ast.Source{
+	{Name: "abstract.graphql", Input: sourceData("abstract.graphql"), BuiltIn: false},
 	{Name: "directive.graphql", Input: sourceData("directive.graphql"), BuiltIn: false},
 	{Name: "extras.graphql", Input: sourceData("extras.graphql"), BuiltIn: false},
 	{Name: "hybrid_input.graphql", Input: sourceData("hybrid_input.graphql"), BuiltIn: false},
@@ -1550,3 +1700,57 @@ var sources = []*ast.Source{
 	{Name: "schema.graphql", Input: sourceData("schema.graphql"), BuiltIn: false},
 }
 var parsedSchema = gqlparser.MustLoadSchema(sources...)
+
+func (ec *executionContext) _AbstractInterface(ctx context.Context, sel ast.SelectionSet, obj model.AbstractInterface) graphql.Marshaler {
+	switch obj := (obj).(type) {
+	case nil:
+		return graphql.Null
+	case model.InterfaceMemberB:
+		return ec._InterfaceMemberB(ctx, sel, &obj)
+	case *model.InterfaceMemberB:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._InterfaceMemberB(ctx, sel, obj)
+	case model.InterfaceMemberA:
+		return ec._InterfaceMemberA(ctx, sel, &obj)
+	case *model.InterfaceMemberA:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._InterfaceMemberA(ctx, sel, obj)
+	default:
+		if typedObj, ok := obj.(graphql.Marshaler); ok {
+			return typedObj
+		} else {
+			panic(fmt.Errorf("unexpected type %T; non-generated variants of AbstractInterface must implement graphql.Marshaler", obj))
+		}
+	}
+}
+
+func (ec *executionContext) _AbstractUnion(ctx context.Context, sel ast.SelectionSet, obj model.AbstractUnion) graphql.Marshaler {
+	switch obj := (obj).(type) {
+	case nil:
+		return graphql.Null
+	case model.UnionMemberB:
+		return ec._UnionMemberB(ctx, sel, &obj)
+	case *model.UnionMemberB:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._UnionMemberB(ctx, sel, obj)
+	case model.UnionMemberA:
+		return ec._UnionMemberA(ctx, sel, &obj)
+	case *model.UnionMemberA:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._UnionMemberA(ctx, sel, obj)
+	default:
+		if typedObj, ok := obj.(graphql.Marshaler); ok {
+			return typedObj
+		} else {
+			panic(fmt.Errorf("unexpected type %T; non-generated variants of AbstractUnion must implement graphql.Marshaler", obj))
+		}
+	}
+}

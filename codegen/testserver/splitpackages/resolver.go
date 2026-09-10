@@ -25,6 +25,16 @@ func (r *queryResolver) Hello(ctx context.Context, name string) (string, error) 
 	panic("not implemented")
 }
 
+// AbstractUnion is the resolver for the abstractUnion field.
+func (r *queryResolver) AbstractUnion(ctx context.Context) (model.AbstractUnion, error) {
+	panic("not implemented")
+}
+
+// AbstractInterface is the resolver for the abstractInterface field.
+func (r *queryResolver) AbstractInterface(ctx context.Context) (model.AbstractInterface, error) {
+	panic("not implemented")
+}
+
 // DirectiveArg is the resolver for the directiveArg field.
 func (r *queryResolver) DirectiveArg(ctx context.Context, arg string) (*string, error) {
 	panic("not implemented")

@@ -3,5 +3,5 @@
 package splitpackages
 
 import (
-	_ "github.com/99designs/gqlgen/codegen/testserver/splitpackages/internal/gqlgenexec/shards/directive_a8b6a1"
+	_ "github.com/99designs/gqlgen/codegen/testserver/splitpackages/internal/gqlgenexec/shards/abstract_599dca"
 )

@@ -15,6 +15,8 @@ type Stub struct {
 	}
 	QueryResolver struct {
 		Hello                            func(ctx context.Context, name string) (string, error)
+		AbstractUnion                    func(ctx context.Context) (model.AbstractUnion, error)
+		AbstractInterface                func(ctx context.Context) (model.AbstractInterface, error)
 		DirectiveArg                     func(ctx context.Context, arg string) (*string, error)
 		DirectiveNullableArg             func(ctx context.Context, arg *int, arg2 *int, arg3 *string) (*string, error)
 		DirectiveSingleNullableArg       func(ctx context.Context, arg1 *string) (*string, error)
@@ -85,6 +87,12 @@ type stubQuery struct{ *Stub }
 
 func (r *stubQuery) Hello(ctx context.Context, name string) (string, error) {
 	return r.QueryResolver.Hello(ctx, name)
+}
+func (r *stubQuery) AbstractUnion(ctx context.Context) (model.AbstractUnion, error) {
+	return r.QueryResolver.AbstractUnion(ctx)
+}
+func (r *stubQuery) AbstractInterface(ctx context.Context) (model.AbstractInterface, error) {
+	return r.QueryResolver.AbstractInterface(ctx)
 }
 func (r *stubQuery) DirectiveArg(ctx context.Context, arg string) (*string, error) {
 	return r.QueryResolver.DirectiveArg(ctx, arg)

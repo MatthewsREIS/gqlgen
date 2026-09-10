@@ -4,8 +4,11 @@ package directive
 
 import (
 	"context"
+	"fmt"
 	"reflect"
+	"strconv"
 
+	"github.com/99designs/gqlgen/codegen/testserver/splitpackages/model"
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/executor/shardruntime"
 	"github.com/vektah/gqlparser/v2/ast"
@@ -13,57 +16,1100 @@ import (
 
 const splitScope = "github.com/99designs/gqlgen/codegen/testserver/splitpackages"
 
-var type___Schema = &shardruntime.ObjectChildLookup{
-	TypeName: "__Schema",
+var type_ObjectDirectives = &shardruntime.ObjectChildLookup{
+	TypeName: "ObjectDirectives",
 	Kind:     ast.Object,
 	Children: []string{
-		"description",
-		"types",
-		"queryType",
-		"mutationType",
-		"subscriptionType",
-		"directives",
+		"text",
+		"nullableText",
+		"order",
 	},
 }
-var type___Type = &shardruntime.ObjectChildLookup{
-	TypeName: "__Type",
+var type_ObjectDirectivesWithCustomGoModel = &shardruntime.ObjectChildLookup{
+	TypeName: "ObjectDirectivesWithCustomGoModel",
 	Kind:     ast.Object,
 	Children: []string{
-		"kind",
-		"name",
-		"description",
-		"specifiedByURL",
-		"fields",
-		"interfaces",
-		"possibleTypes",
-		"enumValues",
-		"inputFields",
-		"ofType",
-		"isOneOf",
+		"nullableText",
 	},
+}
+var type_String = &shardruntime.ObjectChildLookup{
+	TypeName: "String",
+	Kind:     ast.Scalar,
 }
 
 func init() {
+	shardruntime.RegisterObject(splitScope, "ObjectDirectives", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, obj any) graphql.Marshaler {
+		return _ObjectDirectives(ctx, ec, sel, obj)
+	})
+	shardruntime.RegisterObject(splitScope, "ObjectDirectivesWithCustomGoModel", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, obj any) graphql.Marshaler {
+		return _ObjectDirectivesWithCustomGoModel(ctx, ec, sel, obj)
+	})
 }
 
-// split_args_.gotpl — args for Query.__type
-func __splitArgs_field_Query___type_args(ctx context.Context, ec shardruntime.ObjectExecutionContext, rawArgs map[string]any) (map[string]any, error) {
+var objectDirectivesImplementors = []string{"ObjectDirectives"}
+
+func _ObjectDirectives(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, obj any) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.GetOperationContext(), sel, objectDirectivesImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ObjectDirectives")
+		case "text":
+			out.Values[i] = ec.ResolveField(ctx, "ObjectDirectives", "text", field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "nullableText":
+			out.Values[i] = ec.ResolveField(ctx, "ObjectDirectives", "nullableText", field, obj)
+		case "order":
+			out.Values[i] = ec.ResolveField(ctx, "ObjectDirectives", "order", field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	ec.AddDeferred(int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var objectDirectivesWithCustomGoModelImplementors = []string{"ObjectDirectivesWithCustomGoModel"}
+
+func _ObjectDirectivesWithCustomGoModel(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, obj any) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.GetOperationContext(), sel, objectDirectivesWithCustomGoModelImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("ObjectDirectivesWithCustomGoModel")
+		case "nullableText":
+			out.Values[i] = ec.ResolveField(ctx, "ObjectDirectivesWithCustomGoModel", "nullableText", field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	ec.AddDeferred(int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.ProcessDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+// split_args_.gotpl — args for Query.directiveArg
+func __splitArgs_field_Query_directiveArg_args(ctx context.Context, ec shardruntime.ObjectExecutionContext, rawArgs map[string]any) (map[string]any, error) {
+	args := map[string]any{}
+	arg0, err := __splitArgs_field_Query_directiveArg_args_Arg(ctx, ec, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["arg"] = arg0
+	return args, nil
+}
+
+func __splitArgs_field_Query_directiveArg_args_Arg(ctx context.Context, ec shardruntime.ObjectExecutionContext, rawArgs map[string]any) (string, error) {
+	if _, ok := rawArgs["arg"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("arg"))
+	directive0 := func(ctx context.Context) (any, error) {
+		tmp, ok := rawArgs["arg"]
+		if !ok {
+			var zeroVal string
+			return zeroVal, nil
+		}
+		return ec.UnmarshalCodec(ctx, "unmarshalNString2string", tmp)
+	}
+	directive1 := func(ctx context.Context) (any, error) {
+		return ec.InvokeDirective(ctx, "length", rawArgs, directive0, map[string]any{
+			"min":     1,
+			"max":     255,
+			"message": "invalid length",
+		})
+	}
+	tmp, err := directive1(ctx)
+	if err != nil {
+		var zeroVal string
+		return zeroVal, graphql.ErrorOnPath(ctx, err)
+	}
+	if data, ok := tmp.(string); ok {
+		return data, nil
+	} else {
+		var zeroVal string
+		return zeroVal, graphql.ErrorOnPath(ctx, fmt.Errorf(`unexpected type %T from directive, should be string`, tmp))
+	}
+}
+
+// split_args_.gotpl — args for Query.directiveFieldDef
+func __splitArgs_field_Query_directiveFieldDef_args(ctx context.Context, ec shardruntime.ObjectExecutionContext, rawArgs map[string]any) (map[string]any, error) {
 	args := map[string]any{}
 	var arg0 string
-	if tmp, ok := rawArgs["name"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+	if tmp, ok := rawArgs["ret"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("ret"))
 		data, err := ec.UnmarshalCodec(ctx, "unmarshalNString2string", tmp)
 		if err != nil {
 			return nil, err
 		}
 		arg0 = data.(string)
 	}
-	args["name"] = arg0
+	args["ret"] = arg0
 	return args, nil
 }
 
+// split_args_.gotpl — args for Query.directiveInputNullable
+func __splitArgs_field_Query_directiveInputNullable_args(ctx context.Context, ec shardruntime.ObjectExecutionContext, rawArgs map[string]any) (map[string]any, error) {
+	args := map[string]any{}
+	var arg0 *model.InputDirectives
+	if tmp, ok := rawArgs["arg"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("arg"))
+		data, err := ec.UnmarshalCodec(ctx, "unmarshalOInputDirectives2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐInputDirectives", tmp)
+		if err != nil {
+			return nil, err
+		}
+		if data != nil {
+			arg0 = data.(*model.InputDirectives)
+		}
+	}
+	args["arg"] = arg0
+	return args, nil
+}
+
+// split_args_.gotpl — args for Query.directiveInputOuter
+func __splitArgs_field_Query_directiveInputOuter_args(ctx context.Context, ec shardruntime.ObjectExecutionContext, rawArgs map[string]any) (map[string]any, error) {
+	args := map[string]any{}
+	var arg0 model.OuterWrapperInput
+	if tmp, ok := rawArgs["arg"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("arg"))
+		data, err := ec.UnmarshalCodec(ctx, "unmarshalNOuterWrapperInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐOuterWrapperInput", tmp)
+		if err != nil {
+			return nil, err
+		}
+		arg0 = data.(model.OuterWrapperInput)
+	}
+	args["arg"] = arg0
+	return args, nil
+}
+
+// split_args_.gotpl — args for Query.directiveInputType
+func __splitArgs_field_Query_directiveInputType_args(ctx context.Context, ec shardruntime.ObjectExecutionContext, rawArgs map[string]any) (map[string]any, error) {
+	args := map[string]any{}
+	arg0, err := __splitArgs_field_Query_directiveInputType_args_Arg(ctx, ec, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["arg"] = arg0
+	return args, nil
+}
+
+func __splitArgs_field_Query_directiveInputType_args_Arg(ctx context.Context, ec shardruntime.ObjectExecutionContext, rawArgs map[string]any) (model.InnerInput, error) {
+	if _, ok := rawArgs["arg"]; !ok {
+		var zeroVal model.InnerInput
+		return zeroVal, nil
+	}
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("arg"))
+	directive0 := func(ctx context.Context) (any, error) {
+		tmp, ok := rawArgs["arg"]
+		if !ok {
+			var zeroVal model.InnerInput
+			return zeroVal, nil
+		}
+		return ec.UnmarshalCodec(ctx, "unmarshalNInnerInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐInnerInput", tmp)
+	}
+	directive1 := func(ctx context.Context) (any, error) {
+		return ec.InvokeDirective(ctx, "custom", rawArgs, directive0, nil)
+	}
+	tmp, err := directive1(ctx)
+	if err != nil {
+		var zeroVal model.InnerInput
+		return zeroVal, graphql.ErrorOnPath(ctx, err)
+	}
+	if data, ok := tmp.(model.InnerInput); ok {
+		return data, nil
+	} else {
+		var zeroVal model.InnerInput
+		return zeroVal, graphql.ErrorOnPath(ctx, fmt.Errorf(`unexpected type %T from directive, should be github.com/99designs/gqlgen/codegen/testserver/splitpackages/model.InnerInput`, tmp))
+	}
+}
+
+// split_args_.gotpl — args for Query.directiveInputWithArgs
+func __splitArgs_field_Query_directiveInputWithArgs_args(ctx context.Context, ec shardruntime.ObjectExecutionContext, rawArgs map[string]any) (map[string]any, error) {
+	args := map[string]any{}
+	var arg0 model.InputDirectivesWithArgs
+	if tmp, ok := rawArgs["arg"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("arg"))
+		data, err := ec.UnmarshalCodec(ctx, "unmarshalNInputDirectivesWithArgs2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐInputDirectivesWithArgs", tmp)
+		if err != nil {
+			return nil, err
+		}
+		arg0 = data.(model.InputDirectivesWithArgs)
+	}
+	args["arg"] = arg0
+	return args, nil
+}
+
+// split_args_.gotpl — args for Query.directiveInput
+func __splitArgs_field_Query_directiveInput_args(ctx context.Context, ec shardruntime.ObjectExecutionContext, rawArgs map[string]any) (map[string]any, error) {
+	args := map[string]any{}
+	var arg0 model.InputDirectives
+	if tmp, ok := rawArgs["arg"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("arg"))
+		data, err := ec.UnmarshalCodec(ctx, "unmarshalNInputDirectives2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐInputDirectives", tmp)
+		if err != nil {
+			return nil, err
+		}
+		arg0 = data.(model.InputDirectives)
+	}
+	args["arg"] = arg0
+	return args, nil
+}
+
+// split_args_.gotpl — args for Query.directiveNullableArg
+func __splitArgs_field_Query_directiveNullableArg_args(ctx context.Context, ec shardruntime.ObjectExecutionContext, rawArgs map[string]any) (map[string]any, error) {
+	args := map[string]any{}
+	arg0, err := __splitArgs_field_Query_directiveNullableArg_args_Arg(ctx, ec, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["arg"] = arg0
+	arg1, err := __splitArgs_field_Query_directiveNullableArg_args_Arg2(ctx, ec, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["arg2"] = arg1
+	arg2, err := __splitArgs_field_Query_directiveNullableArg_args_Arg3(ctx, ec, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["arg3"] = arg2
+	return args, nil
+}
+
+func __splitArgs_field_Query_directiveNullableArg_args_Arg(ctx context.Context, ec shardruntime.ObjectExecutionContext, rawArgs map[string]any) (*int, error) {
+	if _, ok := rawArgs["arg"]; !ok {
+		var zeroVal *int
+		return zeroVal, nil
+	}
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("arg"))
+	directive0 := func(ctx context.Context) (any, error) {
+		tmp, ok := rawArgs["arg"]
+		if !ok {
+			var zeroVal *int
+			return zeroVal, nil
+		}
+		return ec.UnmarshalCodec(ctx, "unmarshalOInt2ᚖint", tmp)
+	}
+	directive1 := func(ctx context.Context) (any, error) {
+		return ec.InvokeDirective(ctx, "range", rawArgs, directive0, map[string]any{
+			"min": 0,
+		})
+	}
+	tmp, err := directive1(ctx)
+	if err != nil {
+		var zeroVal *int
+		return zeroVal, graphql.ErrorOnPath(ctx, err)
+	}
+	if data, ok := tmp.(*int); ok {
+		return data, nil
+	} else if tmp == nil {
+		var zeroVal *int
+		return zeroVal, nil
+	} else {
+		var zeroVal *int
+		return zeroVal, graphql.ErrorOnPath(ctx, fmt.Errorf(`unexpected type %T from directive, should be *int`, tmp))
+	}
+}
+
+func __splitArgs_field_Query_directiveNullableArg_args_Arg2(ctx context.Context, ec shardruntime.ObjectExecutionContext, rawArgs map[string]any) (*int, error) {
+	if _, ok := rawArgs["arg2"]; !ok {
+		var zeroVal *int
+		return zeroVal, nil
+	}
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("arg2"))
+	directive0 := func(ctx context.Context) (any, error) {
+		tmp, ok := rawArgs["arg2"]
+		if !ok {
+			var zeroVal *int
+			return zeroVal, nil
+		}
+		return ec.UnmarshalCodec(ctx, "unmarshalOInt2ᚖint", tmp)
+	}
+	directive1 := func(ctx context.Context) (any, error) {
+		return ec.InvokeDirective(ctx, "range", rawArgs, directive0, map[string]any{
+			"min": 0,
+		})
+	}
+	tmp, err := directive1(ctx)
+	if err != nil {
+		var zeroVal *int
+		return zeroVal, graphql.ErrorOnPath(ctx, err)
+	}
+	if data, ok := tmp.(*int); ok {
+		return data, nil
+	} else if tmp == nil {
+		var zeroVal *int
+		return zeroVal, nil
+	} else {
+		var zeroVal *int
+		return zeroVal, graphql.ErrorOnPath(ctx, fmt.Errorf(`unexpected type %T from directive, should be *int`, tmp))
+	}
+}
+
+func __splitArgs_field_Query_directiveNullableArg_args_Arg3(ctx context.Context, ec shardruntime.ObjectExecutionContext, rawArgs map[string]any) (*string, error) {
+	if _, ok := rawArgs["arg3"]; !ok {
+		var zeroVal *string
+		return zeroVal, nil
+	}
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("arg3"))
+	directive0 := func(ctx context.Context) (any, error) {
+		tmp, ok := rawArgs["arg3"]
+		if !ok {
+			var zeroVal *string
+			return zeroVal, nil
+		}
+		return ec.UnmarshalCodec(ctx, "unmarshalOString2ᚖstring", tmp)
+	}
+	directive1 := func(ctx context.Context) (any, error) {
+		return ec.InvokeDirective(ctx, "toNull", rawArgs, directive0, nil)
+	}
+	tmp, err := directive1(ctx)
+	if err != nil {
+		var zeroVal *string
+		return zeroVal, graphql.ErrorOnPath(ctx, err)
+	}
+	if data, ok := tmp.(*string); ok {
+		return data, nil
+	} else if tmp == nil {
+		var zeroVal *string
+		return zeroVal, nil
+	} else {
+		var zeroVal *string
+		return zeroVal, graphql.ErrorOnPath(ctx, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp))
+	}
+}
+
+// split_args_.gotpl — args for Query.directiveSingleNullableArg
+func __splitArgs_field_Query_directiveSingleNullableArg_args(ctx context.Context, ec shardruntime.ObjectExecutionContext, rawArgs map[string]any) (map[string]any, error) {
+	args := map[string]any{}
+	arg0, err := __splitArgs_field_Query_directiveSingleNullableArg_args_Arg1(ctx, ec, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["arg1"] = arg0
+	return args, nil
+}
+
+func __splitArgs_field_Query_directiveSingleNullableArg_args_Arg1(ctx context.Context, ec shardruntime.ObjectExecutionContext, rawArgs map[string]any) (*string, error) {
+	if _, ok := rawArgs["arg1"]; !ok {
+		var zeroVal *string
+		return zeroVal, nil
+	}
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("arg1"))
+	directive0 := func(ctx context.Context) (any, error) {
+		tmp, ok := rawArgs["arg1"]
+		if !ok {
+			var zeroVal *string
+			return zeroVal, nil
+		}
+		return ec.UnmarshalCodec(ctx, "unmarshalOString2ᚖstring", tmp)
+	}
+	directive1 := func(ctx context.Context) (any, error) {
+		return ec.InvokeDirective(ctx, "populate", rawArgs, directive0, map[string]any{
+			"value": "test",
+		})
+	}
+	directive2 := func(ctx context.Context) (any, error) {
+		return ec.InvokeDirective(ctx, "noop", rawArgs, directive1, nil)
+	}
+	tmp, err := directive2(ctx)
+	if err != nil {
+		var zeroVal *string
+		return zeroVal, graphql.ErrorOnPath(ctx, err)
+	}
+	if data, ok := tmp.(*string); ok {
+		return data, nil
+	} else if tmp == nil {
+		var zeroVal *string
+		return zeroVal, nil
+	} else {
+		var zeroVal *string
+		return zeroVal, graphql.ErrorOnPath(ctx, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp))
+	}
+}
+
+// split_args_.gotpl — args for Subscription.directiveArg
+func __splitArgs_field_Subscription_directiveArg_args(ctx context.Context, ec shardruntime.ObjectExecutionContext, rawArgs map[string]any) (map[string]any, error) {
+	args := map[string]any{}
+	arg0, err := __splitArgs_field_Subscription_directiveArg_args_Arg(ctx, ec, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["arg"] = arg0
+	return args, nil
+}
+
+func __splitArgs_field_Subscription_directiveArg_args_Arg(ctx context.Context, ec shardruntime.ObjectExecutionContext, rawArgs map[string]any) (string, error) {
+	if _, ok := rawArgs["arg"]; !ok {
+		var zeroVal string
+		return zeroVal, nil
+	}
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("arg"))
+	directive0 := func(ctx context.Context) (any, error) {
+		tmp, ok := rawArgs["arg"]
+		if !ok {
+			var zeroVal string
+			return zeroVal, nil
+		}
+		return ec.UnmarshalCodec(ctx, "unmarshalNString2string", tmp)
+	}
+	directive1 := func(ctx context.Context) (any, error) {
+		return ec.InvokeDirective(ctx, "length", rawArgs, directive0, map[string]any{
+			"min":     1,
+			"max":     255,
+			"message": "invalid length",
+		})
+	}
+	tmp, err := directive1(ctx)
+	if err != nil {
+		var zeroVal string
+		return zeroVal, graphql.ErrorOnPath(ctx, err)
+	}
+	if data, ok := tmp.(string); ok {
+		return data, nil
+	} else {
+		var zeroVal string
+		return zeroVal, graphql.ErrorOnPath(ctx, fmt.Errorf(`unexpected type %T from directive, should be string`, tmp))
+	}
+}
+
+// split_args_.gotpl — args for Subscription.directiveNullableArg
+func __splitArgs_field_Subscription_directiveNullableArg_args(ctx context.Context, ec shardruntime.ObjectExecutionContext, rawArgs map[string]any) (map[string]any, error) {
+	args := map[string]any{}
+	arg0, err := __splitArgs_field_Subscription_directiveNullableArg_args_Arg(ctx, ec, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["arg"] = arg0
+	arg1, err := __splitArgs_field_Subscription_directiveNullableArg_args_Arg2(ctx, ec, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["arg2"] = arg1
+	arg2, err := __splitArgs_field_Subscription_directiveNullableArg_args_Arg3(ctx, ec, rawArgs)
+	if err != nil {
+		return nil, err
+	}
+	args["arg3"] = arg2
+	return args, nil
+}
+
+func __splitArgs_field_Subscription_directiveNullableArg_args_Arg(ctx context.Context, ec shardruntime.ObjectExecutionContext, rawArgs map[string]any) (*int, error) {
+	if _, ok := rawArgs["arg"]; !ok {
+		var zeroVal *int
+		return zeroVal, nil
+	}
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("arg"))
+	directive0 := func(ctx context.Context) (any, error) {
+		tmp, ok := rawArgs["arg"]
+		if !ok {
+			var zeroVal *int
+			return zeroVal, nil
+		}
+		return ec.UnmarshalCodec(ctx, "unmarshalOInt2ᚖint", tmp)
+	}
+	directive1 := func(ctx context.Context) (any, error) {
+		return ec.InvokeDirective(ctx, "range", rawArgs, directive0, map[string]any{
+			"min": 0,
+		})
+	}
+	tmp, err := directive1(ctx)
+	if err != nil {
+		var zeroVal *int
+		return zeroVal, graphql.ErrorOnPath(ctx, err)
+	}
+	if data, ok := tmp.(*int); ok {
+		return data, nil
+	} else if tmp == nil {
+		var zeroVal *int
+		return zeroVal, nil
+	} else {
+		var zeroVal *int
+		return zeroVal, graphql.ErrorOnPath(ctx, fmt.Errorf(`unexpected type %T from directive, should be *int`, tmp))
+	}
+}
+
+func __splitArgs_field_Subscription_directiveNullableArg_args_Arg2(ctx context.Context, ec shardruntime.ObjectExecutionContext, rawArgs map[string]any) (*int, error) {
+	if _, ok := rawArgs["arg2"]; !ok {
+		var zeroVal *int
+		return zeroVal, nil
+	}
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("arg2"))
+	directive0 := func(ctx context.Context) (any, error) {
+		tmp, ok := rawArgs["arg2"]
+		if !ok {
+			var zeroVal *int
+			return zeroVal, nil
+		}
+		return ec.UnmarshalCodec(ctx, "unmarshalOInt2ᚖint", tmp)
+	}
+	directive1 := func(ctx context.Context) (any, error) {
+		return ec.InvokeDirective(ctx, "range", rawArgs, directive0, map[string]any{
+			"min": 0,
+		})
+	}
+	tmp, err := directive1(ctx)
+	if err != nil {
+		var zeroVal *int
+		return zeroVal, graphql.ErrorOnPath(ctx, err)
+	}
+	if data, ok := tmp.(*int); ok {
+		return data, nil
+	} else if tmp == nil {
+		var zeroVal *int
+		return zeroVal, nil
+	} else {
+		var zeroVal *int
+		return zeroVal, graphql.ErrorOnPath(ctx, fmt.Errorf(`unexpected type %T from directive, should be *int`, tmp))
+	}
+}
+
+func __splitArgs_field_Subscription_directiveNullableArg_args_Arg3(ctx context.Context, ec shardruntime.ObjectExecutionContext, rawArgs map[string]any) (*string, error) {
+	if _, ok := rawArgs["arg3"]; !ok {
+		var zeroVal *string
+		return zeroVal, nil
+	}
+	ctx = graphql.WithPathContext(ctx, graphql.NewPathWithField("arg3"))
+	directive0 := func(ctx context.Context) (any, error) {
+		tmp, ok := rawArgs["arg3"]
+		if !ok {
+			var zeroVal *string
+			return zeroVal, nil
+		}
+		return ec.UnmarshalCodec(ctx, "unmarshalOString2ᚖstring", tmp)
+	}
+	directive1 := func(ctx context.Context) (any, error) {
+		return ec.InvokeDirective(ctx, "toNull", rawArgs, directive0, nil)
+	}
+	tmp, err := directive1(ctx)
+	if err != nil {
+		var zeroVal *string
+		return zeroVal, graphql.ErrorOnPath(ctx, err)
+	}
+	if data, ok := tmp.(*string); ok {
+		return data, nil
+	} else if tmp == nil {
+		var zeroVal *string
+		return zeroVal, nil
+	} else {
+		var zeroVal *string
+		return zeroVal, graphql.ErrorOnPath(ctx, fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp))
+	}
+}
+
+// split_directives_.gotpl
+func __splitDirectives_ObjectDirectives_nullableText(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
+	directive0 := next
+	directive1 := func(ctx context.Context) (any, error) {
+		return ec.InvokeDirective(ctx, "toNull", obj, directive0, nil)
+	}
+	return directive1
+}
+
+// split_directives_.gotpl
+func __splitDirectives_ObjectDirectives_text(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
+	directive0 := next
+	directive1 := func(ctx context.Context) (any, error) {
+		return ec.InvokeDirective(ctx, "length", obj, directive0, map[string]any{
+			"min":     0,
+			"max":     7,
+			"message": "not valid",
+		})
+	}
+	return directive1
+}
+
+// split_directives_.gotpl
+func __splitDirectives_ObjectDirectivesWithCustomGoModel_nullableText(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
+	directive0 := next
+	directive1 := func(ctx context.Context) (any, error) {
+		return ec.InvokeDirective(ctx, "toNull", obj, directive0, nil)
+	}
+	return directive1
+}
+
+// split_directives_.gotpl
+func __splitDirectives_Query_directiveDouble(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
+	directive0 := next
+	directive1 := func(ctx context.Context) (any, error) {
+		return ec.InvokeDirective(ctx, "directive1", obj, directive0, nil)
+	}
+	directive2 := func(ctx context.Context) (any, error) {
+		return ec.InvokeDirective(ctx, "directive2", obj, directive1, nil)
+	}
+	return directive2
+}
+
+// split_directives_.gotpl
+func __splitDirectives_Query_directiveFieldDef(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
+	directive0 := next
+	directive1 := func(ctx context.Context) (any, error) {
+		return ec.InvokeDirective(ctx, "length", obj, directive0, map[string]any{
+			"min":     1,
+			"message": "not valid",
+		})
+	}
+	return directive1
+}
+
+// split_directives_.gotpl
+func __splitDirectives_Query_directiveObject(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
+	directive0 := next
+	directive1 := func(ctx context.Context) (any, error) {
+		return ec.InvokeDirective(ctx, "order1", obj, directive0, map[string]any{
+			"location": "order1_1",
+		})
+	}
+	directive2 := func(ctx context.Context) (any, error) {
+		return ec.InvokeDirective(ctx, "order1", obj, directive1, map[string]any{
+			"location": "order1_2",
+		})
+	}
+	directive3 := func(ctx context.Context) (any, error) {
+		return ec.InvokeDirective(ctx, "order2", obj, directive2, map[string]any{
+			"location": "order2_1",
+		})
+	}
+	directive4 := func(ctx context.Context) (any, error) {
+		return ec.InvokeDirective(ctx, "order1", obj, directive3, map[string]any{
+			"location": "Query_field",
+		})
+	}
+	return directive4
+}
+
+// split_directives_.gotpl
+func __splitDirectives_Query_directiveUnimplemented(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
+	directive0 := next
+	directive1 := func(ctx context.Context) (any, error) {
+		return ec.InvokeDirective(ctx, "unimplemented", obj, directive0, nil)
+	}
+	return directive1
+}
+
+// split_directives_.gotpl
+func __splitDirectives_Subscription_directiveDouble(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
+	directive0 := next
+	directive1 := func(ctx context.Context) (any, error) {
+		return ec.InvokeDirective(ctx, "directive1", obj, directive0, nil)
+	}
+	directive2 := func(ctx context.Context) (any, error) {
+		return ec.InvokeDirective(ctx, "directive2", obj, directive1, nil)
+	}
+	return directive2
+}
+
+// split_directives_.gotpl
+func __splitDirectives_Subscription_directiveUnimplemented(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
+	directive0 := next
+	directive1 := func(ctx context.Context) (any, error) {
+		return ec.InvokeDirective(ctx, "unimplemented", obj, directive0, nil)
+	}
+	return directive1
+}
+
+// split_inputs_.gotpl
+func __splitInput_InnerDirectives(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (model.InnerDirectives, error) {
+	// If already unmarshaled to the correct type, return directly.
+	if typed, ok := obj.(model.InnerDirectives); ok {
+		return typed, nil
+	}
+	if typed, ok := obj.(*model.InnerDirectives); ok {
+		if typed == nil {
+			var zero model.InnerDirectives
+			return zero, nil
+		}
+		return *typed, nil
+	}
+	var it model.InnerDirectives
+	if obj == nil {
+		return it, nil
+	}
+	asMap := map[string]any{}
+	rawMap, ok := obj.(map[string]any)
+	if !ok {
+		return it, fmt.Errorf("unmarshalInputInnerDirectives: expected map[string]any, got %T", obj)
+	}
+	for k, v := range rawMap {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"message"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "message":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("message"))
+			directive0 := func(ctx context.Context) (any, error) {
+				return ec.UnmarshalCodec(ctx, "unmarshalNString2string", v)
+			}
+			directive1 := func(ctx context.Context) (any, error) {
+				return ec.InvokeDirective(ctx, "length", obj, directive0, map[string]any{
+					"min":     1,
+					"message": "not valid",
+				})
+			}
+			tmp, err := directive1(ctx)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			if data, ok := tmp.(string); ok {
+				it.Message = data
+			} else {
+				err := fmt.Errorf(`unexpected type %T from directive, should be string`, tmp)
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+		}
+	}
+
+	return it, nil
+}
+
+// split_inputs_.gotpl
+func __splitInput_InnerInput(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (model.InnerInput, error) {
+	// If already unmarshaled to the correct type, return directly.
+	if typed, ok := obj.(model.InnerInput); ok {
+		return typed, nil
+	}
+	if typed, ok := obj.(*model.InnerInput); ok {
+		if typed == nil {
+			var zero model.InnerInput
+			return zero, nil
+		}
+		return *typed, nil
+	}
+	var it model.InnerInput
+	if obj == nil {
+		return it, nil
+	}
+	asMap := map[string]any{}
+	rawMap, ok := obj.(map[string]any)
+	if !ok {
+		return it, fmt.Errorf("unmarshalInputInnerInput: expected map[string]any, got %T", obj)
+	}
+	for k, v := range rawMap {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"id"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "id":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.UnmarshalCodec(ctx, "unmarshalNInt2int", v)
+			if err != nil {
+				return it, err
+			}
+			it.ID = data.(int)
+		}
+	}
+
+	return it, nil
+}
+
+// split_inputs_.gotpl
+func __splitInput_InputDirectives(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (model.InputDirectives, error) {
+	// If already unmarshaled to the correct type, return directly.
+	if typed, ok := obj.(model.InputDirectives); ok {
+		return typed, nil
+	}
+	if typed, ok := obj.(*model.InputDirectives); ok {
+		if typed == nil {
+			var zero model.InputDirectives
+			return zero, nil
+		}
+		return *typed, nil
+	}
+	var it model.InputDirectives
+	if obj == nil {
+		return it, nil
+	}
+	asMap := map[string]any{}
+	rawMap, ok := obj.(map[string]any)
+	if !ok {
+		return it, fmt.Errorf("unmarshalInputInputDirectives: expected map[string]any, got %T", obj)
+	}
+	for k, v := range rawMap {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"text", "nullableText", "inner", "innerNullable", "thirdParty"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "text":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("text"))
+			directive0 := func(ctx context.Context) (any, error) {
+				return ec.UnmarshalCodec(ctx, "unmarshalNString2string", v)
+			}
+			directive1 := func(ctx context.Context) (any, error) {
+				return ec.InvokeDirective(ctx, "length", obj, directive0, map[string]any{
+					"min":     0,
+					"max":     7,
+					"message": "not valid",
+				})
+			}
+			tmp, err := directive1(ctx)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			if data, ok := tmp.(string); ok {
+				it.Text = data
+			} else {
+				err := fmt.Errorf(`unexpected type %T from directive, should be string`, tmp)
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+		case "nullableText":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nullableText"))
+			directive0 := func(ctx context.Context) (any, error) {
+				return ec.UnmarshalCodec(ctx, "unmarshalOString2ᚖstring", v)
+			}
+			directive1 := func(ctx context.Context) (any, error) {
+				return ec.InvokeDirective(ctx, "toNull", obj, directive0, nil)
+			}
+			tmp, err := directive1(ctx)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			if data, ok := tmp.(*string); ok {
+				it.NullableText = data
+			} else if tmp == nil {
+				it.NullableText = nil
+			} else {
+				err := fmt.Errorf(`unexpected type %T from directive, should be *string`, tmp)
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+		case "inner":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inner"))
+			data, err := ec.UnmarshalCodec(ctx, "unmarshalNInnerDirectives2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐInnerDirectives", v)
+			if err != nil {
+				return it, err
+			}
+			if data != nil {
+				it.Inner = data.(*model.InnerDirectives)
+			}
+		case "innerNullable":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("innerNullable"))
+			data, err := ec.UnmarshalCodec(ctx, "unmarshalOInnerDirectives2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐInnerDirectives", v)
+			if err != nil {
+				return it, err
+			}
+			if data != nil {
+				it.InnerNullable = data.(*model.InnerDirectives)
+			}
+		case "thirdParty":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("thirdParty"))
+			directive0 := func(ctx context.Context) (any, error) {
+				return ec.UnmarshalCodec(ctx, "unmarshalOThirdParty2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐThirdParty", v)
+			}
+			directive1 := func(ctx context.Context) (any, error) {
+				return ec.InvokeDirective(ctx, "length", obj, directive0, map[string]any{
+					"min": 0,
+					"max": 7,
+				})
+			}
+			tmp, err := directive1(ctx)
+			if err != nil {
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+			if data, ok := tmp.(*model.ThirdParty); ok {
+				it.ThirdParty = data
+			} else if tmp == nil {
+				it.ThirdParty = nil
+			} else {
+				err := fmt.Errorf(`unexpected type %T from directive, should be *github.com/99designs/gqlgen/codegen/testserver/splitpackages/model.ThirdParty`, tmp)
+				return it, graphql.ErrorOnPath(ctx, err)
+			}
+		}
+	}
+	directive0 := func(ctx context.Context) (any, error) { return it, nil }
+	directive1 := func(ctx context.Context) (any, error) {
+		return ec.InvokeDirective(ctx, "directive3", asMap, directive0, nil)
+	}
+	tmp, err := directive1(ctx)
+	if err != nil {
+		return it, graphql.ErrorOnPath(ctx, err)
+	}
+	if data, ok := tmp.(model.InputDirectives); ok {
+		return data, nil
+	}
+	return it, graphql.ErrorOnPath(ctx, fmt.Errorf(`unexpected type %T from INPUT_OBJECT directive, should be model.InputDirectives`, tmp))
+}
+
+// split_inputs_.gotpl
+func __splitInput_InputDirectivesWithArgs(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (model.InputDirectivesWithArgs, error) {
+	// If already unmarshaled to the correct type, return directly.
+	if typed, ok := obj.(model.InputDirectivesWithArgs); ok {
+		return typed, nil
+	}
+	if typed, ok := obj.(*model.InputDirectivesWithArgs); ok {
+		if typed == nil {
+			var zero model.InputDirectivesWithArgs
+			return zero, nil
+		}
+		return *typed, nil
+	}
+	var it model.InputDirectivesWithArgs
+	if obj == nil {
+		return it, nil
+	}
+	asMap := map[string]any{}
+	rawMap, ok := obj.(map[string]any)
+	if !ok {
+		return it, fmt.Errorf("unmarshalInputInputDirectivesWithArgs: expected map[string]any, got %T", obj)
+	}
+	for k, v := range rawMap {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"text"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "text":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("text"))
+			data, err := ec.UnmarshalCodec(ctx, "unmarshalNString2string", v)
+			if err != nil {
+				return it, err
+			}
+			it.Text = data.(string)
+		}
+	}
+	directive0 := func(ctx context.Context) (any, error) { return it, nil }
+	directive1 := func(ctx context.Context) (any, error) {
+		return ec.InvokeDirective(ctx, "directive3WithArg", asMap, directive0, map[string]any{
+			"inputNamespace": "InputDirectivesWithArgs",
+		})
+	}
+	tmp, err := directive1(ctx)
+	if err != nil {
+		return it, graphql.ErrorOnPath(ctx, err)
+	}
+	if data, ok := tmp.(model.InputDirectivesWithArgs); ok {
+		return data, nil
+	}
+	return it, graphql.ErrorOnPath(ctx, fmt.Errorf(`unexpected type %T from INPUT_OBJECT directive, should be model.InputDirectivesWithArgs`, tmp))
+}
+
+// split_inputs_.gotpl
+func __splitInput_OuterWrapperInput(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (model.OuterWrapperInput, error) {
+	// If already unmarshaled to the correct type, return directly.
+	if typed, ok := obj.(model.OuterWrapperInput); ok {
+		return typed, nil
+	}
+	if typed, ok := obj.(*model.OuterWrapperInput); ok {
+		if typed == nil {
+			var zero model.OuterWrapperInput
+			return zero, nil
+		}
+		return *typed, nil
+	}
+	var it model.OuterWrapperInput
+	if obj == nil {
+		return it, nil
+	}
+	asMap := map[string]any{}
+	rawMap, ok := obj.(map[string]any)
+	if !ok {
+		return it, fmt.Errorf("unmarshalInputOuterWrapperInput: expected map[string]any, got %T", obj)
+	}
+	for k, v := range rawMap {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"inner"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "inner":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("inner"))
+			data, err := ec.UnmarshalCodec(ctx, "unmarshalNInputDirectives2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐInputDirectives", v)
+			if err != nil {
+				return it, err
+			}
+			if data != nil {
+				it.Inner = data.(*model.InputDirectives)
+			}
+		}
+	}
+
+	return it, nil
+}
+
 // split_codecs_.gotpl — marshal
-func marshalNString2string(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
+func marshalNString2ᚕstringᚄ(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
+	rv := reflect.ValueOf(value)
+	ret := make(graphql.Array, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		ret[i] = ec.MarshalCodec(ctx, "marshalNString2string", sel, rv.Index(i).Interface())
+	}
+	for _, e := range ret {
+		if e == graphql.Null {
+			return graphql.Null
+		}
+	}
+	return ret
+}
+
+// split_codecs_.gotpl — marshal
+func marshalNUUID2string(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
 	_ = sel
 	v := value.(string)
 	res := graphql.MarshalString(v)
@@ -76,10 +1122,40 @@ func marshalNString2string(ctx context.Context, ec shardruntime.ObjectExecutionC
 }
 
 // split_codecs_.gotpl — marshal
-func marshalO__Schema2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
-	handler, ok := shardruntime.LookupObject(splitScope, "__Schema")
+func marshalOInt2int(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
+	_ = sel
+	_ = ctx
+	v := value.(int)
+	res := graphql.MarshalInt(v)
+	return res
+}
+
+// split_codecs_.gotpl — marshal
+func marshalOInt2ᚖint(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
+	if value == nil {
+		return graphql.Null
+	}
+	rv := reflect.ValueOf(value)
+	if rv.Kind() == reflect.Ptr && rv.IsNil() {
+		return graphql.Null
+	}
+	if rv.Kind() == reflect.Struct {
+		ptr := reflect.New(rv.Type())
+		ptr.Elem().Set(rv)
+		value = ptr.Interface()
+	}
+	_ = sel
+	_ = ctx
+	v := value.(*int)
+	res := graphql.MarshalInt(*v)
+	return res
+}
+
+// split_codecs_.gotpl — marshal
+func marshalOObjectDirectives2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐObjectDirectives(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
+	handler, ok := shardruntime.LookupObject(splitScope, "ObjectDirectives")
 	if !ok {
-		panic("missing object shard handler for __Schema")
+		panic("missing object shard handler for ObjectDirectives")
 	}
 	{
 		rv := reflect.ValueOf(value)
@@ -93,7 +1169,7 @@ func marshalO__Schema2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectio
 }
 
 // split_codecs_.gotpl — marshal
-func marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐSchema(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
+func marshalOObjectDirectives2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐObjectDirectives(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
 	if value == nil {
 		return graphql.Null
 	}
@@ -106,18 +1182,18 @@ func marshalO__Schema2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospec
 		ptr.Elem().Set(rv)
 		value = ptr.Interface()
 	}
-	handler, ok := shardruntime.LookupObject(splitScope, "__Schema")
+	handler, ok := shardruntime.LookupObject(splitScope, "ObjectDirectives")
 	if !ok {
-		panic("missing object shard handler for __Schema")
+		panic("missing object shard handler for ObjectDirectives")
 	}
 	return handler(ctx, ec, sel, value)
 }
 
 // split_codecs_.gotpl — marshal
-func marshalO__Type2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
-	handler, ok := shardruntime.LookupObject(splitScope, "__Type")
+func marshalOObjectDirectivesWithCustomGoModel2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐObjectDirectivesWithCustomGoModel(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
+	handler, ok := shardruntime.LookupObject(splitScope, "ObjectDirectivesWithCustomGoModel")
 	if !ok {
-		panic("missing object shard handler for __Type")
+		panic("missing object shard handler for ObjectDirectivesWithCustomGoModel")
 	}
 	{
 		rv := reflect.ValueOf(value)
@@ -131,7 +1207,7 @@ func marshalO__Type2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospection�
 }
 
 // split_codecs_.gotpl — marshal
-func marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
+func marshalOObjectDirectivesWithCustomGoModel2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐObjectDirectivesWithCustomGoModel(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
 	if value == nil {
 		return graphql.Null
 	}
@@ -144,15 +1220,260 @@ func marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospecti
 		ptr.Elem().Set(rv)
 		value = ptr.Interface()
 	}
-	handler, ok := shardruntime.LookupObject(splitScope, "__Type")
+	handler, ok := shardruntime.LookupObject(splitScope, "ObjectDirectivesWithCustomGoModel")
 	if !ok {
-		panic("missing object shard handler for __Type")
+		panic("missing object shard handler for ObjectDirectivesWithCustomGoModel")
 	}
 	return handler(ctx, ec, sel, value)
+}
+
+// split_codecs_.gotpl — marshal
+func marshalOString2string(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
+	_ = sel
+	_ = ctx
+	v := value.(string)
+	res := graphql.MarshalString(v)
+	return res
+}
+
+// split_codecs_.gotpl — marshal
+func marshalOString2ᚖstring(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
+	if value == nil {
+		return graphql.Null
+	}
+	rv := reflect.ValueOf(value)
+	if rv.Kind() == reflect.Ptr && rv.IsNil() {
+		return graphql.Null
+	}
+	if rv.Kind() == reflect.Struct {
+		ptr := reflect.New(rv.Type())
+		ptr.Elem().Set(rv)
+		value = ptr.Interface()
+	}
+	_ = sel
+	_ = ctx
+	v := value.(*string)
+	res := graphql.MarshalString(*v)
+	return res
+}
+
+// split_codecs_.gotpl — marshal
+func marshalOThirdParty2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐThirdParty(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
+	_ = sel
+	_ = ctx
+	v := value.(model.ThirdParty)
+	res := model.MarshalThirdParty(v)
+	return res
+}
+
+// split_codecs_.gotpl — marshal
+func marshalOThirdParty2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐThirdParty(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
+	if value == nil {
+		return graphql.Null
+	}
+	rv := reflect.ValueOf(value)
+	if rv.Kind() == reflect.Ptr && rv.IsNil() {
+		return graphql.Null
+	}
+	if rv.Kind() == reflect.Struct {
+		ptr := reflect.New(rv.Type())
+		ptr.Elem().Set(rv)
+		value = ptr.Interface()
+	}
+	_ = sel
+	_ = ctx
+	v := value.(*model.ThirdParty)
+	res := model.MarshalThirdParty(*v)
+	return res
 }
 
 // split_codecs_.gotpl — unmarshal
-func unmarshalNString2string(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
+func unmarshalNInnerDirectives2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐInnerDirectives(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
+	res, err := __splitInput_InnerDirectives(ctx, ec, value)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+// split_codecs_.gotpl — unmarshal
+func unmarshalNInnerDirectives2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐInnerDirectives(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
+	res, err := __splitInput_InnerDirectives(ctx, ec, value)
+	if err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+// split_codecs_.gotpl — unmarshal
+func unmarshalNInnerInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐInnerInput(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
+	res, err := __splitInput_InnerInput(ctx, ec, value)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+// split_codecs_.gotpl — unmarshal
+func unmarshalNInnerInput2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐInnerInput(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
+	res, err := __splitInput_InnerInput(ctx, ec, value)
+	if err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+// split_codecs_.gotpl — unmarshal
+func unmarshalNInputDirectives2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐInputDirectives(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
+	res, err := __splitInput_InputDirectives(ctx, ec, value)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+// split_codecs_.gotpl — unmarshal
+func unmarshalNInputDirectives2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐInputDirectives(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
+	res, err := __splitInput_InputDirectives(ctx, ec, value)
+	if err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+// split_codecs_.gotpl — unmarshal
+func unmarshalNInputDirectivesWithArgs2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐInputDirectivesWithArgs(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
+	res, err := __splitInput_InputDirectivesWithArgs(ctx, ec, value)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+// split_codecs_.gotpl — unmarshal
+func unmarshalNOuterWrapperInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐOuterWrapperInput(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
+	res, err := __splitInput_OuterWrapperInput(ctx, ec, value)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+// split_codecs_.gotpl — unmarshal
+func unmarshalNString2ᚕstringᚄ(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
+	vSlice := graphql.CoerceList(value)
+	res := make([]string, len(vSlice))
+	for i := range vSlice {
+		elemCtx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
+		elem, err := ec.UnmarshalCodec(elemCtx, "unmarshalNString2string", vSlice[i])
+		if err != nil {
+			return nil, err
+		}
+		if elem != nil {
+			res[i] = elem.(string)
+		}
+	}
+	return res, nil
+}
+
+// split_codecs_.gotpl — unmarshal
+func unmarshalNUUID2string(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
 	res, err := graphql.UnmarshalString(value)
 	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+// split_codecs_.gotpl — unmarshal
+func unmarshalOInnerDirectives2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐInnerDirectives(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
+	res, err := __splitInput_InnerDirectives(ctx, ec, value)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+// split_codecs_.gotpl — unmarshal
+func unmarshalOInnerDirectives2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐInnerDirectives(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
+	if value == nil {
+		return nil, nil
+	}
+	res, err := __splitInput_InnerDirectives(ctx, ec, value)
+	if err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+// split_codecs_.gotpl — unmarshal
+func unmarshalOInputDirectives2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐInputDirectives(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
+	res, err := __splitInput_InputDirectives(ctx, ec, value)
+	if err != nil {
+		return nil, err
+	}
+	return res, nil
+}
+
+// split_codecs_.gotpl — unmarshal
+func unmarshalOInputDirectives2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐInputDirectives(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
+	if value == nil {
+		return nil, nil
+	}
+	res, err := __splitInput_InputDirectives(ctx, ec, value)
+	if err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
+// split_codecs_.gotpl — unmarshal
+func unmarshalOInt2int(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
+	res, err := graphql.UnmarshalInt(value)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+// split_codecs_.gotpl — unmarshal
+func unmarshalOInt2ᚖint(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
+	if value == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalInt(value)
+	if err != nil {
+		return nil, graphql.ErrorOnPath(ctx, err)
+	}
+	return &res, nil
+}
+
+// split_codecs_.gotpl — unmarshal
+func unmarshalOString2string(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
+	res, err := graphql.UnmarshalString(value)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+// split_codecs_.gotpl — unmarshal
+func unmarshalOString2ᚖstring(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
+	if value == nil {
+		return nil, nil
+	}
+	res, err := graphql.UnmarshalString(value)
+	if err != nil {
+		return nil, graphql.ErrorOnPath(ctx, err)
+	}
+	return &res, nil
+}
+
+// split_codecs_.gotpl — unmarshal
+func unmarshalOThirdParty2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐThirdParty(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
+	res, err := model.UnmarshalThirdParty(value)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+// split_codecs_.gotpl — unmarshal
+func unmarshalOThirdParty2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐThirdParty(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
+	if value == nil {
+		return nil, nil
+	}
+	res, err := model.UnmarshalThirdParty(value)
+	if err != nil {
+		return nil, graphql.ErrorOnPath(ctx, err)
+	}
+	return &res, nil
 }
