@@ -68,6 +68,7 @@ type DirectiveRoot struct {
 type ComplexityRoot struct {
 	Mutation struct {
 		Greet          func(childComplexity int, name string) int
+		MaybeGreet     func(childComplexity int, name string) int
 		PingFromExtras func(childComplexity int) int
 	}
 
@@ -108,6 +109,7 @@ type ComplexityRoot struct {
 		InputNullableSlice               func(childComplexity int, arg []string) int
 		InputOmittable                   func(childComplexity int, arg model.OmittableInput) int
 		InputSlice                       func(childComplexity int, arg []string) int
+		MaybeHello                       func(childComplexity int, name string) int
 		PtrToSliceContainer              func(childComplexity int) int
 		ScalarSlice                      func(childComplexity int) int
 		Slices                           func(childComplexity int) int
@@ -131,6 +133,7 @@ type ComplexityRoot struct {
 type MutationResolver interface {
 	Greet(ctx context.Context, name string) (string, error)
 	PingFromExtras(ctx context.Context) (string, error)
+	MaybeGreet(ctx context.Context, name string) (*string, error)
 }
 type QueryResolver interface {
 	Hello(ctx context.Context, name string) (string, error)
@@ -157,6 +160,7 @@ type QueryResolver interface {
 	InputSlice(ctx context.Context, arg []string) (bool, error)
 	InputNullableSlice(ctx context.Context, arg []string) (bool, error)
 	InputListField(ctx context.Context, arg model.ListFieldInput) (string, error)
+	MaybeHello(ctx context.Context, name string) (*string, error)
 	InputOmittable(ctx context.Context, arg model.OmittableInput) (string, error)
 }
 type SubscriptionResolver interface {
@@ -207,6 +211,22 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Mutation.Greet(childComplexity, args["name"].(string)), true
+
+	case "Mutation.maybeGreet":
+		if e.complexity.Mutation.MaybeGreet == nil {
+			break
+		}
+
+		argsHandler, ok := shardruntime.LookupArgs("github.com/99designs/gqlgen/codegen/testserver/splitpackages", "field_Mutation_maybeGreet_args")
+		if !ok {
+			return 0, false
+		}
+		args, err := argsHandler(ctx, &ec, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.MaybeGreet(childComplexity, args["name"].(string)), true
 
 	case "Mutation.pingFromExtras":
 		if e.complexity.Mutation.PingFromExtras == nil {
@@ -556,6 +576,22 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.InputSlice(childComplexity, args["arg"].([]string)), true
+
+	case "Query.maybeHello":
+		if e.complexity.Query.MaybeHello == nil {
+			break
+		}
+
+		argsHandler, ok := shardruntime.LookupArgs("github.com/99designs/gqlgen/codegen/testserver/splitpackages", "field_Query_maybeHello_args")
+		if !ok {
+			return 0, false
+		}
+		args, err := argsHandler(ctx, &ec, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.MaybeHello(childComplexity, args["name"].(string)), true
 
 	case "Query.ptrToSliceContainer":
 		if e.complexity.Query.PtrToSliceContainer == nil {
@@ -1187,7 +1223,7 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 			return ec.ResolveField(ctx, "Mutation", fieldName, collected, nil)
 		})
-		if out.Values[i] == graphql.Null {
+		if out.Values[i] == graphql.Null && (field.Definition == nil || field.Definition.Type.NonNull) {
 			out.Invalids++
 		}
 	}
@@ -1242,7 +1278,7 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 			return ec.ResolveField(ctx, "Query", fieldName, collected, nil)
 		})
-		if out.Values[i] == graphql.Null {
+		if out.Values[i] == graphql.Null && (field.Definition == nil || field.Definition.Type.NonNull) {
 			out.Invalids++
 		}
 	}
@@ -1333,6 +1369,12 @@ func init() {
 		fc := graphql.GetFieldContext(ctx)
 		_ = fc
 		return ec.resolvers.Mutation().PingFromExtras(ctx)
+	})
+	shardruntime.RegisterResolverInvoker(scope, "Mutation", "maybeGreet", func(ctx context.Context, oec shardruntime.ObjectExecutionContext, obj any) (any, error) {
+		ec := oec.(*executionContext)
+		fc := graphql.GetFieldContext(ctx)
+		_ = fc
+		return ec.resolvers.Mutation().MaybeGreet(ctx, fc.Args["name"].(string))
 	})
 	shardruntime.RegisterResolverInvoker(scope, "Query", "hello", func(ctx context.Context, oec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 		ec := oec.(*executionContext)
@@ -1478,6 +1520,12 @@ func init() {
 		_ = fc
 		return ec.resolvers.Query().InputListField(ctx, fc.Args["arg"].(model.ListFieldInput))
 	})
+	shardruntime.RegisterResolverInvoker(scope, "Query", "maybeHello", func(ctx context.Context, oec shardruntime.ObjectExecutionContext, obj any) (any, error) {
+		ec := oec.(*executionContext)
+		fc := graphql.GetFieldContext(ctx)
+		_ = fc
+		return ec.resolvers.Query().MaybeHello(ctx, fc.Args["name"].(string))
+	})
 	shardruntime.RegisterResolverInvoker(scope, "Query", "inputOmittable", func(ctx context.Context, oec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 		ec := oec.(*executionContext)
 		fc := graphql.GetFieldContext(ctx)
@@ -1530,7 +1578,7 @@ func init() {
 	})
 }
 
-//go:embed "directive.graphql" "extras.graphql" "hybrid_input.graphql" "lists.graphql" "omittable_input.graphql" "schema.graphql"
+//go:embed "directive.graphql" "extras.graphql" "hybrid_input.graphql" "lists.graphql" "nullable_root.graphql" "omittable_input.graphql" "schema.graphql"
 var sourcesFS embed.FS
 
 func sourceData(filename string) string {
@@ -1546,6 +1594,7 @@ var sources = []*ast.Source{
 	{Name: "extras.graphql", Input: sourceData("extras.graphql"), BuiltIn: false},
 	{Name: "hybrid_input.graphql", Input: sourceData("hybrid_input.graphql"), BuiltIn: false},
 	{Name: "lists.graphql", Input: sourceData("lists.graphql"), BuiltIn: false},
+	{Name: "nullable_root.graphql", Input: sourceData("nullable_root.graphql"), BuiltIn: false},
 	{Name: "omittable_input.graphql", Input: sourceData("omittable_input.graphql"), BuiltIn: false},
 	{Name: "schema.graphql", Input: sourceData("schema.graphql"), BuiltIn: false},
 }

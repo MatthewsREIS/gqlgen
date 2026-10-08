@@ -579,7 +579,7 @@ func (ec *executionContext) _{{$object.Name}}(ctx context.Context, sel ast.Selec
 		out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 			return ec.ResolveField(ctx, {{$object.Name|quote}}, fieldName, collected, nil)
 		})
-		if out.Values[i] == graphql.Null {
+		if out.Values[i] == graphql.Null && (field.Definition == nil || field.Definition.Type.NonNull) {
 			out.Invalids++
 		}
 	}

@@ -20,6 +20,11 @@ func (r *mutationResolver) PingFromExtras(ctx context.Context) (string, error) {
 	panic("not implemented")
 }
 
+// MaybeGreet is the resolver for the maybeGreet field.
+func (r *mutationResolver) MaybeGreet(ctx context.Context, name string) (*string, error) {
+	panic("not implemented")
+}
+
 // Hello is the resolver for the hello field.
 func (r *queryResolver) Hello(ctx context.Context, name string) (string, error) {
 	panic("not implemented")
@@ -137,6 +142,11 @@ func (r *queryResolver) InputNullableSlice(ctx context.Context, arg []string) (b
 
 // InputListField is the resolver for the inputListField field.
 func (r *queryResolver) InputListField(ctx context.Context, arg model.ListFieldInput) (string, error) {
+	panic("not implemented")
+}
+
+// MaybeHello is the resolver for the maybeHello field.
+func (r *queryResolver) MaybeHello(ctx context.Context, name string) (*string, error) {
 	panic("not implemented")
 }
 

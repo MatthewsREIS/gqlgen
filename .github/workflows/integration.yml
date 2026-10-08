@@ -57,7 +57,7 @@ jobs:
       with:
         node-version: ${{ matrix.node }}
     - run: go mod download
-    - run: cd _examples/federation ; npm install
+    - run: cd _examples/federation ; npm install --legacy-peer-deps
     - run: .github/workflows/check-federation
   init:
     runs-on: ubuntu-latest

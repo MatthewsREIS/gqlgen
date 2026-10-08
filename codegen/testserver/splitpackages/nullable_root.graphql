@@ -1,0 +1,7 @@
+extend type Query {
+	maybeHello(name: String!): String
+}
+
+extend type Mutation {
+	maybeGreet(name: String!): String
+}
