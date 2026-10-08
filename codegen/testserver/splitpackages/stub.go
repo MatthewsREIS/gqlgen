@@ -12,6 +12,7 @@ type Stub struct {
 	MutationResolver struct {
 		Greet          func(ctx context.Context, name string) (string, error)
 		PingFromExtras func(ctx context.Context) (string, error)
+		MaybeGreet     func(ctx context.Context, name string) (*string, error)
 	}
 	QueryResolver struct {
 		Hello                            func(ctx context.Context, name string) (string, error)
@@ -38,6 +39,7 @@ type Stub struct {
 		InputSlice                       func(ctx context.Context, arg []string) (bool, error)
 		InputNullableSlice               func(ctx context.Context, arg []string) (bool, error)
 		InputListField                   func(ctx context.Context, arg model.ListFieldInput) (string, error)
+		MaybeHello                       func(ctx context.Context, name string) (*string, error)
 		InputOmittable                   func(ctx context.Context, arg model.OmittableInput) (string, error)
 	}
 	SubscriptionResolver struct {
@@ -79,6 +81,9 @@ func (r *stubMutation) Greet(ctx context.Context, name string) (string, error) {
 }
 func (r *stubMutation) PingFromExtras(ctx context.Context) (string, error) {
 	return r.MutationResolver.PingFromExtras(ctx)
+}
+func (r *stubMutation) MaybeGreet(ctx context.Context, name string) (*string, error) {
+	return r.MutationResolver.MaybeGreet(ctx, name)
 }
 
 type stubQuery struct{ *Stub }
@@ -154,6 +159,9 @@ func (r *stubQuery) InputNullableSlice(ctx context.Context, arg []string) (bool,
 }
 func (r *stubQuery) InputListField(ctx context.Context, arg model.ListFieldInput) (string, error) {
 	return r.QueryResolver.InputListField(ctx, arg)
+}
+func (r *stubQuery) MaybeHello(ctx context.Context, name string) (*string, error) {
+	return r.QueryResolver.MaybeHello(ctx, name)
 }
 func (r *stubQuery) InputOmittable(ctx context.Context, arg model.OmittableInput) (string, error) {
 	return r.QueryResolver.InputOmittable(ctx, arg)
