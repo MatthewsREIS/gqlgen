@@ -19,16 +19,16 @@ func TestNullableRootFieldResolvingToNullKeepsData(t *testing.T) {
 	srv.AddTransport(transport.POST{})
 	c := client.New(srv)
 
-	resolvers.QueryResolver.MaybeHello = func(ctx context.Context, name string) (*string, error) {
+	resolvers.QueryResolver.MaybeHello = func(_ context.Context, name string) (*string, error) {
 		if name == "found" {
 			return &name, nil
 		}
 		return nil, nil
 	}
-	resolvers.QueryResolver.Hello = func(ctx context.Context, name string) (string, error) {
+	resolvers.QueryResolver.Hello = func(_ context.Context, name string) (string, error) {
 		return "hello " + name, nil
 	}
-	resolvers.MutationResolver.MaybeGreet = func(ctx context.Context, name string) (*string, error) {
+	resolvers.MutationResolver.MaybeGreet = func(_ context.Context, name string) (*string, error) {
 		return nil, nil
 	}
 
@@ -42,7 +42,8 @@ func TestNullableRootFieldResolvingToNullKeepsData(t *testing.T) {
 	}
 
 	t.Run("nullable query resolving to null keeps the data object", func(t *testing.T) {
-		require.JSONEq(t, `{"maybeHello":null}`, rawData(t, `query { maybeHello(name: "missing") }`))
+		query := `query { maybeHello(name: "missing") }`
+		require.JSONEq(t, `{"maybeHello":null}`, rawData(t, query))
 	})
 
 	t.Run("nullable query null alongside a sibling keeps the sibling", func(t *testing.T) {
@@ -53,11 +54,12 @@ func TestNullableRootFieldResolvingToNullKeepsData(t *testing.T) {
 	})
 
 	t.Run("nullable query resolving to a value is unchanged", func(t *testing.T) {
-		require.JSONEq(t, `{"maybeHello":"found"}`, rawData(t, `query { maybeHello(name: "found") }`))
+		query := `query { maybeHello(name: "found") }`
+		require.JSONEq(t, `{"maybeHello":"found"}`, rawData(t, query))
 	})
 
 	t.Run("non-null query that errors still nulls the whole data payload", func(t *testing.T) {
-		resolvers.QueryResolver.Hello = func(ctx context.Context, name string) (string, error) {
+		resolvers.QueryResolver.Hello = func(_ context.Context, name string) (string, error) {
 			return "", errors.New("boom")
 		}
 		var raw map[string]any
@@ -67,7 +69,7 @@ func TestNullableRootFieldResolvingToNullKeepsData(t *testing.T) {
 	})
 
 	t.Run("non-null mutation that errors still nulls the whole data payload", func(t *testing.T) {
-		resolvers.MutationResolver.Greet = func(ctx context.Context, name string) (string, error) {
+		resolvers.MutationResolver.Greet = func(_ context.Context, name string) (string, error) {
 			return "", errors.New("boom")
 		}
 		var raw map[string]any
