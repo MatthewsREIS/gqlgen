@@ -5,8 +5,8 @@ export GO111MODULE=on
 gqlgen_dir=$(pwd)
 cd "$(mktemp -d)"
 go mod init inittest
-go get -tool github.com/99designs/gqlgen
-go mod edit -replace=github.com/99designs/gqlgen="$gqlgen_dir"
+go mod edit -require=github.com/99designs/gqlgen@v0.0.0 -replace=github.com/99designs/gqlgen="$gqlgen_dir"
+go get -tool github.com/99designs/gqlgen@v0.0.0
 go mod tidy
 
 if ! go tool gqlgen init ; then
