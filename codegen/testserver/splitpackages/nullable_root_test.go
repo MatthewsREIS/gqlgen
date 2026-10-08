@@ -66,6 +66,16 @@ func TestNullableRootFieldResolvingToNullKeepsData(t *testing.T) {
 		require.Nil(t, raw)
 	})
 
+	t.Run("non-null mutation that errors still nulls the whole data payload", func(t *testing.T) {
+		resolvers.MutationResolver.Greet = func(ctx context.Context, name string) (string, error) {
+			return "", errors.New("boom")
+		}
+		var raw map[string]any
+		err := c.Post(`mutation { greet(name: "x") maybeGreet(name: "x") }`, &raw)
+		require.ErrorContains(t, err, "boom")
+		require.Nil(t, raw)
+	})
+
 	t.Run("nullable mutation resolving to null keeps the data object", func(t *testing.T) {
 		require.JSONEq(t, `{"maybeGreet":null}`, rawData(t, `mutation { maybeGreet(name: "x") }`))
 	})
