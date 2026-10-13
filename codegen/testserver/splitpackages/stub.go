@@ -33,6 +33,7 @@ type Stub struct {
 		GoodbyeFromExtras                func(ctx context.Context, name string) (string, error)
 		HybridInput                      func(ctx context.Context, arg model.HybridInput) (string, error)
 		HybridInputNullable              func(ctx context.Context, arg *model.HybridInput) (string, error)
+		WalkedInput                      func(ctx context.Context, arg model.WalkedInput) (string, error)
 		Slices                           func(ctx context.Context) (*model.Slices, error)
 		ScalarSlice                      func(ctx context.Context) ([]byte, error)
 		PtrToSliceContainer              func(ctx context.Context) (*model.PtrToSliceContainer, error)
@@ -141,6 +142,9 @@ func (r *stubQuery) HybridInput(ctx context.Context, arg model.HybridInput) (str
 }
 func (r *stubQuery) HybridInputNullable(ctx context.Context, arg *model.HybridInput) (string, error) {
 	return r.QueryResolver.HybridInputNullable(ctx, arg)
+}
+func (r *stubQuery) WalkedInput(ctx context.Context, arg model.WalkedInput) (string, error) {
+	return r.QueryResolver.WalkedInput(ctx, arg)
 }
 func (r *stubQuery) Slices(ctx context.Context) (*model.Slices, error) {
 	return r.QueryResolver.Slices(ctx)

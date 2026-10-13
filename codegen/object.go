@@ -42,7 +42,12 @@ type Object struct {
 	// it is the pre-fix, bypass-prone field set — so HybridSpecialFields panics
 	// on it rather than failing open.
 	needsGeneratedInput map[string]bool
-	hybridClassified    bool
+	// needsGeneratedWalked is the same classification for split-packages
+	// layout, where shardruntime.ApplyInputDirectives applies a hybrid input's
+	// field directives and defaults at runtime: only resolver fields and nested
+	// inputs the walk cannot reach keep a generated arm.
+	needsGeneratedWalked map[string]bool
+	hybridClassified     bool
 }
 
 func (b *builder) buildObject(typ *ast.Definition) (*Object, error) {
@@ -171,6 +176,40 @@ func (o *Object) HybridSpecialFields() []*Field {
 	return special
 }
 
+// HybridGeneratedFields returns the fields a hybrid unmarshaler in
+// split-packages layout still decodes with a generated arm, after
+// shardruntime.ApplyInputDirectives has applied the schema's field directives
+// and defaults at runtime: fields backed by a field resolver, and nested inputs
+// the runtime walk cannot reach — an input without a runtime decoder that
+// carries enforcement anywhere below it, or a hybrid input that itself needs an
+// arm (a resolver field or an INPUT_OBJECT directive, transitively).
+func (o *Object) HybridGeneratedFields() []*Field {
+	if !o.hybridClassified && o.HasContextUnmarshal() {
+		panic(fmt.Errorf(
+			"input %s: HybridGeneratedFields called before Objects.resolveHybridSpecialFields; "+
+				"the nested-input classification would fail open and skip nested directives and resolvers",
+			o.Name))
+	}
+	var generated []*Field
+	for _, f := range o.Fields {
+		if hybridGeneratedField(f, o.needsGeneratedWalked) {
+			generated = append(generated, f)
+		}
+	}
+	return generated
+}
+
+func hybridGeneratedField(f *Field, needsGenerated map[string]bool) bool {
+	if f.IsResolver {
+		return true
+	}
+	if f.TypeReference == nil || f.TypeReference.Definition == nil {
+		return false
+	}
+	def := f.TypeReference.Definition
+	return def.Kind == ast.InputObject && needsGenerated[def.Name]
+}
+
 func hybridSpecialField(f *Field, needsGenerated map[string]bool) bool {
 	if len(f.ImplDirectives()) > 0 || f.IsResolver {
 		return true
@@ -209,10 +248,45 @@ func (os Objects) resolveHybridSpecialFields() {
 			changed = true
 		}
 	}
+	// Split-packages layout: a hybrid input's own directives and defaults are
+	// applied by the runtime walk, which also recurses into nested hybrid inputs,
+	// so only resolver fields, INPUT_OBJECT directives and nested inputs without a
+	// runtime decoder still force a generated arm. An input without a runtime
+	// decoder keeps the hybrid-agnostic classification: the walk cannot pass
+	// through it, so any enforcement below it needs the generated chain.
+	walked := make(map[string]bool, len(os))
+	for _, in := range os {
+		if !in.HasContextUnmarshal() {
+			walked[in.Name] = needsGenerated[in.Name]
+		}
+	}
+	for changed := true; changed; {
+		changed = false
+		for _, in := range os {
+			if walked[in.Name] || !in.HasContextUnmarshal() || !in.requiresGeneratedWalked(walked) {
+				continue
+			}
+			walked[in.Name] = true
+			changed = true
+		}
+	}
 	for _, in := range os {
 		in.needsGeneratedInput = needsGenerated
+		in.needsGeneratedWalked = walked
 		in.hybridClassified = true
 	}
+}
+
+func (o *Object) requiresGeneratedWalked(walked map[string]bool) bool {
+	if len(o.InputObjectDirectives()) > 0 {
+		return true
+	}
+	for _, f := range o.Fields {
+		if hybridGeneratedField(f, walked) {
+			return true
+		}
+	}
+	return false
 }
 
 func (o *Object) requiresGeneratedUnmarshal(needsGenerated map[string]bool) bool {

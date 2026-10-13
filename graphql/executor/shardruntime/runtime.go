@@ -18,6 +18,9 @@ import (
 // ObjectExecutionContext defines the runtime surface required by generated object shards.
 type ObjectExecutionContext interface {
 	GetOperationContext() *graphql.OperationContext
+	// Schema is the parsed schema the root package executes; ApplyInputDirectives
+	// reads input field directives and defaults from it.
+	Schema() *ast.Schema
 	MarshalCodec(
 		ctx context.Context,
 		funcName string,

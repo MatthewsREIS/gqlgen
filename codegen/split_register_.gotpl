@@ -169,6 +169,9 @@ func init() {
 {{- with $input := index $.InputByName $inputName }}
 	{{- if not $input.HasUnmarshal }}
 	shardruntime.RegisterInputUnmarshaler(splitScope, {{ $input.Name | quote }}, __splitInput_{{ $input.Name }})
+	{{- if $input.HasContextUnmarshal }}
+	shardruntime.RegisterInputDirectivePlan(splitScope, {{ $input.Name | quote }}, []string{ {{- range $input.HybridGeneratedFields }}{{ quote .Name }}, {{ end -}} })
+	{{- end }}
 	{{- end }}
 {{- end }}
 {{- end }}
@@ -208,6 +211,9 @@ func init() {
 {{- with $input := index $.InputByName $inputName }}
 	{{- if not $input.HasUnmarshal }}
 	shardruntime.RegisterInputUnmarshaler(splitScope, {{ $input.Name | quote }}, __splitInput_{{ $input.Name }})
+	{{- if $input.HasContextUnmarshal }}
+	shardruntime.RegisterInputDirectivePlan(splitScope, {{ $input.Name | quote }}, []string{ {{- range $input.HybridGeneratedFields }}{{ quote .Name }}, {{ end -}} })
+	{{- end }}
 	{{- end }}
 {{- end }}
 {{- end }}
