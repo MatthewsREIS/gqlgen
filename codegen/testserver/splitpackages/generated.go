@@ -1376,6 +1376,7 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 func init() {
 	scope := "github.com/99designs/gqlgen/codegen/testserver/splitpackages"
 	_ = scope
+	shardruntime.RegisterRuntimeDirectives(scope, "custom", "directive1", "directive2", "directive3", "directive3WithArg", "fieldOnly", "length", "logged", "mutationOnly", "noop", "order1", "order2", "populate", "queryOnly", "range", "subscriptionOnly", "toNull", "toUpper", "unimplemented")
 	shardruntime.RegisterResolverInvoker(scope, "Mutation", "greet", func(ctx context.Context, oec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 		ec := oec.(*executionContext)
 		fc := graphql.GetFieldContext(ctx)

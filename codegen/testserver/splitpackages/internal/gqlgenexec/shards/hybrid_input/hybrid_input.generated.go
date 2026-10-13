@@ -85,7 +85,7 @@ func __splitInput_HybridInput(ctx context.Context, ec shardruntime.ObjectExecuti
 	if _, present := asMap["withDefault"]; !present {
 		asMap["withDefault"] = "fromDefault"
 	}
-	if err := shardruntime.ApplyInputDirectives(ctx, ec, splitScope, "HybridInput", asMap); err != nil {
+	if err := shardruntime.ApplyInputDirectives(ctx, ec, splitScope, "HybridInput", obj, asMap); err != nil {
 		return it, err
 	}
 

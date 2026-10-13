@@ -67,7 +67,7 @@ func __splitInput_WalkedChild(ctx context.Context, ec shardruntime.ObjectExecuti
 	if _, present := asMap["childDefault"]; !present {
 		asMap["childDefault"] = "childDefault"
 	}
-	if err := shardruntime.ApplyInputDirectives(ctx, ec, splitScope, "WalkedChild", asMap); err != nil {
+	if err := shardruntime.ApplyInputDirectives(ctx, ec, splitScope, "WalkedChild", obj, asMap); err != nil {
 		return it, err
 	}
 
@@ -107,7 +107,7 @@ func __splitInput_WalkedInput(ctx context.Context, ec shardruntime.ObjectExecuti
 	if _, present := asMap["withDefault"]; !present {
 		asMap["withDefault"] = "fromDefault"
 	}
-	if err := shardruntime.ApplyInputDirectives(ctx, ec, splitScope, "WalkedInput", asMap); err != nil {
+	if err := shardruntime.ApplyInputDirectives(ctx, ec, splitScope, "WalkedInput", obj, asMap); err != nil {
 		return it, err
 	}
 

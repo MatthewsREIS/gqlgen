@@ -33,8 +33,15 @@ func describeWalked(in *WalkedInput) string {
 		return "<nil>"
 	}
 	var b strings.Builder
-	fmt.Fprintf(&b, "plain=%q directed=%q default=%q saw=%s child=%s",
-		in.Plain, in.Directed, in.WithDefault, strings.Join(in.SawKeys, ","), describeWalkedChild(in.Child))
+	fmt.Fprintf(
+		&b,
+		"plain=%q directed=%q default=%q saw=%s child=%s",
+		in.Plain,
+		in.Directed,
+		in.WithDefault,
+		strings.Join(in.SawKeys, ","),
+		describeWalkedChild(in.Child),
+	)
 	for _, c := range in.Children {
 		b.WriteString(" list=")
 		b.WriteString(describeWalkedChild(c))
@@ -81,12 +88,14 @@ func TestWalkedInput_DirectivesAndDefaultsApplyAtEveryLevel(t *testing.T) {
 		child: {gated: "g", deeper: {gated: "dd", childDefault: "explicit"}},
 		children: [{gated: "a"}, {gated: "b"}],
 		selfRef: [{plain: "s", directed: "sd", child: {gated: "sg"}}]}) }`, &resp)
-	require.Equal(t,
+	require.Equal(
+		t,
 		`plain="p" directed="D" default="fromDefault" saw=child,children,directed,plain,selfRef,withDefault`+
 			` child={gated="G" default="childDefault" deeper={gated="DD" default="explicit"}}`+
 			` list={gated="A" default="childDefault"} list={gated="B" default="childDefault"}`+
 			` self=(plain="s" directed="SD" default="fromDefault" saw=child,directed,plain,withDefault child={gated="SG" default="childDefault"})`,
-		resp.WalkedInput)
+		resp.WalkedInput,
+	)
 }
 
 // The directive is a gate: a rejection deep in a list must fail the query and
@@ -107,10 +116,26 @@ func TestWalkedInput_NestedRejectionFailsWithPath(t *testing.T) {
 // The point of the walk is the generated code it removes: the unmarshaler for
 // WalkedInput must carry no per-field arm, only the runtime walk.
 func TestWalkedInput_GeneratedUnmarshalerHasNoFieldArms(t *testing.T) {
-	src, err := os.ReadFile(filepath.Join("internal", "gqlgenexec", "shards", "hybrid_walked", "hybrid_walked.generated.go"))
+	src, err := os.ReadFile(
+		filepath.Join(
+			"internal",
+			"gqlgenexec",
+			"shards",
+			"hybrid_walked",
+			"hybrid_walked.generated.go",
+		),
+	)
 	require.NoError(t, err)
-	body := walkedUnmarshalerBody(t, string(src), "__splitInput_WalkedInput")
-	require.Contains(t, body, `shardruntime.ApplyInputDirectives(ctx, ec, splitScope, "WalkedInput", asMap)`)
+	body := walkedUnmarshalerBody(
+		t,
+		strings.ReplaceAll(string(src), "\r\n", "\n"),
+		"__splitInput_WalkedInput",
+	)
+	require.Contains(
+		t,
+		body,
+		`shardruntime.ApplyInputDirectives(ctx, ec, splitScope, "WalkedInput", obj, asMap)`,
+	)
 	require.NotContains(t, body, `case "directed":`)
 	require.NotContains(t, body, `case "child":`)
 	require.NotContains(t, body, `fieldsInOrder`)
@@ -124,4 +149,14 @@ func walkedUnmarshalerBody(t *testing.T, src, fn string) string {
 	end := strings.Index(src[start:], "\n}\n")
 	require.NotEqual(t, -1, end)
 	return src[start : start+end]
+}
+
+// plain carries @codegenOnly, a skip_runtime directive with no implementation.
+// The walk must leave it alone; invoking it would fail every query with
+// "unknown directive".
+func TestWalkedInput_SkipRuntimeDirectiveIsNotInvoked(t *testing.T) {
+	c := newWalkedServer(t)
+	var resp struct{ WalkedInput string }
+	c.MustPost(`{ walkedInput(arg: {plain: "p", directed: "d"}) }`, &resp)
+	require.Contains(t, resp.WalkedInput, `plain="p" directed="D"`)
 }

@@ -27,3 +27,7 @@ models:
     fields:
       resolved:
         resolver: true
+
+directives:
+  codegenOnly:
+    skip_runtime: true
