@@ -8,17 +8,18 @@
 {{- if $input.PointersInUnmarshalInput }}
   {{- $it = "&it" }}
 {{- end }}
-{{- /* Hybrid inputs (Go type has UnmarshalGQLContext): the method decodes every
-       plain field, and only fields the method cannot handle keep a generated
-       case arm — those with INPUT_FIELD_DEFINITION directives, a field resolver,
-       or a type that is an input object needing generated handling itself
-       (transitively: a nested input with a directive, a resolver, a field
-       default or an INPUT_OBJECT directive anywhere below it). See
-       Object.HybridSpecialFields. Mirrors codegen/input.gotpl. */}}
+{{- /* Hybrid inputs (Go type has UnmarshalGQLContext): the schema's field
+       directives and defaults are applied at runtime by
+       shardruntime.ApplyInputDirectives, which recurses into nested hybrid
+       inputs, and the method then decodes every plain field. Only fields the
+       walk cannot handle keep a generated case arm — those backed by a field
+       resolver, and nested inputs the walk cannot reach. See
+       Object.HybridGeneratedFields. The monolithic layout (codegen/input.gotpl)
+       keeps an arm per directive-bearing field instead. */}}
 {{- $hybrid := $input.HasContextUnmarshal }}
 {{- $switchFields := $input.Fields }}
 {{- if $hybrid }}
-{{- $switchFields = $input.HybridSpecialFields }}
+{{- $switchFields = $input.HybridGeneratedFields }}
 {{- end }}
 
 // split_inputs_.gotpl
@@ -65,6 +66,9 @@ func __splitInput_{{ $input.Name }}(ctx context.Context, ec shardruntime.ObjectE
 	{{- end }}
 
 	{{- if $hybrid }}
+	if err := shardruntime.ApplyInputDirectives(ctx, ec, splitScope, {{ $input.Name | quote }}, obj, asMap); err != nil {
+		return {{ $it }}, err
+	}
 	{{- if $switchFields }}
 
 	plain := make(map[string]any, len(asMap))

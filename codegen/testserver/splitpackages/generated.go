@@ -113,6 +113,7 @@ type ComplexityRoot struct {
 		PtrToSliceContainer              func(childComplexity int) int
 		ScalarSlice                      func(childComplexity int) int
 		Slices                           func(childComplexity int) int
+		WalkedInput                      func(childComplexity int, arg model.WalkedInput) int
 	}
 
 	Slices struct {
@@ -154,6 +155,7 @@ type QueryResolver interface {
 	GoodbyeFromExtras(ctx context.Context, name string) (string, error)
 	HybridInput(ctx context.Context, arg model.HybridInput) (string, error)
 	HybridInputNullable(ctx context.Context, arg *model.HybridInput) (string, error)
+	WalkedInput(ctx context.Context, arg model.WalkedInput) (string, error)
 	Slices(ctx context.Context) (*model.Slices, error)
 	ScalarSlice(ctx context.Context) ([]byte, error)
 	PtrToSliceContainer(ctx context.Context) (*model.PtrToSliceContainer, error)
@@ -613,6 +615,22 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.Slices(childComplexity), true
+
+	case "Query.walkedInput":
+		if e.complexity.Query.WalkedInput == nil {
+			break
+		}
+
+		argsHandler, ok := shardruntime.LookupArgs("github.com/99designs/gqlgen/codegen/testserver/splitpackages", "field_Query_walkedInput_args")
+		if !ok {
+			return 0, false
+		}
+		args, err := argsHandler(ctx, &ec, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.WalkedInput(childComplexity, args["arg"].(model.WalkedInput)), true
 
 	case "Slices.test1":
 		if e.complexity.Slices.Test1 == nil {
@@ -1358,6 +1376,7 @@ func (ec *executionContext) ___Type(ctx context.Context, sel ast.SelectionSet, o
 func init() {
 	scope := "github.com/99designs/gqlgen/codegen/testserver/splitpackages"
 	_ = scope
+	shardruntime.RegisterRuntimeDirectives(scope, "custom", "directive1", "directive2", "directive3", "directive3WithArg", "fieldOnly", "length", "logged", "mutationOnly", "noop", "order1", "order2", "populate", "queryOnly", "range", "subscriptionOnly", "toNull", "toUpper", "unimplemented")
 	shardruntime.RegisterResolverInvoker(scope, "Mutation", "greet", func(ctx context.Context, oec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 		ec := oec.(*executionContext)
 		fc := graphql.GetFieldContext(ctx)
@@ -1484,6 +1503,12 @@ func init() {
 		_ = fc
 		return ec.resolvers.Query().HybridInputNullable(ctx, fc.Args["arg"].(*model.HybridInput))
 	})
+	shardruntime.RegisterResolverInvoker(scope, "Query", "walkedInput", func(ctx context.Context, oec shardruntime.ObjectExecutionContext, obj any) (any, error) {
+		ec := oec.(*executionContext)
+		fc := graphql.GetFieldContext(ctx)
+		_ = fc
+		return ec.resolvers.Query().WalkedInput(ctx, fc.Args["arg"].(model.WalkedInput))
+	})
 	shardruntime.RegisterResolverInvoker(scope, "Query", "slices", func(ctx context.Context, oec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 		ec := oec.(*executionContext)
 		fc := graphql.GetFieldContext(ctx)
@@ -1578,7 +1603,7 @@ func init() {
 	})
 }
 
-//go:embed "directive.graphql" "extras.graphql" "hybrid_input.graphql" "lists.graphql" "nullable_root.graphql" "omittable_input.graphql" "schema.graphql"
+//go:embed "directive.graphql" "extras.graphql" "hybrid_input.graphql" "hybrid_walked.graphql" "lists.graphql" "nullable_root.graphql" "omittable_input.graphql" "schema.graphql"
 var sourcesFS embed.FS
 
 func sourceData(filename string) string {
@@ -1593,6 +1618,7 @@ var sources = []*ast.Source{
 	{Name: "directive.graphql", Input: sourceData("directive.graphql"), BuiltIn: false},
 	{Name: "extras.graphql", Input: sourceData("extras.graphql"), BuiltIn: false},
 	{Name: "hybrid_input.graphql", Input: sourceData("hybrid_input.graphql"), BuiltIn: false},
+	{Name: "hybrid_walked.graphql", Input: sourceData("hybrid_walked.graphql"), BuiltIn: false},
 	{Name: "lists.graphql", Input: sourceData("lists.graphql"), BuiltIn: false},
 	{Name: "nullable_root.graphql", Input: sourceData("nullable_root.graphql"), BuiltIn: false},
 	{Name: "omittable_input.graphql", Input: sourceData("omittable_input.graphql"), BuiltIn: false},

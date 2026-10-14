@@ -1242,7 +1242,10 @@ func TestArgsRegistry(t *testing.T) {
 type fakeEC struct {
 	fieldContextHandlers map[string]FieldContextHandler
 	invokeDirective      func(ctx context.Context, name string, obj any, next graphql.Resolver, args map[string]any) (any, error)
+	schema               *ast.Schema
 }
+
+func (f *fakeEC) Schema() *ast.Schema { return f.schema }
 
 // fakeECWithOpCtx embeds fakeEC and overrides GetOperationContext to return a
 // non-nil OperationContext with empty Variables, satisfying the args path in

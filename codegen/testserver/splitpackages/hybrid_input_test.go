@@ -16,8 +16,9 @@ import (
 )
 
 // HybridInput's Go type has UnmarshalGQLContext, so gqlgen generates a hybrid
-// unmarshaler: the method decodes the plain and defaulted fields, generated code
-// still runs the @toUpper field directive and the `resolved` field resolver.
+// unmarshaler: the @toUpper field directive runs from the schema at runtime
+// before the method decodes the plain, defaulted and directed fields, and
+// generated code still runs the `resolved` field resolver.
 func TestHybridInputUnmarshaler(t *testing.T) {
 	describe := func(in *HybridInput) string {
 		if in == nil {
@@ -55,7 +56,7 @@ func TestHybridInputUnmarshaler(t *testing.T) {
 	c := client.New(srv)
 
 	t.Run(
-		"method decodes plain fields, directive and resolver fields are withheld from it",
+		"method decodes plain and directed fields, resolver fields are withheld from it",
 		func(t *testing.T) {
 			var resp struct{ HybridInput string }
 			c.MustPost(
@@ -64,7 +65,7 @@ func TestHybridInputUnmarshaler(t *testing.T) {
 			)
 			require.Equal(
 				t,
-				`plain="p" default="explicit" directed="UP" resolved="resolver(r)" saw=plain,withDefault`,
+				`plain="p" default="explicit" directed="UP" resolved="resolver(r)" saw=directed,plain,withDefault`,
 				resp.HybridInput,
 			)
 		},
@@ -75,7 +76,7 @@ func TestHybridInputUnmarshaler(t *testing.T) {
 		c.MustPost(`{ hybridInput(arg: {plain: "p", directed: "up", resolved: "r"}) }`, &resp)
 		require.Equal(
 			t,
-			`plain="p" default="fromDefault" directed="UP" resolved="resolver(r)" saw=plain,withDefault`,
+			`plain="p" default="fromDefault" directed="UP" resolved="resolver(r)" saw=directed,plain,withDefault`,
 			resp.HybridInput,
 		)
 	})
@@ -181,7 +182,7 @@ func TestHybridInputNestedKeepsDirectivesAndResolvers(t *testing.T) {
 			nested: {gated: "g", resolved: "n"}}) }`, &resp)
 		require.Equal(
 			t,
-			`directed="D" resolved="resolver(r)" saw=plain,withDefault nested={gated="G" resolved="nestedResolver(n)"}`,
+			`directed="D" resolved="resolver(r)" saw=directed,plain,withDefault nested={gated="G" resolved="nestedResolver(n)"}`,
 			resp.HybridInput,
 		)
 	})
@@ -191,7 +192,7 @@ func TestHybridInputNestedKeepsDirectivesAndResolvers(t *testing.T) {
 		c.MustPost(`{ hybridInput(arg: {plain: "p", directed: "d", resolved: "r",
 			nestedList: [{gated: "a", resolved: "n1"}, {gated: "b", resolved: "n2"}]}) }`, &resp)
 		require.Equal(t,
-			`directed="D" resolved="resolver(r)" saw=plain,withDefault nested=<nil>`+
+			`directed="D" resolved="resolver(r)" saw=directed,plain,withDefault nested=<nil>`+
 				` list={gated="A" resolved="nestedResolver(n1)"} list={gated="B" resolved="nestedResolver(n2)"}`,
 			resp.HybridInput)
 	})
@@ -201,7 +202,7 @@ func TestHybridInputNestedKeepsDirectivesAndResolvers(t *testing.T) {
 		c.MustPost(`{ hybridInput(arg: {plain: "p", directed: "d", resolved: "r",
 			nested: {gated: "g", resolved: "n", deeper: {gated: "dd", resolved: "nn"}}}) }`, &resp)
 		require.Equal(t,
-			`directed="D" resolved="resolver(r)" saw=plain,withDefault`+
+			`directed="D" resolved="resolver(r)" saw=directed,plain,withDefault`+
 				` nested={gated="G" resolved="nestedResolver(n)" deeper={gated="DD" resolved="nestedResolver(nn)"}}`,
 			resp.HybridInput)
 	})
@@ -221,8 +222,8 @@ func TestHybridInputNestedKeepsDirectivesAndResolvers(t *testing.T) {
 			c.MustPost(`{ hybridInput(arg: {plain: "p", directed: "d", resolved: "r",
 			selfRef: [{plain: "s", directed: "sd", resolved: "sr", nested: {gated: "sg", resolved: "sn"}}]}) }`, &resp)
 			require.Equal(t,
-				`directed="D" resolved="resolver(r)" saw=plain,withDefault nested=<nil>`+
-					` self=(directed="SD" resolved="resolver(sr)" saw=plain,withDefault nested={gated="SG" resolved="nestedResolver(sn)"})`,
+				`directed="D" resolved="resolver(r)" saw=directed,plain,withDefault nested=<nil>`+
+					` self=(directed="SD" resolved="resolver(sr)" saw=directed,plain,withDefault nested={gated="SG" resolved="nestedResolver(sn)"})`,
 				resp.HybridInput)
 		},
 	)

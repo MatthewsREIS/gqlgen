@@ -614,6 +614,8 @@ func (ec *executionContext) _{{$object.Name}}(ctx context.Context, sel ast.Selec
 func init() {
 	scope := {{ $.Scope | quote }}
 	_ = scope
+	{{- /* The set ApplyInputDirectives may dispatch: exactly the InvokeDirective cases above. */}}
+	shardruntime.RegisterRuntimeDirectives(scope{{ range $directive := .Directives }}, {{ $directive.Name | quote }}{{ end }})
 {{- range $object := .Objects }}
 {{- range $field := $object.Fields }}
 {{- if $field.IsResolver }}

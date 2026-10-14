@@ -85,11 +85,14 @@ func __splitInput_HybridInput(ctx context.Context, ec shardruntime.ObjectExecuti
 	if _, present := asMap["withDefault"]; !present {
 		asMap["withDefault"] = "fromDefault"
 	}
+	if err := shardruntime.ApplyInputDirectives(ctx, ec, splitScope, "HybridInput", obj, asMap); err != nil {
+		return it, err
+	}
 
 	plain := make(map[string]any, len(asMap))
 	for k, v := range asMap {
 		switch k {
-		case "directed", "resolved", "nested", "nestedList", "selfRef":
+		case "resolved", "nested", "nestedList", "selfRef":
 		default:
 			plain[k] = v
 		}
@@ -98,31 +101,13 @@ func __splitInput_HybridInput(ctx context.Context, ec shardruntime.ObjectExecuti
 		return it, err
 	}
 
-	fieldsInOrder := [...]string{"directed", "resolved", "nested", "nestedList", "selfRef"}
+	fieldsInOrder := [...]string{"resolved", "nested", "nestedList", "selfRef"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "directed":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("directed"))
-			directive0 := func(ctx context.Context) (any, error) {
-				return ec.UnmarshalCodec(ctx, "unmarshalNString2string", v)
-			}
-			directive1 := func(ctx context.Context) (any, error) {
-				return ec.InvokeDirective(ctx, "toUpper", obj, directive0, nil)
-			}
-			tmp, err := directive1(ctx)
-			if err != nil {
-				return it, graphql.ErrorOnPath(ctx, err)
-			}
-			if data, ok := tmp.(string); ok {
-				it.Directed = data
-			} else {
-				err := fmt.Errorf(`unexpected type %T from directive, should be string`, tmp)
-				return it, graphql.ErrorOnPath(ctx, err)
-			}
 		case "resolved":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resolved"))
 			data, err := ec.UnmarshalCodec(ctx, "unmarshalNString2string", v)

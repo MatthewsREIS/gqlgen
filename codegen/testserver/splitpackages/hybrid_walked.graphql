@@ -1,0 +1,34 @@
+"""
+WalkedInput is bound to a Go type that decodes itself with UnmarshalGQLContext,
+and nothing below it has a field resolver. Its hybrid unmarshaler therefore
+hands every field to the method and applies the INPUT_FIELD_DEFINITION
+directives and defaults from the schema at runtime, at every nesting level,
+instead of generating a case arm per directive-bearing field.
+"""
+# codegenOnly is a skip_runtime directive (see gqlgen.yml): it exists for
+# codegen and has no implementation, so the runtime walk must not invoke it.
+directive @codegenOnly on INPUT_FIELD_DEFINITION
+
+input WalkedInput {
+	plain: String! @codegenOnly
+	directed: String! @toUpper
+	withDefault: String! = "fromDefault"
+	child: WalkedChild
+	children: [WalkedChild!]
+	selfRef: [WalkedInput!]
+}
+
+"""
+WalkedChild also decodes itself. It is reached only through fields that carry no
+directive of their own, so its @toUpper and its default must come from the
+runtime walk, not from a generated arm.
+"""
+input WalkedChild {
+	gated: String! @toUpper
+	childDefault: String! = "childDefault"
+	deeper: WalkedChild
+}
+
+extend type Query {
+	walkedInput(arg: WalkedInput!): String!
+}

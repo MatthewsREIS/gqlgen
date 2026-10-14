@@ -46,6 +46,7 @@ func init() {
 	shardruntime.RegisterArgs(splitScope, "field_Query_hybridInputNullable_args", __splitArgs_field_Query_hybridInputNullable_args)
 	shardruntime.RegisterArgs(splitScope, "field_Query_hybridInput_args", __splitArgs_field_Query_hybridInput_args)
 	shardruntime.RegisterInputUnmarshaler(splitScope, "HybridInput", __splitInput_HybridInput)
+	shardruntime.RegisterInputDirectivePlan(splitScope, "HybridInput", []string{"resolved", "nested", "nestedList", "selfRef"})
 	shardruntime.RegisterInputUnmarshaler(splitScope, "HybridNested", __splitInput_HybridNested)
 	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalNHybridInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐHybridInput", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
 		return unmarshalNHybridInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐHybridInput(ctx, ec, value)

@@ -17,4 +17,6 @@ type (
 	PtrToSliceContainer               = model.PtrToSliceContainer
 	ListFieldInput                    = model.ListFieldInput
 	OmittableInput                    = model.OmittableInput
+	WalkedInput                       = model.WalkedInput
+	WalkedChild                       = model.WalkedChild
 )
