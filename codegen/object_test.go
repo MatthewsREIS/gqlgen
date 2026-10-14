@@ -248,3 +248,93 @@ func TestHybridSpecialFieldsPanicsWhenUnclassified(t *testing.T) {
 	// A non-hybrid input never consults the classification, so it is unaffected.
 	assert.NotPanics(t, func() { mkInput("Plain", mkField("a")).HybridSpecialFields() })
 }
+
+// mkHybridInput builds an input Object whose Go type has UnmarshalGQLContext.
+func mkHybridInput(t *testing.T, name string, fields ...*Field) *Object {
+	t.Helper()
+	obj := mkInputObject(t, "UnmarshalGQLContext")
+	obj.Name = name
+	obj.Fields = fields
+	for _, f := range fields {
+		f.Object = obj
+	}
+	return obj
+}
+
+func fieldNames(fields []*Field) []string {
+	var names []string
+	for _, f := range fields {
+		names = append(names, f.Name)
+	}
+	return names
+}
+
+// Split-packages layout: a resolver-backed field is the runtime's, never an
+// arm. A nested hybrid input is a runtime descent when something below it needs
+// a resolver and it has no arm; one that keeps an arm (it reaches a plain input
+// with enforcement) runs its own resolvers inside that arm and is not descended.
+func TestHybridResolverFieldsFollowTheArmlessPath(t *testing.T) {
+	resolverField := func(name string) *Field {
+		f := mkField(name)
+		f.IsResolver = true
+		return f
+	}
+	leaf := mkHybridInput(
+		t,
+		"Leaf",
+		mkField("plain"),
+		resolverField("ownedBy"),
+		mkInputField("not", "Leaf"),
+	)
+	parent := mkHybridInput(t, "Parent", mkField("plain"), mkInputField("and", "Leaf"))
+	quiet := mkHybridInput(t, "Quiet", mkField("plain"), mkInputField("and", "Quiet"))
+	gated := mkInput("Gated", withDirective(mkField("secret")))
+	teams := mkInputField("teams", "Gated")
+	teams.IsResolver = true
+	walker := mkHybridInput(t, "Walker",
+		resolverField("ownedBy"),
+		mkInputField("nested", "Gated"),
+		mkInputField("self", "Walker"),
+		teams,
+	)
+	carrier := mkHybridInput(
+		t,
+		"Carrier",
+		mkInputField("w", "Walker"),
+		mkInputField("leaf", "Leaf"),
+	)
+
+	Objects{leaf, parent, quiet, gated, walker, carrier}.resolveHybridSpecialFields()
+
+	assert.Equal(t, []string{"ownedBy", "not"}, fieldNames(leaf.HybridResolverFields()))
+	assert.Nil(t, leaf.HybridGeneratedFields())
+	assert.Equal(
+		t,
+		[]string{"and"},
+		fieldNames(parent.HybridResolverFields()),
+		"transitive through and",
+	)
+	assert.Nil(t, parent.HybridGeneratedFields())
+	assert.Nil(
+		t,
+		quiet.HybridResolverFields(),
+		"a cycle with no resolver below terminates and needs nothing",
+	)
+	assert.Nil(t, quiet.HybridGeneratedFields())
+	assert.Equal(t, []string{"nested", "self", "teams"}, fieldNames(walker.HybridGeneratedFields()),
+		"a plain input with enforcement, and the walked self reference, keep their arms")
+	assert.Equal(t, []string{"ownedBy"}, fieldNames(walker.HybridResolverFields()),
+		"fields with an arm are not planned")
+	assert.Equal(t, []string{"w"}, fieldNames(carrier.HybridGeneratedFields()))
+	assert.Equal(t, []string{"leaf"}, fieldNames(carrier.HybridResolverFields()))
+}
+
+func TestHybridResolverFieldsPanicsWhenUnclassified(t *testing.T) {
+	hybrid := mkInputObject(t, "UnmarshalGQLContext")
+	assert.PanicsWithError(t,
+		"input In: HybridResolverFields called before Objects.resolveHybridSpecialFields; "+
+			"the nested-input classification would fail open and skip nested resolvers",
+		func() { hybrid.HybridResolverFields() })
+	Objects{hybrid}.resolveHybridSpecialFields()
+	assert.Nil(t, hybrid.HybridResolverFields())
+}

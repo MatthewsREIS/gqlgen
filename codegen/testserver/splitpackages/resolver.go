@@ -115,6 +115,11 @@ func (r *queryResolver) HybridInputNullable(ctx context.Context, arg *model.Hybr
 	panic("not implemented")
 }
 
+// ResolvedWhere is the resolver for the resolvedWhere field.
+func (r *queryResolver) ResolvedWhere(ctx context.Context, arg model.ResolvedWhereInput) (string, error) {
+	panic("not implemented")
+}
+
 // WalkedInput is the resolver for the walkedInput field.
 func (r *queryResolver) WalkedInput(ctx context.Context, arg model.WalkedInput) (string, error) {
 	panic("not implemented")

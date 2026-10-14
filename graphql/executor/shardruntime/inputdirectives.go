@@ -12,8 +12,8 @@ import (
 )
 
 // inputDirectivePlan lists the fields of a hybrid input that its generated
-// unmarshaler still decodes itself (field resolvers, and nested inputs that
-// have no runtime decoder). ApplyInputDirectives leaves those to their arm.
+// unmarshaler still decodes itself (nested inputs the runtime cannot reach).
+// ApplyInputDirectives leaves those to their arm.
 type inputDirectivePlan struct {
 	generated map[string]bool
 }
@@ -143,7 +143,10 @@ func ApplyInputDirectives(
 			v = dv
 		}
 		fctx := graphql.WithPathContext(ctx, graphql.NewPathWithField(f.Name))
-		res, err := applyFieldDirectives(fctx, ec, scope, schema, f, obj, v)
+		// A resolver-backed field is decoded by its codec in ApplyInputFieldResolvers,
+		// which runs the nested input's own directives, so the walk stops at the field.
+		descend := !isResolverOwnedField(scope, inputName, f.Name)
+		res, err := applyFieldDirectives(fctx, ec, scope, schema, f, obj, v, descend)
 		if err != nil {
 			return graphql.ErrorOnPath(fctx, err)
 		}
@@ -162,8 +165,12 @@ func applyFieldDirectives(
 	f *ast.FieldDefinition,
 	obj any,
 	v any,
+	descend bool,
 ) (any, error) {
 	next := graphql.Resolver(func(ctx context.Context) (any, error) {
+		if !descend {
+			return v, nil
+		}
 		if err := walkNested(ctx, ec, scope, schema, f.Type, v); err != nil {
 			return nil, err
 		}

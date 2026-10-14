@@ -44,10 +44,14 @@ type Object struct {
 	needsGeneratedInput map[string]bool
 	// needsGeneratedWalked is the same classification for split-packages
 	// layout, where shardruntime.ApplyInputDirectives applies a hybrid input's
-	// field directives and defaults at runtime: only resolver fields and nested
-	// inputs the walk cannot reach keep a generated arm.
+	// field directives and defaults at runtime: only nested inputs the walk
+	// cannot reach keep a generated arm.
 	needsGeneratedWalked map[string]bool
-	hybridClassified     bool
+	// needsRuntimeResolvers marks the hybrid inputs of split-packages layout with
+	// a resolver-backed field at or below them that no generated arm runs, so
+	// shardruntime.ApplyInputFieldResolvers has work there.
+	needsRuntimeResolvers map[string]bool
+	hybridClassified      bool
 }
 
 func (b *builder) buildObject(typ *ast.Definition) (*Object, error) {
@@ -177,12 +181,10 @@ func (o *Object) HybridSpecialFields() []*Field {
 }
 
 // HybridGeneratedFields returns the fields a hybrid unmarshaler in
-// split-packages layout still decodes with a generated arm, after
-// shardruntime.ApplyInputDirectives has applied the schema's field directives
-// and defaults at runtime: fields backed by a field resolver, and nested inputs
-// the runtime walk cannot reach — an input without a runtime decoder that
-// carries enforcement anywhere below it, or a hybrid input that itself needs an
-// arm (a resolver field or an INPUT_OBJECT directive, transitively).
+// split-packages layout still decodes with a generated arm: nested inputs the
+// runtime cannot reach — an input without a runtime decoder that carries
+// enforcement anywhere below it, or a hybrid input that itself needs an arm (an
+// INPUT_OBJECT directive, transitively). See HybridResolverFields for the rest.
 func (o *Object) HybridGeneratedFields() []*Field {
 	if !o.hybridClassified && o.HasContextUnmarshal() {
 		panic(fmt.Errorf(
@@ -200,27 +202,56 @@ func (o *Object) HybridGeneratedFields() []*Field {
 }
 
 func hybridGeneratedField(f *Field, needsGenerated map[string]bool) bool {
-	if f.IsResolver {
-		return true
+	def, ok := nestedInput(f)
+	return ok && needsGenerated[def.Name]
+}
+
+// HybridResolverFields returns, in schema order, the fields of a hybrid input in
+// split-packages layout that shardruntime.ApplyInputFieldResolvers handles once
+// UnmarshalGQLContext has decoded the input: the resolver-backed fields, and the
+// nested hybrid inputs with a resolver-backed field at or below them that have
+// no generated arm of their own to run it.
+func (o *Object) HybridResolverFields() []*Field {
+	if !o.hybridClassified && o.HasContextUnmarshal() {
+		panic(fmt.Errorf(
+			"input %s: HybridResolverFields called before Objects.resolveHybridSpecialFields; "+
+				"the nested-input classification would fail open and skip nested resolvers",
+			o.Name))
 	}
-	if f.TypeReference == nil || f.TypeReference.Definition == nil {
+	var fields []*Field
+	for _, f := range o.Fields {
+		if hybridResolverField(f, o.needsRuntimeResolvers, o.needsGeneratedWalked) {
+			fields = append(fields, f)
+		}
+	}
+	return fields
+}
+
+// A field that keeps a generated arm runs its own resolver inside that arm.
+func hybridResolverField(f *Field, resolvers, walked map[string]bool) bool {
+	def, ok := nestedInput(f)
+	if ok && walked[def.Name] {
 		return false
 	}
+	return f.IsResolver || (ok && resolvers[def.Name])
+}
+
+// nestedInput is the input object behind a field's type, past any list and
+// non-null wrapping, so [X!]! and X classify alike.
+func nestedInput(f *Field) (*ast.Definition, bool) {
+	if f.TypeReference == nil || f.TypeReference.Definition == nil {
+		return nil, false
+	}
 	def := f.TypeReference.Definition
-	return def.Kind == ast.InputObject && needsGenerated[def.Name]
+	return def, def.Kind == ast.InputObject
 }
 
 func hybridSpecialField(f *Field, needsGenerated map[string]bool) bool {
 	if len(f.ImplDirectives()) > 0 || f.IsResolver {
 		return true
 	}
-	// TypeReference.Definition is the named type behind any list/non-null
-	// wrapping, so [X!]! and X classify alike.
-	if f.TypeReference == nil || f.TypeReference.Definition == nil {
-		return false
-	}
-	def := f.TypeReference.Definition
-	return def.Kind == ast.InputObject && needsGenerated[def.Name]
+	def, ok := nestedInput(f)
+	return ok && needsGenerated[def.Name]
 }
 
 // resolveHybridSpecialFields classifies the input graph for the hybrid
@@ -248,12 +279,10 @@ func (os Objects) resolveHybridSpecialFields() {
 			changed = true
 		}
 	}
-	// Split-packages layout: a hybrid input's own directives and defaults are
-	// applied by the runtime walk, which also recurses into nested hybrid inputs,
-	// so only resolver fields, INPUT_OBJECT directives and nested inputs without a
-	// runtime decoder still force a generated arm. An input without a runtime
-	// decoder keeps the hybrid-agnostic classification: the walk cannot pass
-	// through it, so any enforcement below it needs the generated chain.
+	// Split-packages: directives, defaults and resolvers run at runtime, so only
+	// INPUT_OBJECT directives and nested inputs without a runtime decoder force
+	// an arm; a non-hybrid input keeps the hybrid-agnostic result because the
+	// walk cannot pass through it.
 	walked := make(map[string]bool, len(os))
 	for _, in := range os {
 		if !in.HasContextUnmarshal() {
@@ -270,11 +299,33 @@ func (os Objects) resolveHybridSpecialFields() {
 			changed = true
 		}
 	}
+	resolvers := make(map[string]bool, len(os))
+	for changed := true; changed; {
+		changed = false
+		for _, in := range os {
+			if resolvers[in.Name] || !in.HasContextUnmarshal() ||
+				!in.requiresRuntimeResolvers(resolvers, walked) {
+				continue
+			}
+			resolvers[in.Name] = true
+			changed = true
+		}
+	}
 	for _, in := range os {
 		in.needsGeneratedInput = needsGenerated
 		in.needsGeneratedWalked = walked
+		in.needsRuntimeResolvers = resolvers
 		in.hybridClassified = true
 	}
+}
+
+func (o *Object) requiresRuntimeResolvers(resolvers, walked map[string]bool) bool {
+	for _, f := range o.Fields {
+		if hybridResolverField(f, resolvers, walked) {
+			return true
+		}
+	}
+	return false
 }
 
 func (o *Object) requiresGeneratedWalked(walked map[string]bool) bool {

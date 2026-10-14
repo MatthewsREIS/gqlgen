@@ -33,6 +33,7 @@ type Stub struct {
 		GoodbyeFromExtras                func(ctx context.Context, name string) (string, error)
 		HybridInput                      func(ctx context.Context, arg model.HybridInput) (string, error)
 		HybridInputNullable              func(ctx context.Context, arg *model.HybridInput) (string, error)
+		ResolvedWhere                    func(ctx context.Context, arg model.ResolvedWhereInput) (string, error)
 		WalkedInput                      func(ctx context.Context, arg model.WalkedInput) (string, error)
 		Slices                           func(ctx context.Context) (*model.Slices, error)
 		ScalarSlice                      func(ctx context.Context) ([]byte, error)
@@ -51,10 +52,18 @@ type Stub struct {
 	}
 
 	HybridInputResolver struct {
-		Resolved func(ctx context.Context, obj *model.HybridInput, data string) error
+		Resolved       func(ctx context.Context, obj *model.HybridInput, data string) error
+		ResolvedNested func(ctx context.Context, obj *model.HybridInput, data []*model.HybridNested) error
 	}
 	HybridNestedResolver struct {
 		Resolved func(ctx context.Context, obj *model.HybridNested, data string) error
+	}
+	ResolvedChildWhereInputResolver struct {
+		OwnedBy func(ctx context.Context, obj *model.ResolvedChildWhereInput, data *string) error
+	}
+	ResolvedWhereInputResolver struct {
+		OwnedBy func(ctx context.Context, obj *model.ResolvedWhereInput, data *string) error
+		Owner   func(ctx context.Context, obj *model.ResolvedWhereInput, data *model.ResolvedOwnerInput) error
 	}
 }
 
@@ -73,6 +82,12 @@ func (r *Stub) HybridInput() HybridInputResolver {
 }
 func (r *Stub) HybridNested() HybridNestedResolver {
 	return &stubHybridNested{r}
+}
+func (r *Stub) ResolvedChildWhereInput() ResolvedChildWhereInputResolver {
+	return &stubResolvedChildWhereInput{r}
+}
+func (r *Stub) ResolvedWhereInput() ResolvedWhereInputResolver {
+	return &stubResolvedWhereInput{r}
 }
 
 type stubMutation struct{ *Stub }
@@ -143,6 +158,9 @@ func (r *stubQuery) HybridInput(ctx context.Context, arg model.HybridInput) (str
 func (r *stubQuery) HybridInputNullable(ctx context.Context, arg *model.HybridInput) (string, error) {
 	return r.QueryResolver.HybridInputNullable(ctx, arg)
 }
+func (r *stubQuery) ResolvedWhere(ctx context.Context, arg model.ResolvedWhereInput) (string, error) {
+	return r.QueryResolver.ResolvedWhere(ctx, arg)
+}
 func (r *stubQuery) WalkedInput(ctx context.Context, arg model.WalkedInput) (string, error) {
 	return r.QueryResolver.WalkedInput(ctx, arg)
 }
@@ -191,9 +209,27 @@ type stubHybridInput struct{ *Stub }
 func (r *stubHybridInput) Resolved(ctx context.Context, obj *model.HybridInput, data string) error {
 	return r.HybridInputResolver.Resolved(ctx, obj, data)
 }
+func (r *stubHybridInput) ResolvedNested(ctx context.Context, obj *model.HybridInput, data []*model.HybridNested) error {
+	return r.HybridInputResolver.ResolvedNested(ctx, obj, data)
+}
 
 type stubHybridNested struct{ *Stub }
 
 func (r *stubHybridNested) Resolved(ctx context.Context, obj *model.HybridNested, data string) error {
 	return r.HybridNestedResolver.Resolved(ctx, obj, data)
+}
+
+type stubResolvedChildWhereInput struct{ *Stub }
+
+func (r *stubResolvedChildWhereInput) OwnedBy(ctx context.Context, obj *model.ResolvedChildWhereInput, data *string) error {
+	return r.ResolvedChildWhereInputResolver.OwnedBy(ctx, obj, data)
+}
+
+type stubResolvedWhereInput struct{ *Stub }
+
+func (r *stubResolvedWhereInput) OwnedBy(ctx context.Context, obj *model.ResolvedWhereInput, data *string) error {
+	return r.ResolvedWhereInputResolver.OwnedBy(ctx, obj, data)
+}
+func (r *stubResolvedWhereInput) Owner(ctx context.Context, obj *model.ResolvedWhereInput, data *model.ResolvedOwnerInput) error {
+	return r.ResolvedWhereInputResolver.Owner(ctx, obj, data)
 }

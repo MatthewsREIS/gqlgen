@@ -19,4 +19,7 @@ type (
 	OmittableInput                    = model.OmittableInput
 	WalkedInput                       = model.WalkedInput
 	WalkedChild                       = model.WalkedChild
+	ResolvedWhereInput                = model.ResolvedWhereInput
+	ResolvedChildWhereInput           = model.ResolvedChildWhereInput
+	ResolvedOwnerInput                = model.ResolvedOwnerInput
 )

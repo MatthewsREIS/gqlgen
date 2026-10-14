@@ -1,0 +1,35 @@
+"""
+ResolvedWhereInput is shaped like an entgql where input: its Go type decodes
+itself with UnmarshalGQLContext and `ownedBy` is backed by a field resolver that
+must run at every nesting level the method decoded, with no generated arm.
+"""
+input ResolvedWhereInput {
+	name: String
+	ownedBy: String @toUpper
+	owner: ResolvedOwnerInput
+	not: ResolvedWhereInput
+	and: [ResolvedWhereInput!]
+	hasChildWith: [ResolvedChildWhereInput!]
+}
+
+"""
+ResolvedOwnerInput decodes itself and is reached only through the resolver-backed
+`owner`, whose codec runs its @toUpper; the directive walk must not run it again.
+"""
+input ResolvedOwnerInput {
+	name: String! @toUpper
+}
+
+"""
+ResolvedChildWhereInput is reached only through hasChildWith; its own `ownedBy`
+resolver must still run there.
+"""
+input ResolvedChildWhereInput {
+	label: String
+	ownedBy: String
+	not: ResolvedChildWhereInput
+}
+
+extend type Query {
+	resolvedWhere(arg: ResolvedWhereInput!): String!
+}

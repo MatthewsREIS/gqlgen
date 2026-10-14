@@ -135,6 +135,10 @@ func TestHybridInputNestedKeepsDirectivesAndResolvers(t *testing.T) {
 			b.WriteString(" list=")
 			b.WriteString(describeNested(n))
 		}
+		for _, n := range in.ResolvedNested {
+			b.WriteString(" resolvedNested=")
+			b.WriteString(describeNested(n))
+		}
 		for _, c := range in.SelfRef {
 			b.WriteString(" self=(")
 			b.WriteString(describe(c))
@@ -153,6 +157,10 @@ func TestHybridInputNestedKeepsDirectivesAndResolvers(t *testing.T) {
 	}
 	resolvers.HybridNestedResolver.Resolved = func(ctx context.Context, obj *HybridNested, data string) error {
 		obj.Resolved = "nestedResolver(" + data + ")"
+		return nil
+	}
+	resolvers.HybridInputResolver.ResolvedNested = func(ctx context.Context, obj *HybridInput, data []*HybridNested) error {
+		obj.ResolvedNested = append(obj.ResolvedNested, data...)
 		return nil
 	}
 
@@ -191,10 +199,12 @@ func TestHybridInputNestedKeepsDirectivesAndResolvers(t *testing.T) {
 		var resp struct{ HybridInput string }
 		c.MustPost(`{ hybridInput(arg: {plain: "p", directed: "d", resolved: "r",
 			nestedList: [{gated: "a", resolved: "n1"}, {gated: "b", resolved: "n2"}]}) }`, &resp)
-		require.Equal(t,
+		require.Equal(
+			t,
 			`directed="D" resolved="resolver(r)" saw=directed,plain,withDefault nested=<nil>`+
 				` list={gated="A" resolved="nestedResolver(n1)"} list={gated="B" resolved="nestedResolver(n2)"}`,
-			resp.HybridInput)
+			resp.HybridInput,
+		)
 	})
 
 	t.Run("one level deeper keeps its directive and resolver", func(t *testing.T) {
@@ -221,10 +231,27 @@ func TestHybridInputNestedKeepsDirectivesAndResolvers(t *testing.T) {
 			var resp struct{ HybridInput string }
 			c.MustPost(`{ hybridInput(arg: {plain: "p", directed: "d", resolved: "r",
 			selfRef: [{plain: "s", directed: "sd", resolved: "sr", nested: {gated: "sg", resolved: "sn"}}]}) }`, &resp)
-			require.Equal(t,
+			require.Equal(
+				t,
 				`directed="D" resolved="resolver(r)" saw=directed,plain,withDefault nested=<nil>`+
 					` self=(directed="SD" resolved="resolver(sr)" saw=directed,plain,withDefault nested={gated="SG" resolved="nestedResolver(sn)"})`,
-				resp.HybridInput)
+				resp.HybridInput,
+			)
+		},
+	)
+
+	t.Run(
+		"a resolver-backed nested list runs its resolver once, after nested enforcement",
+		func(t *testing.T) {
+			var resp struct{ HybridInput string }
+			c.MustPost(`{ hybridInput(arg: {plain: "p", directed: "d", resolved: "r",
+			resolvedNested: [{gated: "x", resolved: "n1"}]}) }`, &resp)
+			require.Equal(
+				t,
+				`directed="D" resolved="resolver(r)" saw=directed,plain,withDefault nested=<nil>`+
+					` resolvedNested={gated="X" resolved="nestedResolver(n1)"}`,
+				resp.HybridInput,
+			)
 		},
 	)
 }

@@ -23,9 +23,21 @@ models:
     fields:
       resolved:
         resolver: true
+      resolvedNested:
+        resolver: true
   HybridNested:
     fields:
       resolved:
+        resolver: true
+  ResolvedWhereInput:
+    fields:
+      ownedBy:
+        resolver: true
+      owner:
+        resolver: true
+  ResolvedChildWhereInput:
+    fields:
+      ownedBy:
         resolver: true
 
 directives:

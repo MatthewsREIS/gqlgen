@@ -10,16 +10,19 @@
 {{- end }}
 {{- /* Hybrid inputs (Go type has UnmarshalGQLContext): the schema's field
        directives and defaults are applied at runtime by
-       shardruntime.ApplyInputDirectives, which recurses into nested hybrid
-       inputs, and the method then decodes every plain field. Only fields the
-       walk cannot handle keep a generated case arm — those backed by a field
-       resolver, and nested inputs the walk cannot reach. See
-       Object.HybridGeneratedFields. The monolithic layout (codegen/input.gotpl)
-       keeps an arm per directive-bearing field instead. */}}
+       shardruntime.ApplyInputDirectives, the method then decodes the fields,
+       and shardruntime.ApplyInputFieldResolvers runs the field resolvers on the
+       decoded value; both recurse into nested hybrid inputs. Only nested inputs
+       the runtime cannot reach keep a generated case arm. See
+       Object.HybridGeneratedFields and Object.HybridResolverFields. The
+       monolithic layout (codegen/input.gotpl) keeps an arm per directive-bearing
+       field instead. */}}
 {{- $hybrid := $input.HasContextUnmarshal }}
 {{- $switchFields := $input.Fields }}
+{{- $resolverFields := false }}
 {{- if $hybrid }}
 {{- $switchFields = $input.HybridGeneratedFields }}
+{{- $resolverFields = $input.HybridResolverFields }}
 {{- end }}
 
 // split_inputs_.gotpl
@@ -69,6 +72,7 @@ func __splitInput_{{ $input.Name }}(ctx context.Context, ec shardruntime.ObjectE
 	if err := shardruntime.ApplyInputDirectives(ctx, ec, splitScope, {{ $input.Name | quote }}, obj, asMap); err != nil {
 		return {{ $it }}, err
 	}
+	{{- $methodInput := "asMap" }}
 	{{- if $switchFields }}
 
 	plain := make(map[string]any, len(asMap))
@@ -79,15 +83,15 @@ func __splitInput_{{ $input.Name }}(ctx context.Context, ec shardruntime.ObjectE
 			plain[k] = v
 		}
 	}
-	if err := it.UnmarshalGQLContext(ctx, plain); err != nil {
-		return {{ $it }}, err
-	}
-	{{- else }}
-
-	if err := it.UnmarshalGQLContext(ctx, asMap); err != nil {
-		return {{ $it }}, err
-	}
+	{{- $methodInput = "plain" }}
 	{{- end }}
+	{{- if $resolverFields }}
+	{{- $methodInput = printf "shardruntime.StripInputResolverFields(splitScope, %q, %s)" $input.Name $methodInput }}
+	{{- end }}
+
+	if err := it.UnmarshalGQLContext(ctx, {{ $methodInput }}); err != nil {
+		return {{ $it }}, err
+	}
 	{{- end }}
 	{{- if or (not $hybrid) $switchFields }}
 
@@ -180,6 +184,12 @@ func __splitInput_{{ $input.Name }}(ctx context.Context, ec shardruntime.ObjectE
 			{{- end }}
 		{{- end }}
 		}
+	}
+	{{- end }}
+	{{- if $resolverFields }}
+
+	if err := shardruntime.ApplyInputFieldResolvers(ctx, ec, splitScope, {{ $input.Name | quote }}, &it, asMap); err != nil {
+		return {{ $it }}, err
 	}
 	{{- end }}
 
