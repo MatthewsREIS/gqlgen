@@ -19,8 +19,9 @@ directive @gate(need: [[String!]], mode: String = "read") on INPUT_FIELD_DEFINIT
 directive @codegenOnly on INPUT_FIELD_DEFINITION
 directive @typeGate(need: [[String!]]) on SCALAR | INPUT_FIELD_DEFINITION
 directive @onInput on INPUT_OBJECT | INPUT_FIELD_DEFINITION
+directive @scalarOnly on SCALAR
 
-scalar Tagged @typeGate(need: [["s"]])
+scalar Tagged @typeGate(need: [["s"]]) @scalarOnly
 
 input Top {
 	plain: String
@@ -136,7 +137,7 @@ func TestApplyInputDirectives_DoesNotDescendIntoAResolverBackedField(t *testing.
 // input itself.
 func TestApplyInputDirectives_AppliesTheDirectivesInheritedFromTheFieldType(t *testing.T) {
 	setupWalkerPlans(t)
-	RegisterRuntimeDirectives("s", "gate", "typeGate", "onInput")
+	RegisterRuntimeDirectives("s", "gate", "typeGate", "onInput", "scalarOnly")
 	var calls []directiveCall
 	ec := newWalkerEC(t, &calls)
 	raw := map[string]any{"inherited": "x", "kid": map[string]any{"inner": "i"}}
@@ -164,7 +165,8 @@ func TestApplyInputDirectives_AppliesTheDirectivesInheritedFromTheFieldType(t *t
 			{name: "typeGate", args: map[string]any{"need": []any{[]any{"s"}}}, path: "inherited"},
 		},
 		stripObj(calls),
-		"the type's directive is innermost, and Child's INPUT_OBJECT directive is not a field directive",
+		"the type's INPUT_FIELD_DEFINITION directive is innermost; one declared only on SCALAR, "+
+			"and Child's INPUT_OBJECT one, are not field directives",
 	)
 }
 
