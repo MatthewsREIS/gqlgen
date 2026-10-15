@@ -234,8 +234,18 @@ func hybridResolverField(f *Field, resolvers, walked map[string]bool) bool {
 	if hybridGeneratedField(f, walked) {
 		return false
 	}
+	if f.IsResolver {
+		return true
+	}
 	def, ok := nestedInput(f)
-	return f.IsResolver || (ok && resolvers[def.Name])
+	return ok && resolvers[def.Name] && !boundTypeDecodesItself(f)
+}
+
+// The field codec hands such a value to the bound type's own UnmarshalGQL or
+// external unmarshal function, never to the nested input's generated decoder,
+// so the decoded value is not the nested input's model and cannot be descended.
+func boundTypeDecodesItself(f *Field) bool {
+	return f.TypeReference.IsMarshaler || f.TypeReference.Unmarshaler != nil
 }
 
 // nestedInput is the input object behind a field's type, past any list and

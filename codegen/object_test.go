@@ -307,8 +307,11 @@ func TestHybridResolverFieldsFollowTheArmlessPath(t *testing.T) {
 	omitted.TypeReference.IsOmittable = true
 	wrapper := mkHybridInput(t, "Wrapper", omitted, mkInputField("leaf", "Leaf"))
 	wrapped := mkHybridInput(t, "Wrapped", mkInputField("w", "Wrapper"))
+	alt := mkInputField("alt", "Leaf")
+	alt.TypeReference.IsMarshaler = true
+	altHolder := mkHybridInput(t, "AltHolder", alt, mkInputField("leaf", "Leaf"))
 
-	Objects{leaf, parent, quiet, gated, walker, carrier, wrapper, wrapped}.
+	Objects{leaf, parent, quiet, gated, walker, carrier, wrapper, wrapped, altHolder}.
 		resolveHybridSpecialFields()
 
 	assert.Equal(t, []string{"ownedBy", "not"}, fieldNames(leaf.HybridResolverFields()))
@@ -338,6 +341,9 @@ func TestHybridResolverFieldsFollowTheArmlessPath(t *testing.T) {
 	assert.Equal(t, []string{"w"}, fieldNames(wrapped.HybridGeneratedFields()),
 		"and so does every input that nests its holder")
 	assert.Nil(t, wrapped.HybridResolverFields())
+	assert.Equal(t, []string{"leaf"}, fieldNames(altHolder.HybridResolverFields()),
+		"a nested input bound to a type with its own UnmarshalGQL is neither planned nor armed")
+	assert.Nil(t, altHolder.HybridGeneratedFields())
 }
 
 func TestHybridResolverFieldsPanicsWhenUnclassified(t *testing.T) {
