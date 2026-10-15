@@ -17,6 +17,8 @@ type resolvedNode struct {
 	Marks  []string
 	Kid    *resolvedNode
 	Kids   []*resolvedNode
+	KidPP  **resolvedNode
+	KidsP  *[]*resolvedNode
 	Leaf   resolvedLeaf
 	Leaves []resolvedLeaf
 }
@@ -76,6 +78,8 @@ func setupResolverPlans(t *testing.T) {
 		{Name: "mark", UnmarshalCodec: "str"},
 		{Name: "kid", GoField: "Kid", Input: "Node"},
 		{Name: "kids", GoField: "Kids", Input: "Node"},
+		{Name: "kidpp", GoField: "KidPP", Input: "Node"},
+		{Name: "kidsp", GoField: "KidsP", Input: "Node"},
 		{Name: "leaf", GoField: "Leaf", Input: "Leaf"},
 		{Name: "leaves", GoField: "Leaves", Input: "Leaf"},
 		{Name: "late", UnmarshalCodec: "str"},
@@ -189,6 +193,41 @@ func TestApplyInputFieldResolvers_DescendsIntoListsStructsAndSlicesOfStructs(t *
 		"a slice element is addressed in place",
 	)
 	require.Equal(t, "Leaf", calls[3].input)
+}
+
+func TestApplyInputFieldResolvers_UnwrapsPointerToPointerAndPointerToSlice(t *testing.T) {
+	setupResolverPlans(t)
+	var calls []resolverCall
+	ec := newResolverEC(&calls)
+	kid := &resolvedNode{}
+	kids := []*resolvedNode{{}}
+	typed := &resolvedNode{KidPP: &kid, KidsP: &kids}
+	raw := map[string]any{
+		"kidpp": map[string]any{"mark": "a"},
+		"kidsp": []any{map[string]any{"mark": "b"}},
+	}
+
+	require.NoError(t, ApplyInputFieldResolvers(context.Background(), ec, "s", "Node", typed, raw))
+
+	require.Equal(t, []string{"kidpp.mark", "kidsp[0].mark"}, paths(calls))
+	require.Equal(t, []string{"mark=a!"}, kid.Marks)
+	require.Equal(t, []string{"mark=b!"}, kids[0].Marks)
+	require.IsType(
+		t,
+		&resolvedNode{},
+		calls[0].parent,
+		"the resolver is handed the struct pointer, not the pointer to it",
+	)
+
+	err := ApplyInputFieldResolvers(
+		context.Background(),
+		ec,
+		"s",
+		"Node",
+		&resolvedNode{},
+		map[string]any{"kidsp": []any{map[string]any{"mark": "c"}}},
+	)
+	require.ErrorContains(t, err, "input Node: decoded to nil")
 }
 
 func TestApplyInputFieldResolvers_ResolverErrorCarriesTheFullPath(t *testing.T) {

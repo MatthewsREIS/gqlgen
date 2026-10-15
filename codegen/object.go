@@ -183,8 +183,10 @@ func (o *Object) HybridSpecialFields() []*Field {
 // HybridGeneratedFields returns the fields a hybrid unmarshaler in
 // split-packages layout still decodes with a generated arm: nested inputs the
 // runtime cannot reach — an input without a runtime decoder that carries
-// enforcement anywhere below it, or a hybrid input that itself needs an arm (an
-// INPUT_OBJECT directive, transitively). See HybridResolverFields for the rest.
+// enforcement anywhere below it, a hybrid input that itself needs an arm (an
+// INPUT_OBJECT directive, transitively), or a nested input bound to
+// graphql.Omittable, whose value the runtime walk cannot address. See
+// HybridResolverFields for the rest.
 func (o *Object) HybridGeneratedFields() []*Field {
 	if !o.hybridClassified && o.HasContextUnmarshal() {
 		panic(fmt.Errorf(
@@ -203,7 +205,7 @@ func (o *Object) HybridGeneratedFields() []*Field {
 
 func hybridGeneratedField(f *Field, needsGenerated map[string]bool) bool {
 	def, ok := nestedInput(f)
-	return ok && needsGenerated[def.Name]
+	return ok && (needsGenerated[def.Name] || f.TypeReference.IsOmittable)
 }
 
 // HybridResolverFields returns, in schema order, the fields of a hybrid input in
@@ -229,10 +231,10 @@ func (o *Object) HybridResolverFields() []*Field {
 
 // A field that keeps a generated arm runs its own resolver inside that arm.
 func hybridResolverField(f *Field, resolvers, walked map[string]bool) bool {
-	def, ok := nestedInput(f)
-	if ok && walked[def.Name] {
+	if hybridGeneratedField(f, walked) {
 		return false
 	}
+	def, ok := nestedInput(f)
 	return f.IsResolver || (ok && resolvers[def.Name])
 }
 

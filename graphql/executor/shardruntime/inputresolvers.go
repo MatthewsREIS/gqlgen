@@ -185,6 +185,18 @@ func applyNestedResolvers(
 	fv reflect.Value,
 	v any,
 ) error {
+	for fv.Kind() == reflect.Pointer {
+		if fv.IsNil() {
+			return graphql.ErrorOnPath(
+				ctx,
+				fmt.Errorf("input %s: decoded to nil, so its field resolvers cannot run", input),
+			)
+		}
+		if fv.Type().Elem().Kind() == reflect.Struct {
+			break
+		}
+		fv = fv.Elem()
+	}
 	if fv.Kind() == reflect.Slice {
 		list := graphql.CoerceList(v)
 		if fv.Len() != len(list) {
@@ -213,12 +225,6 @@ func applyNestedResolvers(
 	}
 	switch fv.Kind() {
 	case reflect.Pointer:
-		if fv.IsNil() {
-			return graphql.ErrorOnPath(
-				ctx,
-				fmt.Errorf("input %s: decoded to nil, so its field resolvers cannot run", input),
-			)
-		}
 		return ApplyInputFieldResolvers(ctx, ec, scope, input, fv.Interface(), m)
 	case reflect.Struct:
 		return ApplyInputFieldResolvers(ctx, ec, scope, input, fv.Addr().Interface(), m)

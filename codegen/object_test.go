@@ -303,8 +303,13 @@ func TestHybridResolverFieldsFollowTheArmlessPath(t *testing.T) {
 		mkInputField("w", "Walker"),
 		mkInputField("leaf", "Leaf"),
 	)
+	omitted := mkInputField("omitted", "Leaf")
+	omitted.TypeReference.IsOmittable = true
+	wrapper := mkHybridInput(t, "Wrapper", omitted, mkInputField("leaf", "Leaf"))
+	wrapped := mkHybridInput(t, "Wrapped", mkInputField("w", "Wrapper"))
 
-	Objects{leaf, parent, quiet, gated, walker, carrier}.resolveHybridSpecialFields()
+	Objects{leaf, parent, quiet, gated, walker, carrier, wrapper, wrapped}.
+		resolveHybridSpecialFields()
 
 	assert.Equal(t, []string{"ownedBy", "not"}, fieldNames(leaf.HybridResolverFields()))
 	assert.Nil(t, leaf.HybridGeneratedFields())
@@ -327,6 +332,12 @@ func TestHybridResolverFieldsFollowTheArmlessPath(t *testing.T) {
 		"fields with an arm are not planned")
 	assert.Equal(t, []string{"w"}, fieldNames(carrier.HybridGeneratedFields()))
 	assert.Equal(t, []string{"leaf"}, fieldNames(carrier.HybridResolverFields()))
+	assert.Equal(t, []string{"omitted"}, fieldNames(wrapper.HybridGeneratedFields()),
+		"an Omittable-bound nested input keeps its arm")
+	assert.Equal(t, []string{"leaf"}, fieldNames(wrapper.HybridResolverFields()))
+	assert.Equal(t, []string{"w"}, fieldNames(wrapped.HybridGeneratedFields()),
+		"and so does every input that nests its holder")
+	assert.Nil(t, wrapped.HybridResolverFields())
 }
 
 func TestHybridResolverFieldsPanicsWhenUnclassified(t *testing.T) {
