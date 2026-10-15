@@ -21,11 +21,16 @@ type resolvedNode struct {
 	KidsP  *[]*resolvedNode
 	Leaf   resolvedLeaf
 	Leaves []resolvedLeaf
+	Tag    *resolvedTag
+	TagV   resolvedTag
 }
 
 type resolvedLeaf struct {
 	Marks []string
 }
+
+// resolvedTag is a hybrid input modelled on a string, not a struct.
+type resolvedTag string
 
 type resolverCall struct {
 	input, field, path string
@@ -64,6 +69,8 @@ func newResolverEC(calls *[]resolverCall) *fakeEC {
 				p.Marks = append(p.Marks, mark)
 			case *resolvedLeaf:
 				p.Marks = append(p.Marks, mark)
+			case *resolvedTag:
+				*p += resolvedTag(mark)
 			}
 			return nil, nil
 		},
@@ -82,8 +89,15 @@ func setupResolverPlans(t *testing.T) {
 		{Name: "kidsp", GoField: "KidsP", Input: "Node"},
 		{Name: "leaf", GoField: "Leaf", Input: "Leaf"},
 		{Name: "leaves", GoField: "Leaves", Input: "Leaf"},
+		{Name: "tag", GoField: "Tag", Input: "Tag"},
+		{Name: "tagv", GoField: "TagV", Input: "Tag"},
 		{Name: "late", UnmarshalCodec: "str"},
 	})
+	RegisterInputResolverPlan(
+		"s",
+		"Tag",
+		[]InputResolverField{{Name: "mark", UnmarshalCodec: "str"}},
+	)
 	RegisterInputResolverPlan(
 		"s",
 		"Leaf",
@@ -228,6 +242,30 @@ func TestApplyInputFieldResolvers_UnwrapsPointerToPointerAndPointerToSlice(t *te
 		map[string]any{"kidsp": []any{map[string]any{"mark": "c"}}},
 	)
 	require.ErrorContains(t, err, "input Node: decoded to nil")
+}
+
+func TestApplyInputFieldResolvers_ReachesANonStructModelThroughItsReference(t *testing.T) {
+	setupResolverPlans(t)
+	var calls []resolverCall
+	ec := newResolverEC(&calls)
+	tag := resolvedTag("t:")
+	typed := &resolvedNode{Tag: &tag, TagV: "v:"}
+	raw := map[string]any{
+		"tag":  map[string]any{"mark": "a"},
+		"tagv": map[string]any{"mark": "b"},
+	}
+
+	require.NoError(t, ApplyInputFieldResolvers(context.Background(), ec, "s", "Node", typed, raw))
+
+	require.Equal(t, []string{"tag.mark", "tagv.mark"}, paths(calls))
+	require.Equal(t, resolvedTag("t:mark=a!"), *typed.Tag)
+	require.Equal(t, resolvedTag("v:mark=b!"), typed.TagV, "a value field is addressed in place")
+	require.IsType(
+		t,
+		&tag,
+		calls[1].parent,
+		"the invoker gets the pointer the model's resolvers take",
+	)
 }
 
 func TestApplyInputFieldResolvers_ResolverErrorCarriesTheFullPath(t *testing.T) {

@@ -185,14 +185,17 @@ func applyNestedResolvers(
 	fv reflect.Value,
 	v any,
 ) error {
+	nilErr := func() error {
+		return graphql.ErrorOnPath(
+			ctx,
+			fmt.Errorf("input %s: decoded to nil, so its field resolvers cannot run", input),
+		)
+	}
 	for fv.Kind() == reflect.Pointer {
 		if fv.IsNil() {
-			return graphql.ErrorOnPath(
-				ctx,
-				fmt.Errorf("input %s: decoded to nil, so its field resolvers cannot run", input),
-			)
+			return nilErr()
 		}
-		if fv.Type().Elem().Kind() == reflect.Struct {
+		if k := fv.Type().Elem().Kind(); k != reflect.Pointer && k != reflect.Slice {
 			break
 		}
 		fv = fv.Elem()
@@ -223,14 +226,16 @@ func applyNestedResolvers(
 			fmt.Errorf("input %s: expected map[string]any, got %T", input, v),
 		)
 	}
+	// The invoker asserts the model's reference type: the value itself when the
+	// model is nilable, a pointer to it otherwise (codegen Object.Reference).
 	switch fv.Kind() {
 	case reflect.Pointer:
 		return ApplyInputFieldResolvers(ctx, ec, scope, input, fv.Interface(), m)
-	case reflect.Struct:
-		return ApplyInputFieldResolvers(ctx, ec, scope, input, fv.Addr().Interface(), m)
+	case reflect.Map, reflect.Interface, reflect.Func, reflect.Chan:
+		if fv.IsNil() {
+			return nilErr()
+		}
+		return ApplyInputFieldResolvers(ctx, ec, scope, input, fv.Interface(), m)
 	}
-	return graphql.ErrorOnPath(
-		ctx,
-		fmt.Errorf("input %s: cannot descend into a %s field", input, fv.Kind()),
-	)
+	return ApplyInputFieldResolvers(ctx, ec, scope, input, fv.Addr().Interface(), m)
 }
