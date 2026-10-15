@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"maps"
+	"slices"
 	"sync"
 
 	"github.com/vektah/gqlparser/v2/ast"
@@ -176,7 +177,7 @@ func applyFieldDirectives(
 		}
 		return v, nil
 	})
-	for _, d := range f.Directives {
+	for _, d := range effectiveDirectives(schema, f) {
 		if !isRuntimeDirective(scope, d.Name) {
 			continue
 		}
@@ -190,6 +191,25 @@ func applyFieldDirectives(
 		}
 	}
 	return next(ctx)
+}
+
+// effectiveDirectives is the list codegen's bindField gives a field: the
+// directives declared on the field's named type, minus those for INPUT_OBJECT,
+// ahead of the field's own.
+func effectiveDirectives(schema *ast.Schema, f *ast.FieldDefinition) []*ast.Directive {
+	typ := schema.Types[f.Type.Name()]
+	if typ == nil || len(typ.Directives) == 0 {
+		return f.Directives
+	}
+	dirs := make([]*ast.Directive, 0, len(typ.Directives)+len(f.Directives))
+	for _, d := range typ.Directives {
+		def := schema.Directives[d.Name]
+		if def != nil && slices.Contains(def.Locations, ast.LocationInputObject) {
+			continue
+		}
+		dirs = append(dirs, d)
+	}
+	return append(dirs, f.Directives...)
 }
 
 // directiveArgs is the runtime twin of the splitDirectiveArgs template: the

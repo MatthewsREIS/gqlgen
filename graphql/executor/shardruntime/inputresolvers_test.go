@@ -23,6 +23,7 @@ type resolvedNode struct {
 	Leaves []resolvedLeaf
 	Tag    *resolvedTag
 	TagV   resolvedTag
+	Fn     resolvedFn
 }
 
 type resolvedLeaf struct {
@@ -31,6 +32,10 @@ type resolvedLeaf struct {
 
 // resolvedTag is a hybrid input modelled on a string, not a struct.
 type resolvedTag string
+
+// resolvedFn is a hybrid input modelled on a func, which codegen does not count
+// as nilable, so its resolvers take a pointer to it.
+type resolvedFn func()
 
 type resolverCall struct {
 	input, field, path string
@@ -91,6 +96,7 @@ func setupResolverPlans(t *testing.T) {
 		{Name: "leaves", GoField: "Leaves", Input: "Leaf"},
 		{Name: "tag", GoField: "Tag", Input: "Tag"},
 		{Name: "tagv", GoField: "TagV", Input: "Tag"},
+		{Name: "fn", GoField: "Fn", Input: "Tag"},
 		{Name: "late", UnmarshalCodec: "str"},
 	})
 	RegisterInputResolverPlan(
@@ -266,6 +272,18 @@ func TestApplyInputFieldResolvers_ReachesANonStructModelThroughItsReference(t *t
 		calls[1].parent,
 		"the invoker gets the pointer the model's resolvers take",
 	)
+
+	calls = nil
+	typed = &resolvedNode{Fn: func() {}}
+	require.NoError(t, ApplyInputFieldResolvers(
+		context.Background(),
+		ec,
+		"s",
+		"Node",
+		typed,
+		map[string]any{"fn": map[string]any{"mark": "c"}},
+	))
+	require.IsType(t, &typed.Fn, calls[0].parent, "a func model is not nilable to codegen")
 }
 
 func TestApplyInputFieldResolvers_ResolverErrorCarriesTheFullPath(t *testing.T) {

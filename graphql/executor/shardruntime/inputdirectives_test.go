@@ -17,6 +17,10 @@ import (
 const walkerSchema = `
 directive @gate(need: [[String!]], mode: String = "read") on INPUT_FIELD_DEFINITION
 directive @codegenOnly on INPUT_FIELD_DEFINITION
+directive @typeGate(need: [[String!]]) on SCALAR | INPUT_FIELD_DEFINITION
+directive @onInput on INPUT_OBJECT | INPUT_FIELD_DEFINITION
+
+scalar Tagged @typeGate(need: [["s"]])
 
 input Top {
 	plain: String
@@ -29,9 +33,10 @@ input Top {
 	kids: [Child!]
 	plainKid: Plain
 	viaResolver: Child
+	inherited: Tagged @gate(need: [["f"]])
 }
 
-input Child {
+input Child @onInput {
 	inner: String @gate(need: [["c"]])
 	deeper: Child
 }
@@ -123,6 +128,43 @@ func TestApplyInputDirectives_DoesNotDescendIntoAResolverBackedField(t *testing.
 		t,
 		[]directiveCall{{name: "gate", args: map[string]any{"mode": "read"}, path: "dflt"}},
 		stripObj(calls),
+	)
+}
+
+// bindField prepends a named type's directives to the field's own, so an arm
+// ran them; the walk must too, except INPUT_OBJECT ones, which belong to the
+// input itself.
+func TestApplyInputDirectives_AppliesTheDirectivesInheritedFromTheFieldType(t *testing.T) {
+	setupWalkerPlans(t)
+	RegisterRuntimeDirectives("s", "gate", "typeGate", "onInput")
+	var calls []directiveCall
+	ec := newWalkerEC(t, &calls)
+	raw := map[string]any{"inherited": "x", "kid": map[string]any{"inner": "i"}}
+
+	require.NoError(
+		t,
+		ApplyInputDirectives(context.Background(), ec, "s", "Top", maps.Clone(raw), raw),
+	)
+
+	require.Equal(t, "x!!", raw["inherited"], "both directives ran on the value")
+	require.Equal(
+		t,
+		[]directiveCall{
+			{name: "gate", args: map[string]any{"mode": "read"}, path: "dflt"},
+			{
+				name: "gate",
+				args: map[string]any{"need": []any{[]any{"c"}}, "mode": "read"},
+				path: "kid.inner",
+			},
+			{
+				name: "gate",
+				args: map[string]any{"need": []any{[]any{"f"}}, "mode": "read"},
+				path: "inherited",
+			},
+			{name: "typeGate", args: map[string]any{"need": []any{[]any{"s"}}}, path: "inherited"},
+		},
+		stripObj(calls),
+		"the type's directive is innermost, and Child's INPUT_OBJECT directive is not a field directive",
 	)
 }
 
