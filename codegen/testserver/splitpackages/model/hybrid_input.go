@@ -8,8 +8,9 @@ import (
 
 // HybridInput is the Go binding for the HybridInput input object. It decodes
 // itself with UnmarshalGQLContext, so gqlgen emits a hybrid unmarshaler: this
-// method sees the plain and defaulted fields, while generated code keeps
-// running the @toUpper field directive and the `resolved` field resolver.
+// method sees the plain and defaulted fields, the runtime applies the @toUpper
+// directive and the `resolved` resolver, and only the nested inputs below keep
+// a generated arm.
 type HybridInput struct {
 	Plain       string
 	WithDefault string
@@ -19,9 +20,10 @@ type HybridInput struct {
 	// Nested inputs. This decoder can populate them by reflection, but it cannot
 	// run their field directives or field resolvers, so the generated unmarshaler
 	// must keep these fields for itself.
-	Nested     *HybridNested
-	NestedList []*HybridNested
-	SelfRef    []*HybridInput
+	Nested         *HybridNested
+	NestedList     []*HybridNested
+	SelfRef        []*HybridInput
+	ResolvedNested []*HybridNested
 
 	// SawKeys records, sorted, the keys the hybrid body handed to
 	// UnmarshalGQLContext. Not a schema field.

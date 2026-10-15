@@ -41,6 +41,8 @@ type ResolverRoot interface {
 	Subscription() SubscriptionResolver
 	HybridInput() HybridInputResolver
 	HybridNested() HybridNestedResolver
+	ResolvedChildWhereInput() ResolvedChildWhereInputResolver
+	ResolvedWhereInput() ResolvedWhereInputResolver
 }
 
 type DirectiveRoot struct {
@@ -111,6 +113,7 @@ type ComplexityRoot struct {
 		InputSlice                       func(childComplexity int, arg []string) int
 		MaybeHello                       func(childComplexity int, name string) int
 		PtrToSliceContainer              func(childComplexity int) int
+		ResolvedWhere                    func(childComplexity int, arg model.ResolvedWhereInput) int
 		ScalarSlice                      func(childComplexity int) int
 		Slices                           func(childComplexity int) int
 		WalkedInput                      func(childComplexity int, arg model.WalkedInput) int
@@ -155,6 +158,7 @@ type QueryResolver interface {
 	GoodbyeFromExtras(ctx context.Context, name string) (string, error)
 	HybridInput(ctx context.Context, arg model.HybridInput) (string, error)
 	HybridInputNullable(ctx context.Context, arg *model.HybridInput) (string, error)
+	ResolvedWhere(ctx context.Context, arg model.ResolvedWhereInput) (string, error)
 	WalkedInput(ctx context.Context, arg model.WalkedInput) (string, error)
 	Slices(ctx context.Context) (*model.Slices, error)
 	ScalarSlice(ctx context.Context) ([]byte, error)
@@ -174,9 +178,18 @@ type SubscriptionResolver interface {
 
 type HybridInputResolver interface {
 	Resolved(ctx context.Context, obj *model.HybridInput, data string) error
+
+	ResolvedNested(ctx context.Context, obj *model.HybridInput, data []*model.HybridNested) error
 }
 type HybridNestedResolver interface {
 	Resolved(ctx context.Context, obj *model.HybridNested, data string) error
+}
+type ResolvedChildWhereInputResolver interface {
+	OwnedBy(ctx context.Context, obj *model.ResolvedChildWhereInput, data *string) error
+}
+type ResolvedWhereInputResolver interface {
+	OwnedBy(ctx context.Context, obj *model.ResolvedWhereInput, data *string) error
+	Owner(ctx context.Context, obj *model.ResolvedWhereInput, data *model.ResolvedOwnerInput) error
 }
 
 type executableSchema struct {
@@ -601,6 +614,22 @@ func (e *executableSchema) Complexity(ctx context.Context, typeName, field strin
 		}
 
 		return e.complexity.Query.PtrToSliceContainer(childComplexity), true
+
+	case "Query.resolvedWhere":
+		if e.complexity.Query.ResolvedWhere == nil {
+			break
+		}
+
+		argsHandler, ok := shardruntime.LookupArgs("github.com/99designs/gqlgen/codegen/testserver/splitpackages", "field_Query_resolvedWhere_args")
+		if !ok {
+			return 0, false
+		}
+		args, err := argsHandler(ctx, &ec, rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.ResolvedWhere(childComplexity, args["arg"].(model.ResolvedWhereInput)), true
 
 	case "Query.scalarSlice":
 		if e.complexity.Query.ScalarSlice == nil {
@@ -1503,6 +1532,12 @@ func init() {
 		_ = fc
 		return ec.resolvers.Query().HybridInputNullable(ctx, fc.Args["arg"].(*model.HybridInput))
 	})
+	shardruntime.RegisterResolverInvoker(scope, "Query", "resolvedWhere", func(ctx context.Context, oec shardruntime.ObjectExecutionContext, obj any) (any, error) {
+		ec := oec.(*executionContext)
+		fc := graphql.GetFieldContext(ctx)
+		_ = fc
+		return ec.resolvers.Query().ResolvedWhere(ctx, fc.Args["arg"].(model.ResolvedWhereInput))
+	})
 	shardruntime.RegisterResolverInvoker(scope, "Query", "walkedInput", func(ctx context.Context, oec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 		ec := oec.(*executionContext)
 		fc := graphql.GetFieldContext(ctx)
@@ -1596,14 +1631,50 @@ func init() {
 		args := obj.([]any)
 		return nil, ec.resolvers.HybridInput().Resolved(ctx, args[0].(*model.HybridInput), args[1].(string))
 	})
+	shardruntime.RegisterResolverInvoker(scope, "HybridInput", "resolvedNested", func(ctx context.Context, oec shardruntime.ObjectExecutionContext, obj any) (any, error) {
+		ec := oec.(*executionContext)
+		args := obj.([]any)
+		var arg1 []*model.HybridNested
+		if args[1] != nil {
+			arg1 = args[1].([]*model.HybridNested)
+		}
+		return nil, ec.resolvers.HybridInput().ResolvedNested(ctx, args[0].(*model.HybridInput), arg1)
+	})
 	shardruntime.RegisterResolverInvoker(scope, "HybridNested", "resolved", func(ctx context.Context, oec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 		ec := oec.(*executionContext)
 		args := obj.([]any)
 		return nil, ec.resolvers.HybridNested().Resolved(ctx, args[0].(*model.HybridNested), args[1].(string))
 	})
+	shardruntime.RegisterResolverInvoker(scope, "ResolvedChildWhereInput", "ownedBy", func(ctx context.Context, oec shardruntime.ObjectExecutionContext, obj any) (any, error) {
+		ec := oec.(*executionContext)
+		args := obj.([]any)
+		var arg1 *string
+		if args[1] != nil {
+			arg1 = args[1].(*string)
+		}
+		return nil, ec.resolvers.ResolvedChildWhereInput().OwnedBy(ctx, args[0].(*model.ResolvedChildWhereInput), arg1)
+	})
+	shardruntime.RegisterResolverInvoker(scope, "ResolvedWhereInput", "ownedBy", func(ctx context.Context, oec shardruntime.ObjectExecutionContext, obj any) (any, error) {
+		ec := oec.(*executionContext)
+		args := obj.([]any)
+		var arg1 *string
+		if args[1] != nil {
+			arg1 = args[1].(*string)
+		}
+		return nil, ec.resolvers.ResolvedWhereInput().OwnedBy(ctx, args[0].(*model.ResolvedWhereInput), arg1)
+	})
+	shardruntime.RegisterResolverInvoker(scope, "ResolvedWhereInput", "owner", func(ctx context.Context, oec shardruntime.ObjectExecutionContext, obj any) (any, error) {
+		ec := oec.(*executionContext)
+		args := obj.([]any)
+		var arg1 *model.ResolvedOwnerInput
+		if args[1] != nil {
+			arg1 = args[1].(*model.ResolvedOwnerInput)
+		}
+		return nil, ec.resolvers.ResolvedWhereInput().Owner(ctx, args[0].(*model.ResolvedWhereInput), arg1)
+	})
 }
 
-//go:embed "directive.graphql" "extras.graphql" "hybrid_input.graphql" "hybrid_walked.graphql" "lists.graphql" "nullable_root.graphql" "omittable_input.graphql" "schema.graphql"
+//go:embed "directive.graphql" "extras.graphql" "hybrid_input.graphql" "hybrid_resolved.graphql" "hybrid_walked.graphql" "lists.graphql" "nullable_root.graphql" "omittable_input.graphql" "schema.graphql"
 var sourcesFS embed.FS
 
 func sourceData(filename string) string {
@@ -1618,6 +1689,7 @@ var sources = []*ast.Source{
 	{Name: "directive.graphql", Input: sourceData("directive.graphql"), BuiltIn: false},
 	{Name: "extras.graphql", Input: sourceData("extras.graphql"), BuiltIn: false},
 	{Name: "hybrid_input.graphql", Input: sourceData("hybrid_input.graphql"), BuiltIn: false},
+	{Name: "hybrid_resolved.graphql", Input: sourceData("hybrid_resolved.graphql"), BuiltIn: false},
 	{Name: "hybrid_walked.graphql", Input: sourceData("hybrid_walked.graphql"), BuiltIn: false},
 	{Name: "lists.graphql", Input: sourceData("lists.graphql"), BuiltIn: false},
 	{Name: "nullable_root.graphql", Input: sourceData("nullable_root.graphql"), BuiltIn: false},

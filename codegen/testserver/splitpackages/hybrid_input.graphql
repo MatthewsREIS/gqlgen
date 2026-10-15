@@ -3,8 +3,9 @@ directive @toUpper on INPUT_FIELD_DEFINITION
 """
 HybridInput is bound to a Go type that decodes itself with UnmarshalGQLContext.
 gqlgen still generates an unmarshaler for it, with a hybrid body: the Go method
-decodes plain and defaulted fields, generated code runs the field directive and
-the field resolver.
+decodes plain and defaulted fields; directives, defaults and field resolvers are
+applied at runtime, and only nested inputs without a runtime decoder keep a
+generated arm.
 """
 input HybridInput {
 	plain: String!
@@ -14,6 +15,11 @@ input HybridInput {
 	nested: HybridNested
 	nestedList: [HybridNested!]
 	selfRef: [HybridInput!]
+	"""
+	resolvedNested is backed by a field resolver and typed by an input that
+	needs a generated arm; that one arm decodes it and runs the resolver.
+	"""
+	resolvedNested: [HybridNested!]
 }
 
 """

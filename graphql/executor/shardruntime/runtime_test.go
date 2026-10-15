@@ -1242,6 +1242,8 @@ func TestArgsRegistry(t *testing.T) {
 type fakeEC struct {
 	fieldContextHandlers map[string]FieldContextHandler
 	invokeDirective      func(ctx context.Context, name string, obj any, next graphql.Resolver, args map[string]any) (any, error)
+	unmarshalCodec       func(ctx context.Context, name string, v any) (any, error)
+	invokeResolver       func(ctx context.Context, objectName, fieldName string, obj any) (any, error)
 	schema               *ast.Schema
 }
 
@@ -1267,7 +1269,14 @@ func (f *fakeEC) GetOperationContext() *graphql.OperationContext { return nil }
 func (f *fakeEC) MarshalCodec(context.Context, string, ast.SelectionSet, any) graphql.Marshaler {
 	return graphql.Null
 }
-func (f *fakeEC) UnmarshalCodec(context.Context, string, any) (any, error) { return nil, nil }
+
+func (f *fakeEC) UnmarshalCodec(ctx context.Context, name string, v any) (any, error) {
+	if f.unmarshalCodec != nil {
+		return f.unmarshalCodec(ctx, name, v)
+	}
+	return nil, nil
+}
+
 func (f *fakeEC) ParseFieldArgs(context.Context, string, map[string]any) (map[string]any, error) {
 	return nil, nil
 }
@@ -1292,7 +1301,14 @@ func (f *fakeEC) ResolveStreamField(
 	return func(context.Context) graphql.Marshaler { return graphql.Null }
 }
 
-func (f *fakeEC) InvokeResolver(context.Context, string, string, any) (any, error) {
+func (f *fakeEC) InvokeResolver(
+	ctx context.Context,
+	objectName, fieldName string,
+	obj any,
+) (any, error) {
+	if f.invokeResolver != nil {
+		return f.invokeResolver(ctx, objectName, fieldName, obj)
+	}
 	return nil, nil
 }
 

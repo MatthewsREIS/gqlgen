@@ -92,31 +92,23 @@ func __splitInput_HybridInput(ctx context.Context, ec shardruntime.ObjectExecuti
 	plain := make(map[string]any, len(asMap))
 	for k, v := range asMap {
 		switch k {
-		case "resolved", "nested", "nestedList", "selfRef":
+		case "nested", "nestedList", "selfRef", "resolvedNested":
 		default:
 			plain[k] = v
 		}
 	}
-	if err := it.UnmarshalGQLContext(ctx, plain); err != nil {
+
+	if err := it.UnmarshalGQLContext(ctx, shardruntime.StripInputResolverFields(splitScope, "HybridInput", plain)); err != nil {
 		return it, err
 	}
 
-	fieldsInOrder := [...]string{"resolved", "nested", "nestedList", "selfRef"}
+	fieldsInOrder := [...]string{"nested", "nestedList", "selfRef", "resolvedNested"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
-		case "resolved":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resolved"))
-			data, err := ec.UnmarshalCodec(ctx, "unmarshalNString2string", v)
-			if err != nil {
-				return it, err
-			}
-			if _, err := ec.InvokeResolver(ctx, "HybridInput", "resolved", []any{&it, data}); err != nil {
-				return it, err
-			}
 		case "nested":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("nested"))
 			data, err := ec.UnmarshalCodec(ctx, "unmarshalOHybridNested2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐHybridNested", v)
@@ -144,7 +136,20 @@ func __splitInput_HybridInput(ctx context.Context, ec shardruntime.ObjectExecuti
 			if data != nil {
 				it.SelfRef = data.([]*model.HybridInput)
 			}
+		case "resolvedNested":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("resolvedNested"))
+			data, err := ec.UnmarshalCodec(ctx, "unmarshalOHybridNested2ᚕᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐHybridNestedᚄ", v)
+			if err != nil {
+				return it, err
+			}
+			if _, err := ec.InvokeResolver(ctx, "HybridInput", "resolvedNested", []any{&it, data}); err != nil {
+				return it, err
+			}
 		}
+	}
+
+	if err := shardruntime.ApplyInputFieldResolvers(ctx, ec, splitScope, "HybridInput", &it, asMap); err != nil {
+		return it, err
 	}
 
 	return it, nil

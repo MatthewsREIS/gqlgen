@@ -804,9 +804,9 @@ func TestSplitInputOmittableNonNilableNoGuardNeeded(t *testing.T) {
 	require.NotContains(t, text, "if data != nil")
 }
 
-// A hybrid input (Go type has UnmarshalGQLContext) delegates its plain fields to
-// the method and keeps generated case arms only for fields the method cannot
-// handle: those with directives or a field resolver.
+// A hybrid input (Go type has UnmarshalGQLContext) hands the method the map
+// minus its resolver-backed keys; the resolvers run afterwards at runtime, on
+// the decoded value, so no field keeps a generated case arm.
 func TestSplitInputGeneratesHybridUnmarshalBody(t *testing.T) {
 	const modelImportPath = "example.com/project/model"
 	modelInputType := types.NewNamed(
@@ -882,14 +882,21 @@ func TestSplitInputGeneratesHybridUnmarshalBody(t *testing.T) {
 		text,
 		`fmt.Errorf("unmarshalInputUserInput: expected map[string]any, got %T", obj)`,
 	)
-	require.Contains(t, text, "it.UnmarshalGQLContext(ctx, plain)")
-	require.Contains(t, text, `case "computed":`)
-	require.Contains(t, text, `ec.InvokeResolver(ctx, "UserInput", "computed"`)
-	// The plain field is the method's job: no generated case arm, and it is not
-	// stripped from the map handed to the method.
+	require.Contains(
+		t,
+		text,
+		`it.UnmarshalGQLContext(ctx, shardruntime.StripInputResolverFields(splitScope, "UserInput", asMap))`,
+	)
+	require.Contains(
+		t,
+		text,
+		`shardruntime.ApplyInputFieldResolvers(ctx, ec, splitScope, "UserInput", &it, asMap)`,
+	)
+	require.NotContains(t, text, `case "computed":`)
+	require.NotContains(t, text, `ec.InvokeResolver(`)
 	require.NotContains(t, text, `case "name":`)
 	require.NotContains(t, text, "it.Name =")
-	require.Contains(t, text, `fieldsInOrder := [...]string{"computed"}`)
+	require.NotContains(t, text, "fieldsInOrder")
 }
 
 // The hybrid classification is transitive: a field with no directive of its own

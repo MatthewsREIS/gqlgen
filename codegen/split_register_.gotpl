@@ -171,6 +171,17 @@ func init() {
 	shardruntime.RegisterInputUnmarshaler(splitScope, {{ $input.Name | quote }}, __splitInput_{{ $input.Name }})
 	{{- if $input.HasContextUnmarshal }}
 	shardruntime.RegisterInputDirectivePlan(splitScope, {{ $input.Name | quote }}, []string{ {{- range $input.HybridGeneratedFields }}{{ quote .Name }}, {{ end -}} })
+	{{- with $input.HybridResolverFields }}
+	shardruntime.RegisterInputResolverPlan(splitScope, {{ $input.Name | quote }}, []shardruntime.InputResolverField{
+		{{- range . }}
+		{{- if .IsResolver }}
+		{Name: {{ .Name | quote }}, UnmarshalCodec: {{ .TypeReference.UnmarshalFunc | quote }}},
+		{{- else }}
+		{Name: {{ .Name | quote }}, GoField: {{ .GoFieldName | quote }}, Input: {{ .TypeReference.Definition.Name | quote }}},
+		{{- end }}
+		{{- end }}
+	})
+	{{- end }}
 	{{- end }}
 	{{- end }}
 {{- end }}
@@ -213,6 +224,17 @@ func init() {
 	shardruntime.RegisterInputUnmarshaler(splitScope, {{ $input.Name | quote }}, __splitInput_{{ $input.Name }})
 	{{- if $input.HasContextUnmarshal }}
 	shardruntime.RegisterInputDirectivePlan(splitScope, {{ $input.Name | quote }}, []string{ {{- range $input.HybridGeneratedFields }}{{ quote .Name }}, {{ end -}} })
+	{{- with $input.HybridResolverFields }}
+	shardruntime.RegisterInputResolverPlan(splitScope, {{ $input.Name | quote }}, []shardruntime.InputResolverField{
+		{{- range . }}
+		{{- if .IsResolver }}
+		{Name: {{ .Name | quote }}, UnmarshalCodec: {{ .TypeReference.UnmarshalFunc | quote }}},
+		{{- else }}
+		{Name: {{ .Name | quote }}, GoField: {{ .GoFieldName | quote }}, Input: {{ .TypeReference.Definition.Name | quote }}},
+		{{- end }}
+		{{- end }}
+	})
+	{{- end }}
 	{{- end }}
 	{{- end }}
 {{- end }}

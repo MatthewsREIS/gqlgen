@@ -28,6 +28,7 @@ input Top {
 	kid: Child
 	kids: [Child!]
 	plainKid: Plain
+	viaResolver: Child
 }
 
 input Child {
@@ -95,8 +96,34 @@ func setupWalkerPlans(t *testing.T) {
 	t.Helper()
 	resetInputDirectivePlansForTest()
 	t.Cleanup(resetInputDirectivePlansForTest)
+	resetInputResolverPlansForTest()
+	t.Cleanup(resetInputResolverPlansForTest)
 	RegisterInputDirectivePlan("s", "Top", []string{"gen"})
 	RegisterInputDirectivePlan("s", "Child", nil)
+	RegisterInputResolverPlan(
+		"s",
+		"Top",
+		[]InputResolverField{{Name: "viaResolver", UnmarshalCodec: "child"}},
+	)
+}
+
+// The codec of a resolver-backed field decodes the nested input and runs its
+// directives; a walk that also descended would run them twice (and here, deny).
+func TestApplyInputDirectives_DoesNotDescendIntoAResolverBackedField(t *testing.T) {
+	setupWalkerPlans(t)
+	var calls []directiveCall
+	ec := newWalkerEC(t, &calls)
+	raw := map[string]any{"viaResolver": map[string]any{"inner": "deny"}}
+
+	require.NoError(
+		t,
+		ApplyInputDirectives(context.Background(), ec, "s", "Top", maps.Clone(raw), raw),
+	)
+	require.Equal(
+		t,
+		[]directiveCall{{name: "gate", args: map[string]any{"mode": "read"}, path: "dflt"}},
+		stripObj(calls),
+	)
 }
 
 func TestApplyInputDirectives_RunsDirectivesWithArgsAndDefaults(t *testing.T) {
