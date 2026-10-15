@@ -231,7 +231,7 @@ func applyNestedResolvers(
 	switch fv.Kind() {
 	case reflect.Pointer:
 		return ApplyInputFieldResolvers(ctx, ec, scope, input, fv.Interface(), m)
-	case reflect.Map, reflect.Interface, reflect.Func, reflect.Chan:
+	case reflect.Map, reflect.Interface, reflect.Chan:
 		if fv.IsNil() {
 			return nilErr()
 		}
