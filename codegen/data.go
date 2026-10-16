@@ -149,6 +149,13 @@ func assignEmbedPaths(dir string, sources []AugmentedSource) error {
 			rel = rel[3:]
 		}
 		s.EmbedPath = path.Join(dir, rel)
+		if path.Base(s.EmbedPath) == embedManifest {
+			return fmt.Errorf(
+				"schema file %s would be copied to %s, which embed_schema_dir reserves for its manifest",
+				s.RelativePath,
+				s.EmbedPath,
+			)
+		}
 		if prev, dup := seen[s.EmbedPath]; dup {
 			return fmt.Errorf(
 				"schema files %s and %s both map to %s under embed_schema_dir",

@@ -44,6 +44,15 @@ func TestAssignEmbedPaths_Collision(t *testing.T) {
 	)
 }
 
+func TestAssignEmbedPaths_RejectsTheManifestName(t *testing.T) {
+	sources := []AugmentedSource{{RelativePath: "../.gqlgen-embedded"}}
+	require.EqualError(
+		t,
+		assignEmbedPaths("schema", sources),
+		"schema file ../.gqlgen-embedded would be copied to schema/.gqlgen-embedded, which embed_schema_dir reserves for its manifest",
+	)
+}
+
 func TestAssignEmbedPaths_Unset(t *testing.T) {
 	sources := []AugmentedSource{{RelativePath: "../x.graphql"}}
 	require.NoError(t, assignEmbedPaths("", sources))
