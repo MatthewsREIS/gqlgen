@@ -58,7 +58,9 @@ func writeEmbeddedSchemaCopies(data *Data) error {
 			continue
 		}
 		want[filepath.Join(execDir, filepath.FromSlash(s.EmbedPath))] = []byte(s.Source)
-		schemaExt[filepath.Ext(s.EmbedPath)] = true
+		if ext := filepath.Ext(s.EmbedPath); ext != "" {
+			schemaExt[ext] = true
+		}
 	}
 	if _, err := os.Stat(root); err == nil {
 		err = filepath.WalkDir(root, func(p string, d fs.DirEntry, walkErr error) error {

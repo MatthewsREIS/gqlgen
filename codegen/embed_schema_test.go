@@ -117,3 +117,24 @@ func TestWriteEmbeddedSchemaCopies_ReconcilesWithoutDeletingForeignFiles(t *test
 	require.FileExists(t, foreign)
 	require.FileExists(t, copyPath)
 }
+
+func TestWriteEmbeddedSchemaCopies_ExtensionlessSourceKeepsForeignFiles(t *testing.T) {
+	execDir := t.TempDir()
+	data := &Data{
+		Config: &config.Config{Exec: config.ExecConfig{
+			Layout:         config.ExecLayoutSplitPackages,
+			Filename:       filepath.Join(execDir, "generated.go"),
+			EmbedSchemaDir: "schema",
+		}},
+		AugmentedSources: []AugmentedSource{
+			{RelativePath: "../SCHEMA", EmbedPath: "schema/SCHEMA", Embeddable: true, Source: "type Query { a: ID }\n"},
+		},
+	}
+	require.NoError(t, writeEmbeddedSchemaCopies(data))
+
+	foreign := filepath.Join(execDir, "schema", "README")
+	require.NoError(t, os.WriteFile(foreign, []byte("notes\n"), 0o644))
+	err := writeEmbeddedSchemaCopies(data)
+	require.ErrorContains(t, err, "which codegen did not write")
+	require.FileExists(t, foreign)
+}
