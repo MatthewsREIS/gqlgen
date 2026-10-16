@@ -1562,6 +1562,62 @@ func TestResolveFromDef_ConcurrentFirstExecution(t *testing.T) {
 	wg.Wait()
 }
 
+func TestResolveFromDef_PlanFollowsTheContextSchema(t *testing.T) {
+	resetFieldRegistryForTest()
+	resetFieldContextRegistryForTest()
+	resetArgsRegistryForTest()
+	resetCodecMarshalRegistryForTest()
+	resetInputDirectivePlansForTest()
+	RegisterRuntimeDirectives("scope", "wrap")
+	RegisterCodecMarshal(
+		"scope",
+		"marshalNString",
+		func(_ context.Context, _ ObjectExecutionContext, _ ast.SelectionSet, v any) graphql.Marshaler {
+			return graphql.MarshalString(v.(string))
+		},
+	)
+	RegisterFieldDef("scope", "Query", "name", &FieldDef{
+		Resolve:      func(_ context.Context, _ ObjectExecutionContext, obj any) (any, error) { return obj.(string), nil },
+		MarshalCodec: "marshalNString",
+		NonNull:      true,
+		PanicHandled: true,
+	})
+	h, ok := LookupField("scope", "Query", "name")
+	require.True(t, ok)
+
+	var calls []string
+	resolveWith := func(schema *ast.Schema) []string {
+		calls = nil
+		ec := &fakeECWithOpCtx{
+			fakeEC{
+				schema: schema,
+				invokeDirective: func(ctx context.Context, name string, _ any, next graphql.Resolver, _ map[string]any) (any, error) {
+					calls = append(calls, name)
+					return next(ctx)
+				},
+			},
+		}
+		var buf bytes.Buffer
+		h(
+			context.Background(),
+			ec,
+			graphql.CollectedField{Field: &ast.Field{Name: "name"}},
+			"v",
+		).MarshalGQL(&buf)
+		require.Equal(t, `"v"`, buf.String())
+		require.Empty(t, ec.errors)
+		return calls
+	}
+
+	wrapped := runtimeSchema(t)
+	plain := gqlparser.MustLoadSchema(
+		&ast.Source{Name: "plain.graphql", Input: "type Query { name: String! }\n"},
+	)
+	require.Equal(t, []string{"wrap"}, resolveWith(wrapped))
+	require.Empty(t, resolveWith(plain))
+	require.Equal(t, []string{"wrap"}, resolveWith(wrapped))
+}
+
 func TestRegisterFieldDef_BasicRegistration(t *testing.T) {
 	resetFieldRegistryForTest()
 	resetFieldContextRegistryForTest()

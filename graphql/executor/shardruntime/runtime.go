@@ -117,7 +117,8 @@ type ArgsHandler func(ctx context.Context, ec ObjectExecutionContext, rawArgs ma
 
 // FieldDef holds what the schema cannot tell the runtime about a field: the
 // typed accessor, the marshal codec and the context flags. The return type's
-// children and the directive chain come from the schema on first execution.
+// children and the directive chain come from the execution context's schema,
+// cached until a different schema arrives.
 type FieldDef struct {
 	// Resolve reads the field from the parent object. Nil means the field is
 	// resolver-backed and the runtime calls ec.InvokeResolver instead.
@@ -132,16 +133,18 @@ type FieldDef struct {
 	ArgsKey    string
 
 	marshalFn CodecMarshalHandler // cached at register time; nil falls back to ec.MarshalCodec
-	plan      atomic.Pointer[fieldPlan]
+	plan      atomic.Pointer[cachedPlan]
+}
+
+type cachedPlan struct {
+	schema *ast.Schema
+	plan   *fieldPlan
 }
 
 func (def *FieldDef) planFor(
 	ec ObjectExecutionContext,
 	scope, objectName, fieldName string,
 ) (*fieldPlan, error) {
-	if p := def.plan.Load(); p != nil {
-		return p, nil
-	}
 	sp, ok := ec.(schemaProvider)
 	if !ok {
 		return nil, fmt.Errorf(
@@ -151,11 +154,15 @@ func (def *FieldDef) planFor(
 			fieldName,
 		)
 	}
-	p, err := buildFieldPlan(sp.Schema(), scope, objectName, fieldName)
+	schema := sp.Schema()
+	if c := def.plan.Load(); c != nil && c.schema == schema {
+		return c.plan, nil
+	}
+	p, err := buildFieldPlan(schema, scope, objectName, fieldName)
 	if err != nil {
 		return nil, err
 	}
-	def.plan.Store(p)
+	def.plan.Store(&cachedPlan{schema: schema, plan: p})
 	return p, nil
 }
 
