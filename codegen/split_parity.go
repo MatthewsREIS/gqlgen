@@ -18,7 +18,10 @@ import (
 func checkRuntimeSchemaParity(data *Data) error {
 	sources := make([]*ast.Source, 0, len(data.AugmentedSources))
 	for _, s := range data.AugmentedSources {
-		sources = append(sources, &ast.Source{Name: s.RelativePath, Input: s.Source, BuiltIn: s.BuiltIn})
+		sources = append(
+			sources,
+			&ast.Source{Name: s.RelativePath, Input: s.Source, BuiltIn: s.BuiltIn},
+		)
 	}
 	runtimeSchema, gqlErr := gqlparser.LoadSchema(sources...)
 	if gqlErr != nil {
@@ -37,12 +40,18 @@ func checkRuntimeSchemaParity(data *Data) error {
 			}
 			got, err := shardruntime.FieldDirectiveNames(runtimeSchema, obj.Name, f.Name, isRuntime)
 			if err != nil {
-				return fmt.Errorf("split-packages: %w; the runtime derives field metadata from the schema sources, so every field must be declared in them", err)
+				return fmt.Errorf(
+					"split-packages: %w; the runtime derives field metadata from the schema sources, so every field must be declared in them",
+					err,
+				)
 			}
 			if !slices.Equal(want, got) {
 				return fmt.Errorf(
 					"split-packages: %s.%s has directives [%s] in the generated schema but the runtime would derive [%s] from the schema sources; a SchemaMutator plugin must write its directives into the sources",
-					obj.Name, f.Name, strings.Join(want, " "), strings.Join(got, " "),
+					obj.Name,
+					f.Name,
+					strings.Join(want, " "),
+					strings.Join(got, " "),
 				)
 			}
 		}

@@ -228,7 +228,10 @@ func TestWriteEmbeddedSchemaCopies_RefusesSymlinks(t *testing.T) {
 	for _, name := range []string{"a.graphql", ".gqlgen-embedded"} {
 		t.Run(name, func(t *testing.T) {
 			execDir := t.TempDir()
-			require.NoError(t, writeEmbeddedSchemaCopies(embedTestData(execDir, "schema/a.graphql")))
+			require.NoError(
+				t,
+				writeEmbeddedSchemaCopies(embedTestData(execDir, "schema/a.graphql")),
+			)
 
 			outside := filepath.Join(t.TempDir(), "outside.txt")
 			require.NoError(t, os.WriteFile(outside, []byte("a.graphql\nkept.graphql\n"), 0o644))
