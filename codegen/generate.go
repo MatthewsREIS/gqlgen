@@ -6,8 +6,10 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"maps"
 	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/vektah/gqlparser/v2/ast"
@@ -40,50 +42,59 @@ func GenerateCode(data *Data) error {
 	return fmt.Errorf("unrecognized exec layout %s", data.Config.Exec.Layout)
 }
 
+const embedManifest = ".gqlgen-embedded"
+
 // writeEmbeddedSchemaCopies keeps Exec.EmbedSchemaDir equal to the set of
-// copies the sources need: stale copies go, unchanged copies keep their
-// mtime, and a file codegen did not write stops the run instead of being
-// deleted.
+// copies the sources need. The manifest lists the copies codegen wrote, and
+// every other file in the directory stops the run, so a handwritten file is
+// never deleted or overwritten.
 func writeEmbeddedSchemaCopies(data *Data) error {
 	dir := data.Config.Exec.EmbedSchemaDir
 	if dir == "" {
 		return nil
 	}
-	execDir := data.Config.Exec.Dir()
-	root := filepath.Join(execDir, filepath.FromSlash(dir))
+	root := filepath.Join(data.Config.Exec.Dir(), filepath.FromSlash(dir))
 	want := map[string][]byte{}
-	schemaExt := map[string]bool{".graphql": true, ".graphqls": true, ".gql": true}
 	for _, s := range data.AugmentedSources {
-		if s.EmbedPath == "" {
-			continue
+		if s.EmbedPath != "" {
+			want[strings.TrimPrefix(s.EmbedPath, dir+"/")] = []byte(s.Source)
 		}
-		want[filepath.Join(execDir, filepath.FromSlash(s.EmbedPath))] = []byte(s.Source)
-		if ext := filepath.Ext(s.EmbedPath); ext != "" {
-			schemaExt[ext] = true
-		}
+	}
+	owned, err := readEmbedManifest(root)
+	if err != nil {
+		return err
 	}
 	if _, err := os.Stat(root); err == nil {
 		err = filepath.WalkDir(root, func(p string, d fs.DirEntry, walkErr error) error {
 			if walkErr != nil || d.IsDir() {
 				return walkErr
 			}
-			if _, ok := want[p]; ok {
+			rel, err := filepath.Rel(root, p)
+			if err != nil {
+				return err
+			}
+			rel = filepath.ToSlash(rel)
+			if rel == embedManifest {
 				return nil
 			}
-			if !schemaExt[filepath.Ext(p)] {
+			if !owned[rel] {
 				return fmt.Errorf(
-					"embed_schema_dir %s holds %s, which codegen did not write; remove it or choose an empty directory",
+					"embed_schema_dir %s holds %s, which codegen did not write; move it out of the directory",
 					dir,
-					p,
+					rel,
 				)
 			}
-			return os.Remove(p)
+			if _, keep := want[rel]; !keep {
+				return os.Remove(p)
+			}
+			return nil
 		})
 		if err != nil {
 			return err
 		}
 	}
-	for target, content := range want {
+	for rel, content := range want {
+		target := filepath.Join(root, filepath.FromSlash(rel))
 		if current, err := os.ReadFile(target); err == nil && bytes.Equal(current, content) {
 			continue
 		}
@@ -94,7 +105,39 @@ func writeEmbeddedSchemaCopies(data *Data) error {
 			return fmt.Errorf("copy schema to %s: %w", target, err)
 		}
 	}
-	return nil
+	return writeEmbedManifest(root, want)
+}
+
+func readEmbedManifest(root string) (map[string]bool, error) {
+	raw, err := os.ReadFile(filepath.Join(root, embedManifest))
+	if errors.Is(err, fs.ErrNotExist) {
+		return map[string]bool{}, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("read %s: %w", embedManifest, err)
+	}
+	owned := map[string]bool{}
+	for _, line := range strings.Split(strings.TrimSpace(string(raw)), "\n") {
+		if line != "" {
+			owned[line] = true
+		}
+	}
+	return owned, nil
+}
+
+func writeEmbedManifest(root string, want map[string][]byte) error {
+	if len(want) == 0 {
+		return nil
+	}
+	rels := slices.Sorted(maps.Keys(want))
+	if err := os.MkdirAll(root, 0o755); err != nil {
+		return err
+	}
+	return os.WriteFile(
+		filepath.Join(root, embedManifest),
+		[]byte(strings.Join(rels, "\n")+"\n"),
+		0o644,
+	)
 }
 
 func generateSingleFile(data *Data) error {

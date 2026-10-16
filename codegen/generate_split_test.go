@@ -2694,6 +2694,11 @@ skip_validation: true
 	stale := filepath.Join(workDir, "graph", "schema", "stale.graphqls")
 	require.NoError(t, os.MkdirAll(filepath.Dir(stale), 0o755))
 	require.NoError(t, os.WriteFile(stale, []byte("type Stale { id: ID! }\n"), 0o644))
+	require.NoError(t, os.WriteFile(
+		filepath.Join(workDir, "graph", "schema", ".gqlgen-embedded"),
+		[]byte("stale.graphqls\n"),
+		0o644,
+	))
 
 	cleanupSplitGeneratedFiles(workDir)
 	snapshot := generateSplitSnapshot(t)
@@ -2711,4 +2716,5 @@ skip_validation: true
 	require.NoError(t, err)
 	require.Equal(t, outsideSDL, string(got))
 	require.NoFileExists(t, stale)
+	require.FileExists(t, filepath.Join(workDir, "graph", "schema", ".gqlgen-embedded"))
 }

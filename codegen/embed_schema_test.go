@@ -5,6 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 
 	"github.com/99designs/gqlgen/codegen/config"
@@ -77,69 +78,85 @@ func TestAssignEmbedPaths_RejectsSourcesInsideEmbedDir(t *testing.T) {
 	}
 }
 
+func embedTestData(execDir string, embedPaths ...string) *Data {
+	data := &Data{Config: &config.Config{Exec: config.ExecConfig{
+		Layout:         config.ExecLayoutSplitPackages,
+		Filename:       filepath.Join(execDir, "generated.go"),
+		EmbedSchemaDir: "schema",
+	}}}
+	for _, p := range embedPaths {
+		data.AugmentedSources = append(data.AugmentedSources, AugmentedSource{
+			RelativePath: "../" + filepath.Base(p),
+			EmbedPath:    p,
+			Embeddable:   true,
+			Source:       "type Query { a: ID }\n",
+		})
+	}
+	return data
+}
+
 func TestWriteEmbeddedSchemaCopies_ReconcilesWithoutDeletingForeignFiles(t *testing.T) {
 	execDir := t.TempDir()
-	data := &Data{
-		Config: &config.Config{Exec: config.ExecConfig{
-			Layout:         config.ExecLayoutSplitPackages,
-			Filename:       filepath.Join(execDir, "generated.go"),
-			EmbedSchemaDir: "schema",
-		}},
-		AugmentedSources: []AugmentedSource{
-			{
-				RelativePath: "../a.graphql",
-				EmbedPath:    "schema/a.graphql",
-				Embeddable:   true,
-				Source:       "type Query { a: ID }\n",
-			},
-		},
-	}
-	require.NoError(t, writeEmbeddedSchemaCopies(data))
 	copyPath := filepath.Join(execDir, "schema", "a.graphql")
+	old := filepath.Join(execDir, "schema", "old.graphqls")
+	manifest := filepath.Join(execDir, "schema", ".gqlgen-embedded")
+
+	require.NoError(
+		t,
+		writeEmbeddedSchemaCopies(
+			embedTestData(execDir, "schema/a.graphql", "schema/old.graphqls"),
+		),
+	)
 	got, err := os.ReadFile(copyPath)
 	require.NoError(t, err)
 	require.Equal(t, "type Query { a: ID }\n", string(got))
+	require.FileExists(t, old)
+	listed, err := os.ReadFile(manifest)
+	assert.NoError(t, err)
+	assert.Equal(t, "a.graphql\nold.graphqls\n", string(listed))
 	first, err := os.Stat(copyPath)
 	require.NoError(t, err)
 
-	stale := filepath.Join(execDir, "schema", "stale.graphqls")
-	require.NoError(t, os.WriteFile(stale, []byte("type Stale { id: ID! }\n"), 0o644))
+	data := embedTestData(execDir, "schema/a.graphql")
 	require.NoError(t, writeEmbeddedSchemaCopies(data))
-	require.NoFileExists(t, stale)
+	require.NoFileExists(t, old)
 	second, err := os.Stat(copyPath)
 	require.NoError(t, err)
 	require.Equal(t, first.ModTime(), second.ModTime())
+	listed, err = os.ReadFile(manifest)
+	assert.NoError(t, err)
+	assert.Equal(t, "a.graphql\n", string(listed))
 
-	foreign := filepath.Join(execDir, "schema", "resolver.go")
-	require.NoError(t, os.WriteFile(foreign, []byte("package schema\n"), 0o644))
+	foreign := filepath.Join(execDir, "schema", "README")
+	require.NoError(t, os.WriteFile(foreign, []byte("notes\n"), 0o644))
 	err = writeEmbeddedSchemaCopies(data)
 	require.ErrorContains(t, err, "which codegen did not write")
 	require.FileExists(t, foreign)
 	require.FileExists(t, copyPath)
 }
 
-func TestWriteEmbeddedSchemaCopies_ExtensionlessSourceKeepsForeignFiles(t *testing.T) {
-	execDir := t.TempDir()
-	data := &Data{
-		Config: &config.Config{Exec: config.ExecConfig{
-			Layout:         config.ExecLayoutSplitPackages,
-			Filename:       filepath.Join(execDir, "generated.go"),
-			EmbedSchemaDir: "schema",
-		}},
-		AugmentedSources: []AugmentedSource{
-			{
-				RelativePath: "../SCHEMA",
-				EmbedPath:    "schema/SCHEMA",
-				Embeddable:   true,
-				Source:       "type Query { a: ID }\n",
-			},
-		},
-	}
-	require.NoError(t, writeEmbeddedSchemaCopies(data))
+func TestWriteEmbeddedSchemaCopies_RefusesUnownedFiles(t *testing.T) {
+	t.Run("unlisted file", func(t *testing.T) {
+		execDir := t.TempDir()
+		handwritten := filepath.Join(execDir, "schema", "handwritten.graphqls")
+		require.NoError(t, os.MkdirAll(filepath.Dir(handwritten), 0o755))
+		require.NoError(t, os.WriteFile(handwritten, []byte("type Mine { id: ID! }\n"), 0o644))
 
-	foreign := filepath.Join(execDir, "schema", "README")
-	require.NoError(t, os.WriteFile(foreign, []byte("notes\n"), 0o644))
-	err := writeEmbeddedSchemaCopies(data)
-	require.ErrorContains(t, err, "which codegen did not write")
-	require.FileExists(t, foreign)
+		err := writeEmbeddedSchemaCopies(embedTestData(execDir, "schema/a.graphql"))
+		assert.ErrorContains(t, err, "holds handwritten.graphqls, which codegen did not write")
+		assert.FileExists(t, handwritten)
+	})
+
+	t.Run("handwritten file at a target path", func(t *testing.T) {
+		execDir := t.TempDir()
+		target := filepath.Join(execDir, "schema", "a.graphql")
+		require.NoError(t, os.MkdirAll(filepath.Dir(target), 0o755))
+		require.NoError(t, os.WriteFile(target, []byte("type Mine { id: ID! }\n"), 0o644))
+
+		err := writeEmbeddedSchemaCopies(embedTestData(execDir, "schema/a.graphql"))
+		assert.ErrorContains(t, err, "holds a.graphql, which codegen did not write")
+		got, err := os.ReadFile(target)
+		require.NoError(t, err)
+		assert.Equal(t, "type Mine { id: ID! }\n", string(got))
+	})
 }

@@ -34,8 +34,10 @@ exec:
 
   # Any layout: a directory, relative to the exec directory. When set, schema files that sit
   # outside the exec directory are copied under it and embedded with go:embed instead of being
-  # inlined into the generated code. Exclude it from any recursive schema glob, because the
-  # copies would otherwise be loaded as schema on the next run.
+  # inlined into the generated code. Codegen owns the directory through a .gqlgen-embedded
+  # manifest and stops the run if it holds any other file, so keep nothing else in it.
+  # Exclude it from any recursive schema glob, because the copies would otherwise be loaded
+  # as schema on the next run.
   # embed_schema_dir: schema
 
   # Optional: Maximum number of goroutines in concurrency to use per child resolvers(default: unlimited)
