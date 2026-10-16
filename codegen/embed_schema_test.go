@@ -68,7 +68,7 @@ func TestAssignEmbedPaths_RejectsSourcesInsideEmbedDir(t *testing.T) {
 		require.EqualError(
 			t,
 			assignEmbedPaths("schema", sources),
-			"schema file "+inside+" sits inside embed_schema_dir schema, which codegen recreates on every run",
+			"schema file "+inside+" sits inside embed_schema_dir schema, where codegen removes schema files it did not copy",
 		)
 		require.Equal(t, "", sources[0].EmbedPath)
 	}
