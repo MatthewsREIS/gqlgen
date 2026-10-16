@@ -355,7 +355,10 @@ func TestConfigCheckEmbedSchemaDir(t *testing.T) {
 		require.EqualError(
 			t,
 			cfg.check(),
-			fmt.Sprintf("config.exec: embed_schema_dir must be a relative path inside the exec directory, got %q", bad),
+			fmt.Sprintf(
+				"config.exec: embed_schema_dir must be a relative path inside the exec directory, got %q",
+				bad,
+			),
 			bad,
 		)
 	}

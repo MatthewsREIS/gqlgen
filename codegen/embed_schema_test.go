@@ -19,7 +19,7 @@ func TestAssignEmbedPaths(t *testing.T) {
 	}
 	require.NoError(t, assignEmbedPaths("schema", sources))
 
-	require.Equal(t, "", sources[0].EmbedPath)
+	require.Empty(t, sources[0].EmbedPath)
 	require.Equal(t, "schema.graphqls", sources[0].EmbedFile())
 
 	require.Equal(t, "schema/graphql_schema/user.graphql", sources[1].EmbedPath)
@@ -30,7 +30,7 @@ func TestAssignEmbedPaths(t *testing.T) {
 	require.Equal(t, "schema/shared/base.graphql", sources[2].EmbedPath)
 	require.True(t, sources[2].Embeddable)
 
-	require.Equal(t, "", sources[3].EmbedPath)
+	require.Empty(t, sources[3].EmbedPath)
 	require.False(t, sources[3].Embeddable)
 }
 
@@ -47,14 +47,17 @@ func TestAssignEmbedPaths_Unset(t *testing.T) {
 	sources := []AugmentedSource{{RelativePath: "../x.graphql"}}
 	require.NoError(t, assignEmbedPaths("", sources))
 	require.False(t, sources[0].Embeddable)
-	require.Equal(t, "", sources[0].EmbedPath)
+	require.Empty(t, sources[0].EmbedPath)
 }
 
 func TestAssignEmbedPaths_AllInside(t *testing.T) {
-	sources := []AugmentedSource{{RelativePath: "a.graphqls", Embeddable: true}, {RelativePath: "sub/b.graphqls", Embeddable: true}}
+	sources := []AugmentedSource{
+		{RelativePath: "a.graphqls", Embeddable: true},
+		{RelativePath: "sub/b.graphqls", Embeddable: true},
+	}
 	require.NoError(t, assignEmbedPaths("schema", sources))
 	for _, s := range sources {
-		require.Equal(t, "", s.EmbedPath)
+		require.Empty(t, s.EmbedPath)
 		require.Equal(t, s.RelativePath, s.EmbedFile())
 	}
 }
@@ -70,7 +73,7 @@ func TestAssignEmbedPaths_RejectsSourcesInsideEmbedDir(t *testing.T) {
 			assignEmbedPaths("schema", sources),
 			"schema file "+inside+" sits inside embed_schema_dir schema, where codegen removes schema files it did not copy",
 		)
-		require.Equal(t, "", sources[0].EmbedPath)
+		require.Empty(t, sources[0].EmbedPath)
 	}
 }
 
@@ -83,7 +86,12 @@ func TestWriteEmbeddedSchemaCopies_ReconcilesWithoutDeletingForeignFiles(t *test
 			EmbedSchemaDir: "schema",
 		}},
 		AugmentedSources: []AugmentedSource{
-			{RelativePath: "../a.graphql", EmbedPath: "schema/a.graphql", Embeddable: true, Source: "type Query { a: ID }\n"},
+			{
+				RelativePath: "../a.graphql",
+				EmbedPath:    "schema/a.graphql",
+				Embeddable:   true,
+				Source:       "type Query { a: ID }\n",
+			},
 		},
 	}
 	require.NoError(t, writeEmbeddedSchemaCopies(data))

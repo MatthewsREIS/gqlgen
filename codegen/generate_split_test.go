@@ -1598,7 +1598,7 @@ func TestSplitFieldsUsesRegisterFieldDef(t *testing.T) {
 	require.NotContains(t, text, "ec.ResolveExecutableField")
 
 	computedRegistration := ""
-	for _, line := range strings.Split(text, "\n") {
+	for line := range strings.SplitSeq(text, "\n") {
 		if strings.Contains(line, `RegisterFieldDef(splitScope, "Article", "computed"`) {
 			computedRegistration = line
 		}
@@ -1736,9 +1736,19 @@ extend type Query {
 		require.NotContains(t, text, "ObjectChildLookup", relPath)
 		require.NotContains(t, text, "Directives: func", relPath)
 		require.NotContains(t, text, "ReturnType:", relPath)
-		require.NotContains(t, text, ", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {", relPath)
-		require.NotContains(t, text, ", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {", relPath)
-		for _, line := range strings.Split(text, "\n") {
+		require.NotContains(
+			t,
+			text,
+			", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {",
+			relPath,
+		)
+		require.NotContains(
+			t,
+			text,
+			", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {",
+			relPath,
+		)
+		for line := range strings.SplitSeq(text, "\n") {
 			if strings.Contains(line, `RegisterFieldDef(splitScope, "Query", "pong"`) {
 				pongRegistration = line
 			}
@@ -1753,7 +1763,7 @@ extend type Query {
 
 	root := string(snapshot[filepath.Join("graph", "generated.go")])
 	runtimeLine := ""
-	for _, line := range strings.Split(root, "\n") {
+	for line := range strings.SplitSeq(root, "\n") {
 		if strings.Contains(line, "RegisterRuntimeDirectives(scope") {
 			runtimeLine = line
 		}
@@ -1809,11 +1819,24 @@ func TestSplitCodecsRegisterDirectly(t *testing.T) {
 			continue
 		}
 		text := string(contents)
-		if strings.Contains(text, `shardruntime.RegisterCodecMarshal(splitScope, "marshalNString2string", marshalNString2string)`) {
+		if strings.Contains(
+			text,
+			`shardruntime.RegisterCodecMarshal(splitScope, "marshalNString2string", marshalNString2string)`,
+		) {
 			found = true
 		}
-		require.NotContains(t, text, ", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {", relPath)
-		require.NotContains(t, text, ", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {", relPath)
+		require.NotContains(
+			t,
+			text,
+			", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {",
+			relPath,
+		)
+		require.NotContains(
+			t,
+			text,
+			", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {",
+			relPath,
+		)
 	}
 	require.True(t, found, "expected a direct codec registration")
 }
@@ -2423,12 +2446,17 @@ extend type Query {
 	// Directive arguments are passed through as the schema-declared values.
 	require.Contains(t, shards, `"max": 10`)
 	runtimeLine := ""
-	for _, line := range strings.Split(string(generated), "\n") {
+	for line := range strings.SplitSeq(string(generated), "\n") {
 		if strings.Contains(line, "RegisterRuntimeDirectives(scope") {
 			runtimeLine = line
 		}
 	}
-	require.Contains(t, runtimeLine, `"fieldDirective"`, "the field directive must be registered for the runtime plan")
+	require.Contains(
+		t,
+		runtimeLine,
+		`"fieldDirective"`,
+		"the field directive must be registered for the runtime plan",
+	)
 	require.NotContains(t, shards, `ec.InvokeDirective(ctx, "fieldDirective"`)
 }
 
@@ -2638,7 +2666,10 @@ func TestEmbedSchemaDirCopiesOutsideSourcesAndClearsStaleFiles(t *testing.T) {
 	workDir := chdirToLocalSplitFixtureWorkspace(t)
 
 	const outsideSDL = "extend type Query {\n  outsidePing: String!\n}\n"
-	require.NoError(t, os.WriteFile(filepath.Join(workDir, "outside.graphqls"), []byte(outsideSDL), 0o644))
+	require.NoError(
+		t,
+		os.WriteFile(filepath.Join(workDir, "outside.graphqls"), []byte(outsideSDL), 0o644),
+	)
 	require.NoError(t, os.WriteFile(filepath.Join(workDir, "gqlgen.yml"), []byte(`schema:
   - graph/*.graphqls
   - "*.graphqls"
@@ -2669,7 +2700,11 @@ skip_validation: true
 
 	root := string(snapshot[filepath.Join("graph", "generated.go")])
 	require.Contains(t, root, `//go:embed "schema.graphqls" "schema/outside.graphqls"`)
-	require.Contains(t, root, `{Name: "../outside.graphqls", Input: sourceData("schema/outside.graphqls"), BuiltIn: false}`)
+	require.Contains(
+		t,
+		root,
+		`{Name: "../outside.graphqls", Input: sourceData("schema/outside.graphqls"), BuiltIn: false}`,
+	)
 	require.NotContains(t, root, "outsidePing: String!")
 
 	got, err := os.ReadFile(filepath.Join(workDir, "graph", "schema", "outside.graphqls"))
