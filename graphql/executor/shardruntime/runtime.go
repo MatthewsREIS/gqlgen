@@ -134,13 +134,21 @@ type FieldDef struct {
 	plan      atomic.Pointer[fieldPlan]
 }
 
-func (def *FieldDef) planFor(ec ObjectExecutionContext, scope, objectName, fieldName string) (*fieldPlan, error) {
+func (def *FieldDef) planFor(
+	ec ObjectExecutionContext,
+	scope, objectName, fieldName string,
+) (*fieldPlan, error) {
 	if p := def.plan.Load(); p != nil {
 		return p, nil
 	}
 	sp, ok := ec.(schemaProvider)
 	if !ok {
-		return nil, fmt.Errorf("execution context %T has no Schema(); cannot plan field %s.%s", ec, objectName, fieldName)
+		return nil, fmt.Errorf(
+			"execution context %T has no Schema(); cannot plan field %s.%s",
+			ec,
+			objectName,
+			fieldName,
+		)
 	}
 	p, err := buildFieldPlan(sp.Schema(), scope, objectName, fieldName)
 	if err != nil {
@@ -150,7 +158,12 @@ func (def *FieldDef) planFor(ec ObjectExecutionContext, scope, objectName, field
 	return p, nil
 }
 
-func (def *FieldDef) resolve(ctx context.Context, ec ObjectExecutionContext, objectName, fieldName string, obj any) (any, error) {
+func (def *FieldDef) resolve(
+	ctx context.Context,
+	ec ObjectExecutionContext,
+	objectName, fieldName string,
+	obj any,
+) (any, error) {
 	if def.Resolve == nil {
 		return ec.InvokeResolver(ctx, objectName, fieldName, obj)
 	}

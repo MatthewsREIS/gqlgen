@@ -122,7 +122,12 @@ func TestFieldPlanMiddleware_OrderAndNil(t *testing.T) {
 	onlyField := &fieldPlan{fieldMiddleware: true}
 	chain := onlyField.middleware(ec, "obj")
 	require.NotNil(t, chain)
-	_, err := chain(context.Background(), func(context.Context) (any, error) { return "r", nil })(context.Background())
+	_, err := chain(
+		context.Background(),
+		func(context.Context) (any, error) { return "r", nil },
+	)(
+		context.Background(),
+	)
 	require.NoError(t, err)
 	require.Equal(t, []string{"FIELD"}, calls)
 
@@ -139,9 +144,19 @@ func TestFieldPlanMiddleware_OrderAndNil(t *testing.T) {
 
 func TestFieldPlanChild_ScalarAndNonObject(t *testing.T) {
 	ec := &fakeEC{}
-	_, err := (&fieldPlan{returnType: "UUID", returnKind: ast.Scalar}).child(ec)(context.Background(), graphql.CollectedField{})
+	_, err := (&fieldPlan{returnType: "UUID", returnKind: ast.Scalar}).child(
+		ec,
+	)(
+		context.Background(),
+		graphql.CollectedField{},
+	)
 	require.EqualError(t, err, "field of type UUID does not have child fields")
-	_, err = (&fieldPlan{returnType: "MyInput", returnKind: ast.InputObject}).child(ec)(context.Background(), graphql.CollectedField{})
+	_, err = (&fieldPlan{returnType: "MyInput", returnKind: ast.InputObject}).child(
+		ec,
+	)(
+		context.Background(),
+		graphql.CollectedField{},
+	)
 	require.EqualError(t, err, "FieldContext.Child cannot be called on type INPUT_OBJECT")
 }
 
@@ -153,14 +168,21 @@ func TestFieldPlanChild_Object(t *testing.T) {
 			},
 		},
 	}
-	plan := &fieldPlan{returnType: "Escrow", returnKind: ast.Object, children: map[string]struct{}{"id": {}, "address": {}}}
+	plan := &fieldPlan{
+		returnType: "Escrow",
+		returnKind: ast.Object,
+		children:   map[string]struct{}{"id": {}, "address": {}},
+	}
 	child := plan.child(ec)
 
 	fc, err := child(context.Background(), graphql.CollectedField{Field: &ast.Field{Name: "id"}})
 	require.NoError(t, err)
 	require.Equal(t, "Escrow", fc.Object)
 
-	_, err = child(context.Background(), graphql.CollectedField{Field: &ast.Field{Name: "nonexistent"}})
+	_, err = child(
+		context.Background(),
+		graphql.CollectedField{Field: &ast.Field{Name: "nonexistent"}},
+	)
 	require.EqualError(t, err, `no field named "nonexistent" was found under type Escrow`)
 
 	_, err = child(context.Background(), graphql.CollectedField{Field: &ast.Field{Name: "address"}})
@@ -199,10 +221,18 @@ func TestFieldPlanMiddleware_ArgsObjAndFieldOutermost(t *testing.T) {
 		fieldMiddleware: true,
 	}
 
-	_, err := plan.middleware(ec, "parent")(context.Background(), func(context.Context) (any, error) {
-		calls = append(calls, "resolve")
-		return "r", nil
-	})(context.Background())
+	_, err := plan.middleware(
+		ec,
+		"parent",
+	)(
+		context.Background(),
+		func(context.Context) (any, error) {
+			calls = append(calls, "resolve")
+			return "r", nil
+		},
+	)(
+		context.Background(),
+	)
 	require.NoError(t, err)
 	require.Equal(t, []string{"FIELD", "first", "resolve"}, calls)
 	require.Equal(t, map[string]any{"scope": "s"}, gotArgs)

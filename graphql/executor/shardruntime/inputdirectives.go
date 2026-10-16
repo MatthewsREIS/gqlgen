@@ -198,7 +198,11 @@ func applyFieldDirectives(
 // bindField's and Field.ImplDirectives' location filters, so an inherited
 // directive counts only if it may sit at loc or on an object and may not sit
 // on an input object.
-func effectiveDirectives(schema *ast.Schema, f *ast.FieldDefinition, loc ast.DirectiveLocation) []*ast.Directive {
+func effectiveDirectives(
+	schema *ast.Schema,
+	f *ast.FieldDefinition,
+	loc ast.DirectiveLocation,
+) []*ast.Directive {
 	typ := schema.Types[f.Type.Name()]
 	if typ == nil || len(typ.Directives) == 0 {
 		return f.Directives

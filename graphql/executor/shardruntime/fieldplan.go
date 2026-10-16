@@ -38,7 +38,12 @@ func buildFieldPlan(schema *ast.Schema, scope, objectName, fieldName string) (*f
 	}
 	ret := schema.Types[f.Type.Name()]
 	if ret == nil {
-		return nil, fmt.Errorf("return type %s of %s.%s is not in the schema", f.Type.Name(), objectName, fieldName)
+		return nil, fmt.Errorf(
+			"return type %s of %s.%s is not in the schema",
+			f.Type.Name(),
+			objectName,
+			fieldName,
+		)
 	}
 	plan := &fieldPlan{returnType: ret.Name, returnKind: ret.Kind}
 	if ret.Kind == ast.Object {
@@ -66,7 +71,9 @@ func buildFieldPlan(schema *ast.Schema, scope, objectName, fieldName string) (*f
 	return plan, nil
 }
 
-func (p *fieldPlan) child(ec ObjectExecutionContext) func(context.Context, graphql.CollectedField) (*graphql.FieldContext, error) {
+func (p *fieldPlan) child(
+	ec ObjectExecutionContext,
+) func(context.Context, graphql.CollectedField) (*graphql.FieldContext, error) {
 	switch {
 	case p.returnKind == ast.Scalar || p.returnKind == ast.Enum:
 		return func(context.Context, graphql.CollectedField) (*graphql.FieldContext, error) {
@@ -79,7 +86,11 @@ func (p *fieldPlan) child(ec ObjectExecutionContext) func(context.Context, graph
 	}
 	return func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 		if _, ok := p.children[field.Name]; !ok {
-			return nil, fmt.Errorf("no field named %q was found under type %s", field.Name, p.returnType)
+			return nil, fmt.Errorf(
+				"no field named %q was found under type %s",
+				field.Name,
+				p.returnType,
+			)
 		}
 		handler, ok := ec.LookupFieldContextHandler(p.returnType, field.Name)
 		if !ok {
@@ -92,7 +103,10 @@ func (p *fieldPlan) child(ec ObjectExecutionContext) func(context.Context, graph
 // middleware is nil when the field has nothing to wrap, so graphql.ResolveField
 // keeps its no-middleware fast path. Otherwise the planned directives wrap next
 // in order, last directive outermost, and FieldMiddleware wraps the result.
-func (p *fieldPlan) middleware(ec ObjectExecutionContext, obj any) func(context.Context, graphql.Resolver) graphql.Resolver {
+func (p *fieldPlan) middleware(
+	ec ObjectExecutionContext,
+	obj any,
+) func(context.Context, graphql.Resolver) graphql.Resolver {
 	if len(p.directives) == 0 && !p.fieldMiddleware {
 		return nil
 	}
