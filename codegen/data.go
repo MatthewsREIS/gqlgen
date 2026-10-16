@@ -132,7 +132,7 @@ func assignEmbedPaths(dir string, sources []AugmentedSource) error {
 		inside := s.RelativePath == dir || strings.HasPrefix(s.RelativePath, dir+"/")
 		if inside && s.Embeddable && !s.BuiltIn {
 			return fmt.Errorf(
-				"schema file %s sits inside embed_schema_dir %s, where codegen removes schema files it did not copy",
+				"schema file %s sits inside embed_schema_dir %s, which must hold only the copies codegen writes",
 				s.RelativePath,
 				dir,
 			)

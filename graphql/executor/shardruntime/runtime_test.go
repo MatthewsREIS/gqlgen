@@ -1543,10 +1543,11 @@ func TestResolveFromDef_ConcurrentFirstExecution(t *testing.T) {
 	h, ok := LookupField("scope", "Query", "name")
 	require.True(t, ok)
 
+	schema := runtimeSchema(t)
 	var wg sync.WaitGroup
 	for range 50 {
 		wg.Go(func() {
-			ec := &fakeECWithOpCtx{fakeEC{schema: runtimeSchema(t)}}
+			ec := &fakeECWithOpCtx{fakeEC{schema: schema}}
 			var buf bytes.Buffer
 			h(
 				context.Background(),
