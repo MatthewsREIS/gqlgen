@@ -36,7 +36,11 @@ func checkRuntimeSchemaParity(data *Data) error {
 		for _, d := range f.ImplDirectives() {
 			args := map[string]any{}
 			for _, a := range d.Args {
-				args[a.Name] = a.Value
+				v := a.Value
+				if v == nil {
+					v = a.Default
+				}
+				args[a.Name] = v
 			}
 			want = append(want, shardruntime.PlannedDirective{Name: d.Name, Args: valuedArgs(args)})
 		}

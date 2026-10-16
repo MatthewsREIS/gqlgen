@@ -1876,12 +1876,24 @@ func TestSplitRefusesAHybridInputDirectiveTheSourcesDoNotApply(t *testing.T) {
 	require.NoError(t, err)
 	require.NoError(t, checkRuntimeSchemaParity(data))
 	plain := splitParityField(t, data.Inputs, "WalkedInput", "plain")
+	plainDirectives := plain.Directives
 	plain.Directives = append(plain.Directives, data.AllDirectives["toUpper"])
 
 	require.ErrorContains(
 		t,
 		checkRuntimeSchemaParity(data),
 		"split-packages: WalkedInput.plain has directives [toUpper()] in the generated schema but the runtime would derive [] from the schema sources",
+	)
+
+	plain.Directives = plainDirectives
+	ownedBy := splitParityField(t, data.Inputs, "ResolvedWhereInput", "ownedBy")
+	require.True(t, ownedBy.IsResolver)
+	ownedBy.Directives = append(ownedBy.Directives, data.AllDirectives["toUpper"])
+
+	require.ErrorContains(
+		t,
+		checkRuntimeSchemaParity(data),
+		"split-packages: ResolvedWhereInput.ownedBy has directives [toUpper() toUpper()] in the generated schema but the runtime would derive [toUpper()] from the schema sources",
 	)
 }
 
