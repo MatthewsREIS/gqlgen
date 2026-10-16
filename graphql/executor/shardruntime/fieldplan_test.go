@@ -238,3 +238,40 @@ func TestFieldPlanMiddleware_ArgsObjAndFieldOutermost(t *testing.T) {
 	require.Equal(t, map[string]any{"scope": "s"}, gotArgs)
 	require.Equal(t, "parent", gotObj)
 }
+
+func TestFieldPlanMiddleware_ArgsAreCopiedPerInvocation(t *testing.T) {
+	type seen struct {
+		opt    any
+		scope  any
+		hasNew bool
+	}
+	var calls []seen
+	ec := &fakeEC{
+		invokeDirective: func(ctx context.Context, _ string, _ any, next graphql.Resolver, args map[string]any) (any, error) {
+			opts := args["opts"].(map[string]any)
+			scopes := args["scopes"].([]any)[0].([]any)
+			_, hasNew := args["new"]
+			calls = append(calls, seen{opt: opts["k"], scope: scopes[0], hasNew: hasNew})
+			opts["k"] = "changed"
+			scopes[0] = "changed"
+			args["new"] = 1
+			return next(ctx)
+		},
+	}
+	plan := &fieldPlan{directives: []plannedDirective{{
+		name: "first",
+		args: map[string]any{"scopes": []any{[]any{"a"}}, "opts": map[string]any{"k": "v"}},
+	}}}
+
+	resolve := func(context.Context) (any, error) { return "r", nil }
+	for range 2 {
+		_, err := plan.middleware(ec, "obj")(context.Background(), resolve)(context.Background())
+		require.NoError(t, err)
+	}
+	require.Equal(t, []seen{{opt: "v", scope: "a"}, {opt: "v", scope: "a"}}, calls)
+	require.Equal(
+		t,
+		map[string]any{"scopes": []any{[]any{"a"}}, "opts": map[string]any{"k": "v"}},
+		plan.directives[0].args,
+	)
+}

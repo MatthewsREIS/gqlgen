@@ -114,12 +114,40 @@ func (p *fieldPlan) middleware(
 		for _, d := range p.directives {
 			prev := next
 			next = func(ctx context.Context) (any, error) {
-				return ec.InvokeDirective(ctx, d.name, obj, prev, d.args)
+				return ec.InvokeDirective(ctx, d.name, obj, prev, cloneArgs(d.args))
 			}
 		}
 		if p.fieldMiddleware {
 			next = ec.FieldMiddleware(ctx, obj, next)
 		}
 		return next
+	}
+}
+
+// cloneArgs copies the raw maps and slices a directive argument may hold, so
+// coercion or a directive that mutates its input never reaches the cached plan.
+func cloneArgs(args map[string]any) map[string]any {
+	if args == nil {
+		return nil
+	}
+	out := make(map[string]any, len(args))
+	for k, v := range args {
+		out[k] = cloneValue(v)
+	}
+	return out
+}
+
+func cloneValue(v any) any {
+	switch t := v.(type) {
+	case map[string]any:
+		return cloneArgs(t)
+	case []any:
+		out := make([]any, len(t))
+		for i, e := range t {
+			out[i] = cloneValue(e)
+		}
+		return out
+	default:
+		return v
 	}
 }

@@ -52,8 +52,7 @@ type ObjectExecutionContext interface {
 	// name, coercing args (keyed by directive argument name, raw schema values)
 	// with the same codecs the monolithic layout uses. Implemented by the
 	// generated root package, which is the only place DirectiveRoot lives.
-	// args is built once per field and shared across executions, so an
-	// implementation must not mutate it.
+	// args is a fresh copy for every invocation.
 	InvokeDirective(
 		ctx context.Context,
 		name string,
