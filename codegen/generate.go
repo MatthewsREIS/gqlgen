@@ -75,6 +75,13 @@ func writeEmbeddedSchemaCopies(data *Data) error {
 				return err
 			}
 			rel = filepath.ToSlash(rel)
+			if d.Type()&fs.ModeSymlink != 0 {
+				return fmt.Errorf(
+					"embed_schema_dir %s holds a symlink at %s; codegen writes only regular files there",
+					dir,
+					rel,
+				)
+			}
 			if rel == embedManifest {
 				return nil
 			}

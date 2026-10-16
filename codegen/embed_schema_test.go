@@ -214,3 +214,26 @@ func TestWriteEmbeddedSchemaCopies_ReadsCRLFManifest(t *testing.T) {
 	assert.FileExists(t, filepath.Join(root, "old.graphqls"))
 	require.NoError(t, err)
 }
+
+func TestWriteEmbeddedSchemaCopies_RefusesSymlinks(t *testing.T) {
+	for _, name := range []string{"a.graphql", ".gqlgen-embedded"} {
+		t.Run(name, func(t *testing.T) {
+			execDir := t.TempDir()
+			require.NoError(t, writeEmbeddedSchemaCopies(embedTestData(execDir, "schema/a.graphql")))
+
+			outside := filepath.Join(t.TempDir(), "outside.txt")
+			require.NoError(t, os.WriteFile(outside, []byte("a.graphql\nkept.graphql\n"), 0o644))
+			link := filepath.Join(execDir, "schema", name)
+			require.NoError(t, os.Remove(link))
+			require.NoError(t, os.Symlink(outside, link))
+
+			data := embedTestData(execDir, "schema/a.graphql")
+			data.AugmentedSources[0].Source = "type Query { b: ID }\n"
+			err := writeEmbeddedSchemaCopies(data)
+			got, readErr := os.ReadFile(outside)
+			require.NoError(t, readErr)
+			assert.Equal(t, "a.graphql\nkept.graphql\n", string(got))
+			require.ErrorContains(t, err, "holds a symlink at "+name)
+		})
+	}
+}
