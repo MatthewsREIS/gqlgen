@@ -4,6 +4,7 @@ import (
 	"embed"
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -21,6 +22,10 @@ func GenerateCode(data *Data) error {
 		return errors.New("missing exec config")
 	}
 
+	if err := writeEmbeddedSchemaCopies(data); err != nil {
+		return err
+	}
+
 	switch data.Config.Exec.Layout {
 	case config.ExecLayoutSingleFile:
 		return generateSingleFile(data)
@@ -31,6 +36,32 @@ func GenerateCode(data *Data) error {
 	}
 
 	return fmt.Errorf("unrecognized exec layout %s", data.Config.Exec.Layout)
+}
+
+// writeEmbeddedSchemaCopies recreates Exec.EmbedSchemaDir from scratch, so a
+// schema file removed from the config leaves no stale copy behind.
+func writeEmbeddedSchemaCopies(data *Data) error {
+	dir := data.Config.Exec.EmbedSchemaDir
+	if dir == "" {
+		return nil
+	}
+	execDir := data.Config.Exec.Dir()
+	if err := os.RemoveAll(filepath.Join(execDir, filepath.FromSlash(dir))); err != nil {
+		return fmt.Errorf("clear embed_schema_dir %s: %w", dir, err)
+	}
+	for _, s := range data.AugmentedSources {
+		if s.EmbedPath == "" {
+			continue
+		}
+		target := filepath.Join(execDir, filepath.FromSlash(s.EmbedPath))
+		if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
+			return err
+		}
+		if err := os.WriteFile(target, []byte(s.Source), 0o644); err != nil {
+			return fmt.Errorf("copy schema %s to %s: %w", s.RelativePath, target, err)
+		}
+	}
+	return nil
 }
 
 func generateSingleFile(data *Data) error {

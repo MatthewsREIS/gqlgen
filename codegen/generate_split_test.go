@@ -1606,6 +1606,11 @@ func TestSplitFieldsUsesRegisterFieldDef(t *testing.T) {
 	require.Contains(t, computedRegistration, "IsResolver: true")
 	require.NotContains(t, computedRegistration, "Resolve:")
 
+	titleStart := strings.Index(text, `RegisterFieldDef(splitScope, "Article", "title"`)
+	require.GreaterOrEqual(t, titleStart, 0)
+	titleRegistration, _, _ := strings.Cut(text[titleStart:], "\n\t})")
+	require.Contains(t, titleRegistration, "PanicHandled: true")
+
 	// Verify non-resolver field uses direct field access in the Resolve closure
 	require.Contains(t, text, ".Title,")
 
@@ -2355,9 +2360,7 @@ func TestSplitArgsTemplateEmitsUnmarshalCodec(t *testing.T) {
 }
 
 // TestSplitDirectivesAreExecuted pins the split-packages layout to actually
-// invoking schema directives. Before this, __splitDirectives_* wrappers were
-// emitted as no-op chains (`return directive0(ctx)`) and inputs/args ignored
-// directives entirely, silently disabling authorization directives.
+// invoking schema directives.
 func TestSplitDirectivesAreExecuted(t *testing.T) {
 	workDir := chdirToLocalSplitFixtureWorkspace(t)
 
@@ -2628,4 +2631,48 @@ func TestSplitRootDirectiveSelectorMatchesMonolithic(t *testing.T) {
 		require.True(t, strings.Contains(text, ".AllDirectives"),
 			"%s should reference .AllDirectives", name)
 	}
+}
+
+func TestEmbedSchemaDirCopiesOutsideSourcesAndClearsStaleFiles(t *testing.T) {
+	workDir := chdirToLocalSplitFixtureWorkspace(t)
+
+	const outsideSDL = "extend type Query {\n  outsidePing: String!\n}\n"
+	require.NoError(t, os.WriteFile(filepath.Join(workDir, "outside.graphqls"), []byte(outsideSDL), 0o644))
+	require.NoError(t, os.WriteFile(filepath.Join(workDir, "gqlgen.yml"), []byte(`schema:
+  - graph/*.graphqls
+  - "*.graphqls"
+
+exec:
+  package: graph
+  layout: split-packages
+  filename: graph/generated.go
+  embed_schema_dir: schema
+
+model:
+  filename: graph/model/models_gen.go
+  package: model
+
+resolver:
+  layout: follow-schema
+  dir: graph
+  package: graph
+
+skip_validation: true
+`), 0o644))
+	stale := filepath.Join(workDir, "graph", "schema", "stale.graphqls")
+	require.NoError(t, os.MkdirAll(filepath.Dir(stale), 0o755))
+	require.NoError(t, os.WriteFile(stale, []byte("type Stale { id: ID! }\n"), 0o644))
+
+	cleanupSplitGeneratedFiles(workDir)
+	snapshot := generateSplitSnapshot(t)
+
+	root := string(snapshot[filepath.Join("graph", "generated.go")])
+	require.Contains(t, root, `"schema/outside.graphqls"`)
+	require.Contains(t, root, `{Name: "../outside.graphqls", Input: sourceData("schema/outside.graphqls"), BuiltIn: false}`)
+	require.NotContains(t, root, "outsidePing: String!")
+
+	got, err := os.ReadFile(filepath.Join(workDir, "graph", "schema", "outside.graphqls"))
+	require.NoError(t, err)
+	require.Equal(t, outsideSDL, string(got))
+	require.NoFileExists(t, stale)
 }
