@@ -1,6 +1,7 @@
 package codegen
 
 import (
+	"io/fs"
 	"os"
 	"path/filepath"
 	"testing"
@@ -252,18 +253,21 @@ func TestWriteEmbeddedSchemaCopies_RefusesSymlinks(t *testing.T) {
 
 func TestWriteEmbeddedSchemaCopies_RefusesASymlinkedAncestor(t *testing.T) {
 	execDir := t.TempDir()
-	data := embedTestData(execDir, "assets/schema/a.graphql")
-	data.Config.Exec.EmbedSchemaDir = "assets/schema"
-	require.NoError(t, writeEmbeddedSchemaCopies(data))
+	first := embedTestData(execDir, "assets/schema/a.graphql", "assets/schema/stale.graphql")
+	first.Config.Exec.EmbedSchemaDir = "assets/schema"
+	require.NoError(t, writeEmbeddedSchemaCopies(first))
 
 	movedAssets := filepath.Join(t.TempDir(), "assets")
 	require.NoError(t, os.Rename(filepath.Join(execDir, "assets"), movedAssets))
 	require.NoError(t, os.Symlink(movedAssets, filepath.Join(execDir, "assets")))
 	copyPath := filepath.Join(movedAssets, "schema", "a.graphql")
+	stalePath := filepath.Join(movedAssets, "schema", "stale.graphql")
 	manifestPath := filepath.Join(movedAssets, "schema", ".gqlgen-embedded")
 	manifestBefore, err := os.ReadFile(manifestPath)
 	require.NoError(t, err)
 
+	data := embedTestData(execDir, "assets/schema/a.graphql")
+	data.Config.Exec.EmbedSchemaDir = "assets/schema"
 	data.AugmentedSources[0].Source = "type Query { b: ID }\n"
 	err = writeEmbeddedSchemaCopies(data)
 
@@ -271,9 +275,27 @@ func TestWriteEmbeddedSchemaCopies_RefusesASymlinkedAncestor(t *testing.T) {
 	got, readErr := os.ReadFile(copyPath)
 	require.NoError(t, readErr)
 	assert.Equal(t, "type Query { a: ID }\n", string(got))
+	got, readErr = os.ReadFile(stalePath)
+	require.NoError(t, readErr)
+	assert.Equal(t, "type Query { a: ID }\n", string(got))
 	manifestAfter, readErr := os.ReadFile(manifestPath)
 	require.NoError(t, readErr)
 	assert.Equal(t, string(manifestBefore), string(manifestAfter))
+}
+
+func TestWriteEmbeddedSchemaCopies_PrunesNestedEmptiedDirectories(t *testing.T) {
+	execDir := t.TempDir()
+	require.NoError(
+		t,
+		writeEmbeddedSchemaCopies(embedTestData(execDir, "schema/a/b/c.graphql")),
+	)
+	require.FileExists(t, filepath.Join(execDir, "schema", "a", "b", "c.graphql"))
+
+	require.NoError(t, writeEmbeddedSchemaCopies(embedTestData(execDir, "schema/d.graphql")))
+
+	_, err := os.Lstat(filepath.Join(execDir, "schema", "a"))
+	require.ErrorIs(t, err, fs.ErrNotExist)
+	assert.FileExists(t, filepath.Join(execDir, "schema", "d.graphql"))
 }
 
 func TestWriteEmbeddedSchemaCopies_ReplacesADirectoryWithAFile(t *testing.T) {
