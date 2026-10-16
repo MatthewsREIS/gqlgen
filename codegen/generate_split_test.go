@@ -1772,6 +1772,43 @@ extend type Query {
 	require.Contains(t, runtimeLine, `"second"`)
 }
 
+func TestSplitRefusesADirectiveTheSourcesDoNotDeclare(t *testing.T) {
+	workDir := chdirToLocalSplitFixtureWorkspace(t)
+	require.NoError(t, os.WriteFile(
+		filepath.Join(workDir, "graph", "mutated.graphqls"),
+		[]byte("directive @mutated on FIELD_DEFINITION\n"),
+		0o644,
+	))
+	cleanupSplitGeneratedFiles(workDir)
+
+	data := buildSplitData(t)
+	mutated := data.AllDirectives["mutated"]
+	require.NotNil(t, mutated)
+	var ping *Field
+	for _, obj := range data.Objects {
+		if obj.Name == "Query" {
+			for _, f := range obj.Fields {
+				if f.Name == "ping" {
+					ping = f
+				}
+			}
+		}
+	}
+	require.NotNil(t, ping)
+	ping.Directives = append(ping.Directives, mutated)
+
+	err := GenerateCode(data)
+	require.ErrorContains(t, err, "Query.ping has directives [mutated]")
+	require.ErrorContains(t, err, "the runtime would derive []")
+	require.NoFileExists(t, filepath.Join(workDir, "graph", "generated.go"))
+}
+
+func TestSplitParityPassesForTheFixture(t *testing.T) {
+	workDir := chdirToLocalSplitFixtureWorkspace(t)
+	cleanupSplitGeneratedFiles(workDir)
+	require.NoError(t, GenerateCode(buildSplitData(t)))
+}
+
 func TestSplitRegistrationOrderDeterministic(t *testing.T) {
 	workDir := chdirToLocalSplitFixtureWorkspace(t)
 

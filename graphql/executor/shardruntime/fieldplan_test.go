@@ -78,6 +78,30 @@ func TestBuildFieldPlan_DirectivesInheritFilterAndDefault(t *testing.T) {
 	}, name.directives)
 }
 
+func TestFieldDirectiveNames_MatchesBuildFieldPlan(t *testing.T) {
+	resetInputDirectivePlansForTest()
+	RegisterRuntimeDirectives("agree", "first", "second", "fd", "sc", "inputish")
+	schema := loadFieldPlanSchema(t)
+	isRuntime := func(name string) bool { return isRuntimeDirective("agree", name) }
+
+	for field, want := range map[[2]string][]string{
+		{"Query", "deal"}:  {"first", "second"},
+		{"Deal", "name"}:   {"first", "second"},
+		{"Query", "price"}: {"fd"},
+	} {
+		plan, err := buildFieldPlan(schema, "agree", field[0], field[1])
+		require.NoError(t, err)
+		var planned []string
+		for _, d := range plan.directives {
+			planned = append(planned, d.name)
+		}
+		got, err := FieldDirectiveNames(schema, field[0], field[1], isRuntime)
+		require.NoError(t, err)
+		require.Equal(t, planned, got, "%s.%s", field[0], field[1])
+		require.Equal(t, want, got, "%s.%s", field[0], field[1])
+	}
+}
+
 func TestBuildFieldPlan_FieldMiddlewarePredicate(t *testing.T) {
 	resetInputDirectivePlansForTest()
 	schema := loadFieldPlanSchema(t)

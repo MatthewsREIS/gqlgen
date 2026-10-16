@@ -71,6 +71,32 @@ func buildFieldPlan(schema *ast.Schema, scope, objectName, fieldName string) (*f
 	return plan, nil
 }
 
+// FieldDirectiveNames is the directive chain the runtime plans for
+// objectName.fieldName in schema, in execution order, keeping only the names
+// isRuntime accepts. Codegen calls it to make sure that the chain it would
+// have generated is the chain the runtime will derive.
+func FieldDirectiveNames(
+	schema *ast.Schema,
+	objectName, fieldName string,
+	isRuntime func(name string) bool,
+) ([]string, error) {
+	obj := schema.Types[objectName]
+	if obj == nil {
+		return nil, fmt.Errorf("type %s is not in the schema", objectName)
+	}
+	f := obj.Fields.ForName(fieldName)
+	if f == nil {
+		return nil, fmt.Errorf("field %s.%s is not in the schema", objectName, fieldName)
+	}
+	var names []string
+	for _, d := range effectiveDirectives(schema, f, ast.LocationFieldDefinition) {
+		if isRuntime(d.Name) {
+			names = append(names, d.Name)
+		}
+	}
+	return names, nil
+}
+
 func (p *fieldPlan) child(
 	ec ObjectExecutionContext,
 ) func(context.Context, graphql.CollectedField) (*graphql.FieldContext, error) {
