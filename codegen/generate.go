@@ -73,11 +73,17 @@ func writeEmbeddedSchemaCopies(data *Data) error {
 	if err != nil {
 		return err
 	}
-	var stale []string
+	var stale, dirs []string
 	if _, err := os.Stat(root); err == nil {
 		err = filepath.WalkDir(root, func(p string, d fs.DirEntry, walkErr error) error {
-			if walkErr != nil || d.IsDir() {
+			if walkErr != nil {
 				return walkErr
+			}
+			if d.IsDir() {
+				if p != root {
+					dirs = append(dirs, p)
+				}
+				return nil
 			}
 			rel, err := filepath.Rel(root, p)
 			if err != nil {
@@ -113,6 +119,17 @@ func writeEmbeddedSchemaCopies(data *Data) error {
 	for _, p := range stale {
 		if err := os.Remove(p); err != nil {
 			return err
+		}
+	}
+	for _, p := range slices.Backward(dirs) {
+		entries, err := os.ReadDir(p)
+		if err != nil {
+			return err
+		}
+		if len(entries) == 0 {
+			if err := os.Remove(p); err != nil {
+				return err
+			}
 		}
 	}
 	for rel, content := range want {

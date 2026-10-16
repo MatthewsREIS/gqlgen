@@ -275,3 +275,24 @@ func TestWriteEmbeddedSchemaCopies_RefusesASymlinkedAncestor(t *testing.T) {
 	require.NoError(t, readErr)
 	assert.Equal(t, string(manifestBefore), string(manifestAfter))
 }
+
+func TestWriteEmbeddedSchemaCopies_ReplacesADirectoryWithAFile(t *testing.T) {
+	execDir := t.TempDir()
+	require.NoError(
+		t,
+		writeEmbeddedSchemaCopies(embedTestData(execDir, "schema/shared/types.graphql")),
+	)
+
+	data := embedTestData(execDir, "schema/shared")
+	data.AugmentedSources[0].Source = "type Query { shared: ID }\n"
+	require.NoError(t, writeEmbeddedSchemaCopies(data))
+
+	target := filepath.Join(execDir, "schema", "shared")
+	info, err := os.Stat(target)
+	require.NoError(t, err)
+	require.True(t, info.Mode().IsRegular())
+	got, err := os.ReadFile(target)
+	require.NoError(t, err)
+	assert.Equal(t, "type Query { shared: ID }\n", string(got))
+	assert.NoFileExists(t, filepath.Join(target, "types.graphql"))
+}
