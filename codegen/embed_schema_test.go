@@ -111,8 +111,7 @@ func TestWriteEmbeddedSchemaCopies_ReconcilesWithoutDeletingForeignFiles(t *test
 	require.NoError(t, err)
 	require.Equal(t, "type Query { a: ID }\n", string(got))
 	require.FileExists(t, old)
-	listed, err := os.ReadFile(manifest)
-	assert.NoError(t, err)
+	listed, _ := os.ReadFile(manifest)
 	assert.Equal(t, "a.graphql\nold.graphqls\n", string(listed))
 	first, err := os.Stat(copyPath)
 	require.NoError(t, err)
@@ -123,8 +122,7 @@ func TestWriteEmbeddedSchemaCopies_ReconcilesWithoutDeletingForeignFiles(t *test
 	second, err := os.Stat(copyPath)
 	require.NoError(t, err)
 	require.Equal(t, first.ModTime(), second.ModTime())
-	listed, err = os.ReadFile(manifest)
-	assert.NoError(t, err)
+	listed, _ = os.ReadFile(manifest)
 	assert.Equal(t, "a.graphql\n", string(listed))
 
 	foreign := filepath.Join(execDir, "schema", "README")
@@ -143,8 +141,8 @@ func TestWriteEmbeddedSchemaCopies_RefusesUnownedFiles(t *testing.T) {
 		require.NoError(t, os.WriteFile(handwritten, []byte("type Mine { id: ID! }\n"), 0o644))
 
 		err := writeEmbeddedSchemaCopies(embedTestData(execDir, "schema/a.graphql"))
-		assert.ErrorContains(t, err, "holds handwritten.graphqls, which codegen did not write")
 		assert.FileExists(t, handwritten)
+		require.ErrorContains(t, err, "holds handwritten.graphqls, which codegen did not write")
 	})
 
 	t.Run("handwritten file at a target path", func(t *testing.T) {
@@ -154,9 +152,9 @@ func TestWriteEmbeddedSchemaCopies_RefusesUnownedFiles(t *testing.T) {
 		require.NoError(t, os.WriteFile(target, []byte("type Mine { id: ID! }\n"), 0o644))
 
 		err := writeEmbeddedSchemaCopies(embedTestData(execDir, "schema/a.graphql"))
-		assert.ErrorContains(t, err, "holds a.graphql, which codegen did not write")
-		got, err := os.ReadFile(target)
-		require.NoError(t, err)
+		got, readErr := os.ReadFile(target)
+		require.NoError(t, readErr)
 		assert.Equal(t, "type Mine { id: ID! }\n", string(got))
+		require.ErrorContains(t, err, "holds a.graphql, which codegen did not write")
 	})
 }
