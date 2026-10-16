@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"io/fs"
 	"os"
 	"path/filepath"
@@ -340,6 +341,34 @@ func TestConfigCheckSplitPackages(t *testing.T) {
 			"federation is not supported with exec.layout=split-packages yet",
 		)
 	})
+}
+
+func TestConfigCheckEmbedSchemaDir(t *testing.T) {
+	for _, bad := range []string{"/abs/schema", "..", "../schema", "schema/../..", "."} {
+		cfg := Config{
+			Exec: ExecConfig{
+				Layout:         ExecLayoutSplitPackages,
+				Filename:       "generated/exec.go",
+				EmbedSchemaDir: bad,
+			},
+		}
+		require.EqualError(
+			t,
+			cfg.check(),
+			fmt.Sprintf("config.exec: embed_schema_dir must be a relative path inside the exec directory, got %q", bad),
+			bad,
+		)
+	}
+
+	cfg := Config{
+		Exec: ExecConfig{
+			Layout:         ExecLayoutSingleFile,
+			Filename:       "generated/exec.go",
+			EmbedSchemaDir: "schema/./sdl",
+		},
+	}
+	require.NoError(t, cfg.check())
+	require.Equal(t, "schema/sdl", cfg.Exec.EmbedSchemaDir)
 }
 
 func TestAutobinding(t *testing.T) {
