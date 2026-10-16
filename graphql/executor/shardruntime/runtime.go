@@ -52,6 +52,8 @@ type ObjectExecutionContext interface {
 	// name, coercing args (keyed by directive argument name, raw schema values)
 	// with the same codecs the monolithic layout uses. Implemented by the
 	// generated root package, which is the only place DirectiveRoot lives.
+	// args is built once per field and shared across executions, so an
+	// implementation must not mutate it.
 	InvokeDirective(
 		ctx context.Context,
 		name string,
@@ -901,10 +903,7 @@ func RegisterStreamFieldDef(scope, objectName, fieldName string, def *StreamFiel
 		if fn, ok := LookupCodecMarshal(scope, def.MarshalCodec); ok {
 			def.marshalFn = fn
 		}
-		// else: marshalFn stays nil; runtime falls back to ec.MarshalCodec by string.
 	}
-	// For the FieldContext side of streaming fields, reuse the same
-	// buildFieldContext path via an adapter FieldDef.
 	fcDef := &FieldDef{IsMethod: def.IsMethod, IsResolver: def.IsResolver, ArgsKey: def.ArgsKey}
 	handler := func(ctx context.Context, ec ObjectExecutionContext, field graphql.CollectedField, obj any) func(context.Context) graphql.Marshaler {
 		return resolveStreamFromDef(ctx, ec, def, fcDef, scope, objectName, fieldName, field, obj)
@@ -1003,13 +1002,12 @@ func adaptStreamChannel(ctx context.Context, res any, err error) (any, error) {
 // given (scope, objectName, fieldName), backed by the supplied FieldDef data.
 // The handlers close over def, which caches the field's plan, so def is not copied
 // and is owned by the runtime after the call. It calls RegisterField /
-// RegisterFieldContext; all existing lookup paths continue to work unchanged.
+// RegisterFieldContext.
 func RegisterFieldDef(scope, objectName, fieldName string, def *FieldDef) {
 	if def.MarshalCodec != "" {
 		if fn, ok := LookupCodecMarshal(scope, def.MarshalCodec); ok {
 			def.marshalFn = fn
 		}
-		// else: marshalFn stays nil; runtime falls back to ec.MarshalCodec by string.
 	}
 	handler := func(ctx context.Context, ec ObjectExecutionContext, field graphql.CollectedField, obj any) graphql.Marshaler {
 		return resolveFromDef(ctx, ec, def, scope, objectName, fieldName, field, obj)
