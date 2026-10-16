@@ -54,3 +54,16 @@ func TestAssignEmbedPaths_AllInside(t *testing.T) {
 		require.Equal(t, s.RelativePath, s.EmbedFile())
 	}
 }
+
+func TestAssignEmbedPaths_RejectsSourcesInsideEmbedDir(t *testing.T) {
+	sources := []AugmentedSource{
+		{RelativePath: "schema/real.graphqls", Embeddable: true},
+		{RelativePath: "../outside.graphql"},
+	}
+	require.EqualError(
+		t,
+		assignEmbedPaths("schema", sources),
+		"schema file schema/real.graphqls sits inside embed_schema_dir schema, which codegen recreates on every run",
+	)
+	require.Equal(t, "", sources[1].EmbedPath)
+}

@@ -128,6 +128,16 @@ func assignEmbedPaths(dir string, sources []AugmentedSource) error {
 	if dir == "" {
 		return nil
 	}
+	for _, s := range sources {
+		inside := s.RelativePath == dir || strings.HasPrefix(s.RelativePath, dir+"/")
+		if inside && s.Embeddable && !s.BuiltIn {
+			return fmt.Errorf(
+				"schema file %s sits inside embed_schema_dir %s, which codegen recreates on every run",
+				s.RelativePath,
+				dir,
+			)
+		}
+	}
 	seen := map[string]string{}
 	for i := range sources {
 		s := &sources[i]
