@@ -77,7 +77,7 @@ func checkRuntimeSchemaParity(data *Data) error {
 		}
 		generated := obj.HybridGeneratedFields()
 		for _, f := range obj.Fields {
-			if f.TypeReference == nil || f.IsResolver || slices.Contains(generated, f) {
+			if f.TypeReference == nil || slices.Contains(generated, f) {
 				continue
 			}
 			if err := compare(obj.Name, f, ast.LocationInputFieldDefinition); err != nil {
