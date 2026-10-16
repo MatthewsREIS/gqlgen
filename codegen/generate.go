@@ -1,9 +1,11 @@
 package codegen
 
 import (
+	"bytes"
 	"embed"
 	"errors"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
 	"strings"
@@ -38,27 +40,56 @@ func GenerateCode(data *Data) error {
 	return fmt.Errorf("unrecognized exec layout %s", data.Config.Exec.Layout)
 }
 
-// writeEmbeddedSchemaCopies recreates Exec.EmbedSchemaDir from scratch, so a
-// schema file removed from the config leaves no stale copy behind.
+// writeEmbeddedSchemaCopies keeps Exec.EmbedSchemaDir equal to the set of
+// copies the sources need: stale copies go, unchanged copies keep their
+// mtime, and a file codegen did not write stops the run instead of being
+// deleted.
 func writeEmbeddedSchemaCopies(data *Data) error {
 	dir := data.Config.Exec.EmbedSchemaDir
 	if dir == "" {
 		return nil
 	}
 	execDir := data.Config.Exec.Dir()
-	if err := os.RemoveAll(filepath.Join(execDir, filepath.FromSlash(dir))); err != nil {
-		return fmt.Errorf("clear embed_schema_dir %s: %w", dir, err)
-	}
+	root := filepath.Join(execDir, filepath.FromSlash(dir))
+	want := map[string][]byte{}
+	schemaExt := map[string]bool{".graphql": true, ".graphqls": true, ".gql": true}
 	for _, s := range data.AugmentedSources {
 		if s.EmbedPath == "" {
 			continue
 		}
-		target := filepath.Join(execDir, filepath.FromSlash(s.EmbedPath))
-		if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
+		want[filepath.Join(execDir, filepath.FromSlash(s.EmbedPath))] = []byte(s.Source)
+		schemaExt[filepath.Ext(s.EmbedPath)] = true
+	}
+	if _, err := os.Stat(root); err == nil {
+		err = filepath.WalkDir(root, func(p string, d fs.DirEntry, walkErr error) error {
+			if walkErr != nil || d.IsDir() {
+				return walkErr
+			}
+			if _, ok := want[p]; ok {
+				return nil
+			}
+			if !schemaExt[filepath.Ext(p)] {
+				return fmt.Errorf(
+					"embed_schema_dir %s holds %s, which codegen did not write; remove it or choose an empty directory",
+					dir,
+					p,
+				)
+			}
+			return os.Remove(p)
+		})
+		if err != nil {
 			return err
 		}
-		if err := os.WriteFile(target, []byte(s.Source), 0o644); err != nil {
-			return fmt.Errorf("copy schema %s to %s: %w", s.RelativePath, target, err)
+	}
+	for target, content := range want {
+		if current, err := os.ReadFile(target); err == nil && bytes.Equal(current, content) {
+			continue
+		}
+		if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
+			return fmt.Errorf("create embed_schema_dir for %s: %w", target, err)
+		}
+		if err := os.WriteFile(target, content, 0o644); err != nil {
+			return fmt.Errorf("copy schema to %s: %w", target, err)
 		}
 	}
 	return nil

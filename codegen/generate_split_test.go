@@ -1608,7 +1608,8 @@ func TestSplitFieldsUsesRegisterFieldDef(t *testing.T) {
 
 	titleStart := strings.Index(text, `RegisterFieldDef(splitScope, "Article", "title"`)
 	require.GreaterOrEqual(t, titleStart, 0)
-	titleRegistration, _, _ := strings.Cut(text[titleStart:], "\n\t})")
+	titleRegistration, _, found := strings.Cut(text[titleStart:], "\n\t})")
+	require.True(t, found)
 	require.Contains(t, titleRegistration, "PanicHandled: true")
 
 	// Verify non-resolver field uses direct field access in the Resolve closure
@@ -2667,7 +2668,7 @@ skip_validation: true
 	snapshot := generateSplitSnapshot(t)
 
 	root := string(snapshot[filepath.Join("graph", "generated.go")])
-	require.Contains(t, root, `"schema/outside.graphqls"`)
+	require.Contains(t, root, `//go:embed "schema.graphqls" "schema/outside.graphqls"`)
 	require.Contains(t, root, `{Name: "../outside.graphqls", Input: sourceData("schema/outside.graphqls"), BuiltIn: false}`)
 	require.NotContains(t, root, "outsidePing: String!")
 

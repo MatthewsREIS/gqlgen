@@ -1,9 +1,13 @@
 package codegen
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
+
+	"github.com/99designs/gqlgen/codegen/config"
 )
 
 func TestAssignEmbedPaths(t *testing.T) {
@@ -56,14 +60,52 @@ func TestAssignEmbedPaths_AllInside(t *testing.T) {
 }
 
 func TestAssignEmbedPaths_RejectsSourcesInsideEmbedDir(t *testing.T) {
-	sources := []AugmentedSource{
-		{RelativePath: "schema/real.graphqls", Embeddable: true},
-		{RelativePath: "../outside.graphql"},
+	for _, inside := range []string{"schema/real.graphqls", "schema"} {
+		sources := []AugmentedSource{
+			{RelativePath: "../outside.graphql"},
+			{RelativePath: inside, Embeddable: true},
+		}
+		require.EqualError(
+			t,
+			assignEmbedPaths("schema", sources),
+			"schema file "+inside+" sits inside embed_schema_dir schema, which codegen recreates on every run",
+		)
+		require.Equal(t, "", sources[0].EmbedPath)
 	}
-	require.EqualError(
-		t,
-		assignEmbedPaths("schema", sources),
-		"schema file schema/real.graphqls sits inside embed_schema_dir schema, which codegen recreates on every run",
-	)
-	require.Equal(t, "", sources[1].EmbedPath)
+}
+
+func TestWriteEmbeddedSchemaCopies_ReconcilesWithoutDeletingForeignFiles(t *testing.T) {
+	execDir := t.TempDir()
+	data := &Data{
+		Config: &config.Config{Exec: config.ExecConfig{
+			Layout:         config.ExecLayoutSplitPackages,
+			Filename:       filepath.Join(execDir, "generated.go"),
+			EmbedSchemaDir: "schema",
+		}},
+		AugmentedSources: []AugmentedSource{
+			{RelativePath: "../a.graphql", EmbedPath: "schema/a.graphql", Embeddable: true, Source: "type Query { a: ID }\n"},
+		},
+	}
+	require.NoError(t, writeEmbeddedSchemaCopies(data))
+	copyPath := filepath.Join(execDir, "schema", "a.graphql")
+	got, err := os.ReadFile(copyPath)
+	require.NoError(t, err)
+	require.Equal(t, "type Query { a: ID }\n", string(got))
+	first, err := os.Stat(copyPath)
+	require.NoError(t, err)
+
+	stale := filepath.Join(execDir, "schema", "stale.graphqls")
+	require.NoError(t, os.WriteFile(stale, []byte("type Stale { id: ID! }\n"), 0o644))
+	require.NoError(t, writeEmbeddedSchemaCopies(data))
+	require.NoFileExists(t, stale)
+	second, err := os.Stat(copyPath)
+	require.NoError(t, err)
+	require.Equal(t, first.ModTime(), second.ModTime())
+
+	foreign := filepath.Join(execDir, "schema", "resolver.go")
+	require.NoError(t, os.WriteFile(foreign, []byte("package schema\n"), 0o644))
+	err = writeEmbeddedSchemaCopies(data)
+	require.ErrorContains(t, err, "which codegen did not write")
+	require.FileExists(t, foreign)
+	require.FileExists(t, copyPath)
 }
