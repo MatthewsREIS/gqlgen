@@ -7,15 +7,9 @@ import (
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/executor/shardruntime"
-	"github.com/vektah/gqlparser/v2/ast"
 )
 
 const splitScope = "github.com/99designs/gqlgen/codegen/testserver/splitpackages"
-
-var type_String = &shardruntime.ObjectChildLookup{
-	TypeName: "String",
-	Kind:     ast.Scalar,
-}
 
 func init() {
 }

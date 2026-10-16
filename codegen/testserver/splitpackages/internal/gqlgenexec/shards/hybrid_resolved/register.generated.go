@@ -3,28 +3,11 @@
 package hybrid_resolved
 
 import (
-	"context"
-
-	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/executor/shardruntime"
 )
 
 func init() {
-	shardruntime.RegisterFieldDef(splitScope, "Query", "resolvedWhere", shardruntime.FieldDef{
-		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
-			return ec.InvokeResolver(ctx, "Query", "resolvedWhere", obj)
-		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalNString2string",
-		NonNull:      true,
-		PanicHandled: true,
-		IsMethod:     true,
-		IsResolver:   true,
-		ArgsKey:      "field_Query_resolvedWhere_args",
-		ReturnType:   type_String,
-	})
+	shardruntime.RegisterFieldDef(splitScope, "Query", "resolvedWhere", &shardruntime.FieldDef{MarshalCodec: "marshalNString2string", NonNull: true, PanicHandled: true, IsMethod: true, IsResolver: true, ArgsKey: "field_Query_resolvedWhere_args"})
 }
 
 func init() {
@@ -46,40 +29,16 @@ func init() {
 		{Name: "and", GoField: "And", Input: "ResolvedWhereInput"},
 		{Name: "hasChildWith", GoField: "HasChildWith", Input: "ResolvedChildWhereInput"},
 	})
-	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalNResolvedChildWhereInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedChildWhereInput", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
-		return unmarshalNResolvedChildWhereInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedChildWhereInput(ctx, ec, value)
-	})
-	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalNResolvedChildWhereInput2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedChildWhereInput", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
-		return unmarshalNResolvedChildWhereInput2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedChildWhereInput(ctx, ec, value)
-	})
-	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalNResolvedWhereInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedWhereInput", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
-		return unmarshalNResolvedWhereInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedWhereInput(ctx, ec, value)
-	})
-	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalNResolvedWhereInput2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedWhereInput", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
-		return unmarshalNResolvedWhereInput2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedWhereInput(ctx, ec, value)
-	})
-	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOResolvedChildWhereInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedChildWhereInput", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
-		return unmarshalOResolvedChildWhereInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedChildWhereInput(ctx, ec, value)
-	})
-	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOResolvedChildWhereInput2ᚕᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedChildWhereInputᚄ", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
-		return unmarshalOResolvedChildWhereInput2ᚕᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedChildWhereInputᚄ(ctx, ec, value)
-	})
-	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOResolvedChildWhereInput2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedChildWhereInput", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
-		return unmarshalOResolvedChildWhereInput2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedChildWhereInput(ctx, ec, value)
-	})
-	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOResolvedOwnerInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedOwnerInput", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
-		return unmarshalOResolvedOwnerInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedOwnerInput(ctx, ec, value)
-	})
-	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOResolvedOwnerInput2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedOwnerInput", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
-		return unmarshalOResolvedOwnerInput2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedOwnerInput(ctx, ec, value)
-	})
-	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOResolvedWhereInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedWhereInput", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
-		return unmarshalOResolvedWhereInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedWhereInput(ctx, ec, value)
-	})
-	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOResolvedWhereInput2ᚕᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedWhereInputᚄ", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
-		return unmarshalOResolvedWhereInput2ᚕᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedWhereInputᚄ(ctx, ec, value)
-	})
-	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOResolvedWhereInput2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedWhereInput", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
-		return unmarshalOResolvedWhereInput2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedWhereInput(ctx, ec, value)
-	})
+	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalNResolvedChildWhereInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedChildWhereInput", unmarshalNResolvedChildWhereInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedChildWhereInput)
+	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalNResolvedChildWhereInput2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedChildWhereInput", unmarshalNResolvedChildWhereInput2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedChildWhereInput)
+	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalNResolvedWhereInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedWhereInput", unmarshalNResolvedWhereInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedWhereInput)
+	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalNResolvedWhereInput2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedWhereInput", unmarshalNResolvedWhereInput2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedWhereInput)
+	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOResolvedChildWhereInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedChildWhereInput", unmarshalOResolvedChildWhereInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedChildWhereInput)
+	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOResolvedChildWhereInput2ᚕᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedChildWhereInputᚄ", unmarshalOResolvedChildWhereInput2ᚕᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedChildWhereInputᚄ)
+	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOResolvedChildWhereInput2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedChildWhereInput", unmarshalOResolvedChildWhereInput2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedChildWhereInput)
+	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOResolvedOwnerInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedOwnerInput", unmarshalOResolvedOwnerInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedOwnerInput)
+	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOResolvedOwnerInput2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedOwnerInput", unmarshalOResolvedOwnerInput2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedOwnerInput)
+	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOResolvedWhereInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedWhereInput", unmarshalOResolvedWhereInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedWhereInput)
+	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOResolvedWhereInput2ᚕᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedWhereInputᚄ", unmarshalOResolvedWhereInput2ᚕᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedWhereInputᚄ)
+	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOResolvedWhereInput2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedWhereInput", unmarshalOResolvedWhereInput2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐResolvedWhereInput)
 }

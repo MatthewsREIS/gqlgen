@@ -506,7 +506,7 @@ func TestSplitCodecWrappersAvoidRootPackageReferences(t *testing.T) {
 	outPath := filepath.Join(t.TempDir(), "alpha.generated.go")
 	err := templates.Render(templates.Options{
 		PackageName: "alpha",
-		Template:    splitShardTemplate + "\n" + splitFieldsTemplate + "\n" + splitFieldContextTemplate + "\n" + splitArgsTemplate + "\n" + splitDirectivesTemplate + "\n" + splitComplexityTemplate + "\n" + splitInputsTemplate + "\n" + splitCodecsTemplate,
+		Template:    splitShardTemplate + "\n" + splitFieldsTemplate + "\n" + splitFieldContextTemplate + "\n" + splitArgsTemplate + "\n" + splitComplexityTemplate + "\n" + splitInputsTemplate + "\n" + splitCodecsTemplate,
 		Filename:    outPath,
 		Data: splitShardTemplateData{
 			Data:             &Data{Config: &config.Config{}},
@@ -563,7 +563,7 @@ func TestSplitShardObjectHandlersAvoidRootPackageReferences(t *testing.T) {
 	outPath := filepath.Join(t.TempDir(), "schema.generated.go")
 	err := templates.Render(templates.Options{
 		PackageName: "alpha",
-		Template:    splitShardTemplate + "\n" + splitFieldsTemplate + "\n" + splitFieldContextTemplate + "\n" + splitArgsTemplate + "\n" + splitDirectivesTemplate + "\n" + splitComplexityTemplate + "\n" + splitInputsTemplate + "\n" + splitCodecsTemplate,
+		Template:    splitShardTemplate + "\n" + splitFieldsTemplate + "\n" + splitFieldContextTemplate + "\n" + splitArgsTemplate + "\n" + splitComplexityTemplate + "\n" + splitInputsTemplate + "\n" + splitCodecsTemplate,
 		Filename:    outPath,
 		Data: splitShardTemplateData{
 			Data: &Data{
@@ -1597,8 +1597,14 @@ func TestSplitFieldsUsesRegisterFieldDef(t *testing.T) {
 	// Verify old bridge pattern is NOT used
 	require.NotContains(t, text, "ec.ResolveExecutableField")
 
-	// Verify resolver field uses InvokeResolver inside the Resolve closure
-	require.Contains(t, text, `ec.InvokeResolver(ctx, "Article", "computed", obj)`)
+	computedRegistration := ""
+	for _, line := range strings.Split(text, "\n") {
+		if strings.Contains(line, `RegisterFieldDef(splitScope, "Article", "computed"`) {
+			computedRegistration = line
+		}
+	}
+	require.Contains(t, computedRegistration, "IsResolver: true")
+	require.NotContains(t, computedRegistration, "Resolve:")
 
 	// Verify non-resolver field uses direct field access in the Resolve closure
 	require.Contains(t, text, ".Title,")
@@ -1684,11 +1690,11 @@ func TestSplitFieldsStreamUsesRegisterStreamFieldDef(t *testing.T) {
 	// Verify old bridge pattern is NOT used
 	require.NotContains(t, text, "ec.ResolveExecutableStreamField")
 
-	// Verify InvokeResolver is used inside the Resolve closure for stream resolver fields
-	require.Contains(t, text, `ec.InvokeResolver(ctx, "Subscription", "onMessage", obj)`)
+	require.NotContains(t, text, "Resolve:")
+	require.Contains(t, text, "IsResolver: true")
 }
 
-func TestSplitDirectiveOrderParity(t *testing.T) {
+func TestSplitShardsCarryNoFieldMetadata(t *testing.T) {
 	workDir := chdirToLocalSplitFixtureWorkspace(t)
 	t.Cleanup(func() {
 		_ = os.Remove(filepath.Join(workDir, "graph", "directive_order.graphqls"))
@@ -1712,42 +1718,42 @@ extend type Query {
 	cleanupSplitGeneratedFiles(workDir)
 	snapshot := generateSplitSnapshot(t)
 
-	var directiveShard string
+	var pongRegistration string
+	shardPrefix := filepath.Join("graph", "internal", "gqlgenexec", "shards")
 	for relPath, contents := range snapshot {
-		if !strings.HasPrefix(relPath, filepath.Join("graph", "internal", "gqlgenexec", "shards")) {
+		if !strings.HasPrefix(relPath, shardPrefix) {
 			continue
 		}
-
 		text := string(contents)
-		if strings.Contains(text, "split_directives_.gotpl") &&
-			strings.Contains(text, "func __splitDirectives_Query_pong") {
-			directiveShard = text
-			break
+		require.NotContains(t, text, "__splitDirectives_", relPath)
+		require.NotContains(t, text, "var type_", relPath)
+		require.NotContains(t, text, "ObjectChildLookup", relPath)
+		require.NotContains(t, text, "Directives: func", relPath)
+		require.NotContains(t, text, "ReturnType:", relPath)
+		require.NotContains(t, text, ", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {", relPath)
+		require.NotContains(t, text, ", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {", relPath)
+		for _, line := range strings.Split(text, "\n") {
+			if strings.Contains(line, `RegisterFieldDef(splitScope, "Query", "pong"`) {
+				pongRegistration = line
+			}
 		}
 	}
 
-	require.NotEmpty(
-		t,
-		directiveShard,
-		"expected split shard directive emission from split_directives_.gotpl",
-	)
-	require.Contains(t, directiveShard, "directive0 := next")
-	require.Contains(
-		t,
-		directiveShard,
-		`return ec.InvokeDirective(ctx, "first", obj, directive0, nil)`,
-	)
-	require.Contains(
-		t,
-		directiveShard,
-		`return ec.InvokeDirective(ctx, "second", obj, directive1, nil)`,
-	)
+	require.NotEmpty(t, pongRegistration, "expected the pong field registered in a shard")
+	require.Contains(t, pongRegistration, "IsResolver: true")
+	require.Contains(t, pongRegistration, "NonNull: true")
+	require.NotContains(t, pongRegistration, "Resolve:")
+	require.Contains(t, pongRegistration, "})")
 
-	firstPos := strings.Index(directiveShard, `ec.InvokeDirective(ctx, "first"`)
-	secondPos := strings.Index(directiveShard, `ec.InvokeDirective(ctx, "second"`)
-	require.NotEqual(t, -1, firstPos)
-	require.NotEqual(t, -1, secondPos)
-	require.Less(t, firstPos, secondPos)
+	root := string(snapshot[filepath.Join("graph", "generated.go")])
+	runtimeLine := ""
+	for _, line := range strings.Split(root, "\n") {
+		if strings.Contains(line, "RegisterRuntimeDirectives(scope") {
+			runtimeLine = line
+		}
+	}
+	require.Contains(t, runtimeLine, `"first"`)
+	require.Contains(t, runtimeLine, `"second"`)
 }
 
 func TestSplitRegistrationOrderDeterministic(t *testing.T) {
@@ -1784,6 +1790,26 @@ func TestSplitRegistrationOrderDeterministic(t *testing.T) {
 		registerCount,
 		"expected at least one register.generated.go file in split shards",
 	)
+}
+
+func TestSplitCodecsRegisterDirectly(t *testing.T) {
+	workDir := chdirToLocalSplitFixtureWorkspace(t)
+	cleanupSplitGeneratedFiles(workDir)
+	snapshot := generateSplitSnapshot(t)
+
+	found := false
+	for relPath, contents := range snapshot {
+		if filepath.Base(relPath) != "register.generated.go" {
+			continue
+		}
+		text := string(contents)
+		if strings.Contains(text, `shardruntime.RegisterCodecMarshal(splitScope, "marshalNString2string", marshalNString2string)`) {
+			found = true
+		}
+		require.NotContains(t, text, ", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {", relPath)
+		require.NotContains(t, text, ", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {", relPath)
+	}
+	require.True(t, found, "expected a direct codec registration")
 }
 
 func TestSplitInputRegistrationEmission(t *testing.T) {
@@ -2383,7 +2409,6 @@ extend type Query {
 	require.NotEmpty(t, shards)
 
 	for _, want := range []string{
-		`ec.InvokeDirective(ctx, "fieldDirective"`,
 		`ec.InvokeDirective(ctx, "argDirective"`,
 		`ec.InvokeDirective(ctx, "inputFieldDirective"`,
 		`ec.InvokeDirective(ctx, "inputObjectDirective"`,
@@ -2393,8 +2418,14 @@ extend type Query {
 
 	// Directive arguments are passed through as the schema-declared values.
 	require.Contains(t, shards, `"max": 10`)
-	// FIELD_DEFINITION directives are wired into the field registration.
-	require.Contains(t, shards, "__splitDirectives_Query_guarded(ctx, ec, obj, next)")
+	runtimeLine := ""
+	for _, line := range strings.Split(string(generated), "\n") {
+		if strings.Contains(line, "RegisterRuntimeDirectives(scope") {
+			runtimeLine = line
+		}
+	}
+	require.Contains(t, runtimeLine, `"fieldDirective"`, "the field directive must be registered for the runtime plan")
+	require.NotContains(t, shards, `ec.InvokeDirective(ctx, "fieldDirective"`)
 }
 
 // The split unmarshal codec for a list type must match upstream codegen/type.gotpl:
@@ -2461,7 +2492,7 @@ func TestSplitCodecSliceUnmarshalMatchesUpstream(t *testing.T) {
 			outPath := filepath.Join(t.TempDir(), "alpha.generated.go")
 			err := templates.Render(templates.Options{
 				PackageName: "alpha",
-				Template:    splitShardTemplate + "\n" + splitFieldsTemplate + "\n" + splitFieldContextTemplate + "\n" + splitArgsTemplate + "\n" + splitDirectivesTemplate + "\n" + splitComplexityTemplate + "\n" + splitInputsTemplate + "\n" + splitCodecsTemplate,
+				Template:    splitShardTemplate + "\n" + splitFieldsTemplate + "\n" + splitFieldContextTemplate + "\n" + splitArgsTemplate + "\n" + splitComplexityTemplate + "\n" + splitInputsTemplate + "\n" + splitCodecsTemplate,
 				Filename:    outPath,
 				Data: splitShardTemplateData{
 					Data:             &Data{Config: &config.Config{}},
@@ -2537,7 +2568,7 @@ func TestSplitCodecSliceMarshalNilMatchesUpstream(t *testing.T) {
 			outPath := filepath.Join(t.TempDir(), "alpha.generated.go")
 			err := templates.Render(templates.Options{
 				PackageName: "alpha",
-				Template:    splitShardTemplate + "\n" + splitFieldsTemplate + "\n" + splitFieldContextTemplate + "\n" + splitArgsTemplate + "\n" + splitDirectivesTemplate + "\n" + splitComplexityTemplate + "\n" + splitInputsTemplate + "\n" + splitCodecsTemplate,
+				Template:    splitShardTemplate + "\n" + splitFieldsTemplate + "\n" + splitFieldContextTemplate + "\n" + splitArgsTemplate + "\n" + splitComplexityTemplate + "\n" + splitInputsTemplate + "\n" + splitCodecsTemplate,
 				Filename:    outPath,
 				Data: splitShardTemplateData{
 					Data:             &Data{Config: &config.Config{}},

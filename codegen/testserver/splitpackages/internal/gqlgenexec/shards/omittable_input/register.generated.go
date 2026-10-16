@@ -3,90 +3,34 @@
 package omittable_input
 
 import (
-	"context"
-
-	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/executor/shardruntime"
-	"github.com/vektah/gqlparser/v2/ast"
 )
 
 func init() {
-	shardruntime.RegisterFieldDef(splitScope, "Query", "inputOmittable", shardruntime.FieldDef{
-		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
-			return ec.InvokeResolver(ctx, "Query", "inputOmittable", obj)
-		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalNString2string",
-		NonNull:      true,
-		PanicHandled: true,
-		IsMethod:     true,
-		IsResolver:   true,
-		ArgsKey:      "field_Query_inputOmittable_args",
-		ReturnType:   type_String,
-	})
+	shardruntime.RegisterFieldDef(splitScope, "Query", "inputOmittable", &shardruntime.FieldDef{MarshalCodec: "marshalNString2string", NonNull: true, PanicHandled: true, IsMethod: true, IsResolver: true, ArgsKey: "field_Query_inputOmittable_args"})
 }
 
 func init() {
 	shardruntime.RegisterArgs(splitScope, "field_Query_inputOmittable_args", __splitArgs_field_Query_inputOmittable_args)
 	shardruntime.RegisterInputUnmarshaler(splitScope, "OmittableInput", __splitInput_OmittableInput)
 	shardruntime.RegisterInputUnmarshaler(splitScope, "OuterInput", __splitInput_OuterInput)
-	shardruntime.RegisterCodecMarshal(splitScope, "marshalOBoolean2bool", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
-		return marshalOBoolean2bool(ctx, ec, sel, value)
-	})
-	shardruntime.RegisterCodecMarshal(splitScope, "marshalOBoolean2ᚖbool", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
-		return marshalOBoolean2ᚖbool(ctx, ec, sel, value)
-	})
-	shardruntime.RegisterCodecMarshal(splitScope, "marshalOID2string", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
-		return marshalOID2string(ctx, ec, sel, value)
-	})
-	shardruntime.RegisterCodecMarshal(splitScope, "marshalOID2ᚖstring", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
-		return marshalOID2ᚖstring(ctx, ec, sel, value)
-	})
-	shardruntime.RegisterCodecMarshal(splitScope, "marshalOStatus2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐStatus", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
-		return marshalOStatus2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐStatus(ctx, ec, sel, value)
-	})
-	shardruntime.RegisterCodecMarshal(splitScope, "marshalOStatus2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐStatus", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
-		return marshalOStatus2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐStatus(ctx, ec, sel, value)
-	})
-	shardruntime.RegisterCodecMarshal(splitScope, "marshalOTime2timeᚐTime", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
-		return marshalOTime2timeᚐTime(ctx, ec, sel, value)
-	})
-	shardruntime.RegisterCodecMarshal(splitScope, "marshalOTime2ᚖtimeᚐTime", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
-		return marshalOTime2ᚖtimeᚐTime(ctx, ec, sel, value)
-	})
-	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalNOmittableInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐOmittableInput", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
-		return unmarshalNOmittableInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐOmittableInput(ctx, ec, value)
-	})
-	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOBoolean2bool", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
-		return unmarshalOBoolean2bool(ctx, ec, value)
-	})
-	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOBoolean2ᚖbool", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
-		return unmarshalOBoolean2ᚖbool(ctx, ec, value)
-	})
-	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOID2string", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
-		return unmarshalOID2string(ctx, ec, value)
-	})
-	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOID2ᚖstring", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
-		return unmarshalOID2ᚖstring(ctx, ec, value)
-	})
-	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOOuterInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐOuterInput", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
-		return unmarshalOOuterInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐOuterInput(ctx, ec, value)
-	})
-	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOOuterInput2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐOuterInput", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
-		return unmarshalOOuterInput2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐOuterInput(ctx, ec, value)
-	})
-	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOStatus2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐStatus", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
-		return unmarshalOStatus2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐStatus(ctx, ec, value)
-	})
-	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOStatus2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐStatus", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
-		return unmarshalOStatus2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐStatus(ctx, ec, value)
-	})
-	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOTime2timeᚐTime", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
-		return unmarshalOTime2timeᚐTime(ctx, ec, value)
-	})
-	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOTime2ᚖtimeᚐTime", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
-		return unmarshalOTime2ᚖtimeᚐTime(ctx, ec, value)
-	})
+	shardruntime.RegisterCodecMarshal(splitScope, "marshalOBoolean2bool", marshalOBoolean2bool)
+	shardruntime.RegisterCodecMarshal(splitScope, "marshalOBoolean2ᚖbool", marshalOBoolean2ᚖbool)
+	shardruntime.RegisterCodecMarshal(splitScope, "marshalOID2string", marshalOID2string)
+	shardruntime.RegisterCodecMarshal(splitScope, "marshalOID2ᚖstring", marshalOID2ᚖstring)
+	shardruntime.RegisterCodecMarshal(splitScope, "marshalOStatus2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐStatus", marshalOStatus2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐStatus)
+	shardruntime.RegisterCodecMarshal(splitScope, "marshalOStatus2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐStatus", marshalOStatus2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐStatus)
+	shardruntime.RegisterCodecMarshal(splitScope, "marshalOTime2timeᚐTime", marshalOTime2timeᚐTime)
+	shardruntime.RegisterCodecMarshal(splitScope, "marshalOTime2ᚖtimeᚐTime", marshalOTime2ᚖtimeᚐTime)
+	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalNOmittableInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐOmittableInput", unmarshalNOmittableInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐOmittableInput)
+	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOBoolean2bool", unmarshalOBoolean2bool)
+	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOBoolean2ᚖbool", unmarshalOBoolean2ᚖbool)
+	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOID2string", unmarshalOID2string)
+	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOID2ᚖstring", unmarshalOID2ᚖstring)
+	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOOuterInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐOuterInput", unmarshalOOuterInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐOuterInput)
+	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOOuterInput2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐOuterInput", unmarshalOOuterInput2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐOuterInput)
+	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOStatus2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐStatus", unmarshalOStatus2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐStatus)
+	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOStatus2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐStatus", unmarshalOStatus2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐStatus)
+	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOTime2timeᚐTime", unmarshalOTime2timeᚐTime)
+	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOTime2ᚖtimeᚐTime", unmarshalOTime2ᚖtimeᚐTime)
 }

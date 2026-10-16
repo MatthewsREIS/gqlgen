@@ -3,43 +3,12 @@
 package schema
 
 import (
-	"context"
-
-	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/executor/shardruntime"
 )
 
 func init() {
-	shardruntime.RegisterFieldDef(splitScope, "Mutation", "greet", shardruntime.FieldDef{
-		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
-			return ec.InvokeResolver(ctx, "Mutation", "greet", obj)
-		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalNString2string",
-		NonNull:      true,
-		PanicHandled: true,
-		IsMethod:     true,
-		IsResolver:   true,
-		ArgsKey:      "field_Mutation_greet_args",
-		ReturnType:   type_String,
-	})
-	shardruntime.RegisterFieldDef(splitScope, "Query", "hello", shardruntime.FieldDef{
-		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
-			return ec.InvokeResolver(ctx, "Query", "hello", obj)
-		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalNString2string",
-		NonNull:      true,
-		PanicHandled: true,
-		IsMethod:     true,
-		IsResolver:   true,
-		ArgsKey:      "field_Query_hello_args",
-		ReturnType:   type_String,
-	})
+	shardruntime.RegisterFieldDef(splitScope, "Mutation", "greet", &shardruntime.FieldDef{MarshalCodec: "marshalNString2string", NonNull: true, PanicHandled: true, IsMethod: true, IsResolver: true, ArgsKey: "field_Mutation_greet_args"})
+	shardruntime.RegisterFieldDef(splitScope, "Query", "hello", &shardruntime.FieldDef{MarshalCodec: "marshalNString2string", NonNull: true, PanicHandled: true, IsMethod: true, IsResolver: true, ArgsKey: "field_Query_hello_args"})
 }
 
 func init() {

@@ -3,42 +3,12 @@
 package extras
 
 import (
-	"context"
-
-	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/executor/shardruntime"
 )
 
 func init() {
-	shardruntime.RegisterFieldDef(splitScope, "Mutation", "pingFromExtras", shardruntime.FieldDef{
-		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
-			return ec.InvokeResolver(ctx, "Mutation", "pingFromExtras", obj)
-		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalNString2string",
-		NonNull:      true,
-		PanicHandled: true,
-		IsMethod:     true,
-		IsResolver:   true,
-		ReturnType:   type_String,
-	})
-	shardruntime.RegisterFieldDef(splitScope, "Query", "goodbyeFromExtras", shardruntime.FieldDef{
-		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
-			return ec.InvokeResolver(ctx, "Query", "goodbyeFromExtras", obj)
-		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalNString2string",
-		NonNull:      true,
-		PanicHandled: true,
-		IsMethod:     true,
-		IsResolver:   true,
-		ArgsKey:      "field_Query_goodbyeFromExtras_args",
-		ReturnType:   type_String,
-	})
+	shardruntime.RegisterFieldDef(splitScope, "Mutation", "pingFromExtras", &shardruntime.FieldDef{MarshalCodec: "marshalNString2string", NonNull: true, PanicHandled: true, IsMethod: true, IsResolver: true})
+	shardruntime.RegisterFieldDef(splitScope, "Query", "goodbyeFromExtras", &shardruntime.FieldDef{MarshalCodec: "marshalNString2string", NonNull: true, PanicHandled: true, IsMethod: true, IsResolver: true, ArgsKey: "field_Query_goodbyeFromExtras_args"})
 }
 
 func init() {
