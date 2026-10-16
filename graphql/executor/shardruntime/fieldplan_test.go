@@ -17,11 +17,16 @@ directive @second(note: String = "dflt") on FIELD_DEFINITION
 directive @codegenOnly on FIELD_DEFINITION | OBJECT
 directive @inputish on OBJECT | INPUT_OBJECT
 directive @logged(id: String!) on FIELD
+directive @fd on SCALAR | FIELD_DEFINITION
+directive @sc on SCALAR
+
+scalar Money @fd @sc
 
 type Query {
   deal: Deal! @second
   plain: Int
   input: String
+  price: Money
 }
 
 type Deal @first(location: "type") @codegenOnly @inputish {
@@ -160,4 +165,46 @@ func TestFieldPlanChild_Object(t *testing.T) {
 
 	_, err = child(context.Background(), graphql.CollectedField{Field: &ast.Field{Name: "address"}})
 	require.EqualError(t, err, "no field context handler for Escrow.address")
+}
+
+func TestBuildFieldPlan_InheritedScalarDirectivesUseFieldLocation(t *testing.T) {
+	resetInputDirectivePlansForTest()
+	RegisterRuntimeDirectives("s", "fd", "sc")
+	schema := loadFieldPlanSchema(t)
+
+	plan, err := buildFieldPlan(schema, "s", "Query", "price")
+	require.NoError(t, err)
+	require.Equal(t, []plannedDirective{{name: "fd"}}, plan.directives)
+}
+
+func TestFieldPlanMiddleware_ArgsObjAndFieldOutermost(t *testing.T) {
+	var calls []string
+	var gotArgs map[string]any
+	var gotObj any
+	ec := &fakeEC{
+		invokeDirective: func(ctx context.Context, name string, obj any, next graphql.Resolver, args map[string]any) (any, error) {
+			calls = append(calls, name)
+			gotArgs, gotObj = args, obj
+			return next(ctx)
+		},
+		fieldMiddleware: func(_ context.Context, _ any, next graphql.Resolver) graphql.Resolver {
+			return func(ctx context.Context) (any, error) {
+				calls = append(calls, "FIELD")
+				return next(ctx)
+			}
+		},
+	}
+	plan := &fieldPlan{
+		directives:      []plannedDirective{{name: "first", args: map[string]any{"scope": "s"}}},
+		fieldMiddleware: true,
+	}
+
+	_, err := plan.middleware(ec, "parent")(context.Background(), func(context.Context) (any, error) {
+		calls = append(calls, "resolve")
+		return "r", nil
+	})(context.Background())
+	require.NoError(t, err)
+	require.Equal(t, []string{"FIELD", "first", "resolve"}, calls)
+	require.Equal(t, map[string]any{"scope": "s"}, gotArgs)
+	require.Equal(t, "parent", gotObj)
 }
