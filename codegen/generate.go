@@ -64,6 +64,7 @@ func writeEmbeddedSchemaCopies(data *Data) error {
 	if err != nil {
 		return err
 	}
+	var stale []string
 	if _, err := os.Stat(root); err == nil {
 		err = filepath.WalkDir(root, func(p string, d fs.DirEntry, walkErr error) error {
 			if walkErr != nil || d.IsDir() {
@@ -85,11 +86,16 @@ func writeEmbeddedSchemaCopies(data *Data) error {
 				)
 			}
 			if _, keep := want[rel]; !keep {
-				return os.Remove(p)
+				stale = append(stale, p)
 			}
 			return nil
 		})
 		if err != nil {
+			return err
+		}
+	}
+	for _, p := range stale {
+		if err := os.Remove(p); err != nil {
 			return err
 		}
 	}
@@ -118,7 +124,7 @@ func readEmbedManifest(root string) (map[string]bool, error) {
 	}
 	owned := map[string]bool{}
 	for line := range strings.SplitSeq(strings.TrimSpace(string(raw)), "\n") {
-		if line != "" {
+		if line = strings.TrimSpace(line); line != "" {
 			owned[line] = true
 		}
 	}
@@ -127,7 +133,11 @@ func readEmbedManifest(root string) (map[string]bool, error) {
 
 func writeEmbedManifest(root string, want map[string][]byte) error {
 	if len(want) == 0 {
-		return nil
+		err := os.Remove(filepath.Join(root, embedManifest))
+		if errors.Is(err, fs.ErrNotExist) {
+			return nil
+		}
+		return err
 	}
 	rels := slices.Sorted(maps.Keys(want))
 	if err := os.MkdirAll(root, 0o755); err != nil {

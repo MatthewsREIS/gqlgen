@@ -158,3 +158,59 @@ func TestWriteEmbeddedSchemaCopies_RefusesUnownedFiles(t *testing.T) {
 		require.ErrorContains(t, err, "holds a.graphql, which codegen did not write")
 	})
 }
+
+func TestWriteEmbeddedSchemaCopies_RemovesManifestWhenNothingIsWanted(t *testing.T) {
+	execDir := t.TempDir()
+	copyPath := filepath.Join(execDir, "schema", "a.graphql")
+	manifest := filepath.Join(execDir, "schema", ".gqlgen-embedded")
+
+	require.NoError(t, writeEmbeddedSchemaCopies(embedTestData(execDir, "schema/a.graphql")))
+	require.FileExists(t, copyPath)
+	require.FileExists(t, manifest)
+
+	require.NoError(t, writeEmbeddedSchemaCopies(embedTestData(execDir)))
+	assert.NoFileExists(t, copyPath)
+	assert.NoFileExists(t, manifest)
+}
+
+func TestWriteEmbeddedSchemaCopies_RefusesBeforeRemoving(t *testing.T) {
+	execDir := t.TempDir()
+	old := filepath.Join(execDir, "schema", "old.graphqls")
+	require.NoError(
+		t,
+		writeEmbeddedSchemaCopies(
+			embedTestData(execDir, "schema/a.graphql", "schema/old.graphqls"),
+		),
+	)
+	foreign := filepath.Join(execDir, "schema", "zzz-foreign.txt")
+	require.NoError(t, os.WriteFile(foreign, []byte("notes\n"), 0o644))
+
+	err := writeEmbeddedSchemaCopies(embedTestData(execDir, "schema/a.graphql"))
+	assert.FileExists(t, old)
+	assert.FileExists(t, foreign)
+	require.ErrorContains(t, err, "holds zzz-foreign.txt, which codegen did not write")
+}
+
+func TestWriteEmbeddedSchemaCopies_ReadsCRLFManifest(t *testing.T) {
+	execDir := t.TempDir()
+	root := filepath.Join(execDir, "schema")
+	require.NoError(t, os.MkdirAll(root, 0o755))
+	for _, name := range []string{"a.graphql", "old.graphqls"} {
+		require.NoError(
+			t,
+			os.WriteFile(filepath.Join(root, name), []byte("type Query { a: ID }\n"), 0o644),
+		)
+	}
+	require.NoError(t, os.WriteFile(
+		filepath.Join(root, ".gqlgen-embedded"),
+		[]byte("a.graphql\r\nold.graphqls\r\n"),
+		0o644,
+	))
+
+	err := writeEmbeddedSchemaCopies(
+		embedTestData(execDir, "schema/a.graphql", "schema/old.graphqls"),
+	)
+	assert.FileExists(t, filepath.Join(root, "a.graphql"))
+	assert.FileExists(t, filepath.Join(root, "old.graphqls"))
+	require.NoError(t, err)
+}
