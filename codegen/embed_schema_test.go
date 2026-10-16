@@ -249,3 +249,29 @@ func TestWriteEmbeddedSchemaCopies_RefusesSymlinks(t *testing.T) {
 		})
 	}
 }
+
+func TestWriteEmbeddedSchemaCopies_RefusesASymlinkedAncestor(t *testing.T) {
+	execDir := t.TempDir()
+	data := embedTestData(execDir, "assets/schema/a.graphql")
+	data.Config.Exec.EmbedSchemaDir = "assets/schema"
+	require.NoError(t, writeEmbeddedSchemaCopies(data))
+
+	movedAssets := filepath.Join(t.TempDir(), "assets")
+	require.NoError(t, os.Rename(filepath.Join(execDir, "assets"), movedAssets))
+	require.NoError(t, os.Symlink(movedAssets, filepath.Join(execDir, "assets")))
+	copyPath := filepath.Join(movedAssets, "schema", "a.graphql")
+	manifestPath := filepath.Join(movedAssets, "schema", ".gqlgen-embedded")
+	manifestBefore, err := os.ReadFile(manifestPath)
+	require.NoError(t, err)
+
+	data.AugmentedSources[0].Source = "type Query { b: ID }\n"
+	err = writeEmbeddedSchemaCopies(data)
+
+	require.ErrorContains(t, err, "passes through a symlink at assets")
+	got, readErr := os.ReadFile(copyPath)
+	require.NoError(t, readErr)
+	assert.Equal(t, "type Query { a: ID }\n", string(got))
+	manifestAfter, readErr := os.ReadFile(manifestPath)
+	require.NoError(t, readErr)
+	assert.Equal(t, string(manifestBefore), string(manifestAfter))
+}

@@ -66,6 +66,9 @@ func writeEmbeddedSchemaCopies(data *Data) error {
 			want[strings.TrimPrefix(s.EmbedPath, dir+"/")] = []byte(s.Source)
 		}
 	}
+	if err := refuseSymlinkedAncestors(data.Config.Exec.Dir(), dir); err != nil {
+		return err
+	}
 	owned, err := readEmbedManifest(root)
 	if err != nil {
 		return err
@@ -125,6 +128,29 @@ func writeEmbeddedSchemaCopies(data *Data) error {
 		}
 	}
 	return writeEmbedManifest(root, want)
+}
+
+func refuseSymlinkedAncestors(execDir, dir string) error {
+	current := execDir
+	parts := strings.Split(dir, "/")
+	for i, part := range parts {
+		current = filepath.Join(current, part)
+		info, err := os.Lstat(current)
+		if errors.Is(err, fs.ErrNotExist) {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		if info.Mode()&fs.ModeSymlink != 0 {
+			return fmt.Errorf(
+				"embed_schema_dir %s passes through a symlink at %s; codegen writes only through real directories",
+				dir,
+				strings.Join(parts[:i+1], "/"),
+			)
+		}
+	}
+	return nil
 }
 
 func readEmbedManifest(root string) (map[string]bool, error) {
