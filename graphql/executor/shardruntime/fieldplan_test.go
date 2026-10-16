@@ -78,24 +78,36 @@ func TestBuildFieldPlan_DirectivesInheritFilterAndDefault(t *testing.T) {
 	}, name.directives)
 }
 
-func TestFieldDirectiveNames_MatchesBuildFieldPlan(t *testing.T) {
+func TestFieldDirectives_MatchesBuildFieldPlan(t *testing.T) {
 	resetInputDirectivePlansForTest()
 	RegisterRuntimeDirectives("agree", "first", "second", "fd", "sc", "inputish")
 	schema := loadFieldPlanSchema(t)
 	isRuntime := func(name string) bool { return isRuntimeDirective("agree", name) }
 
-	for field, want := range map[[2]string][]string{
-		{"Query", "deal"}:  {"first", "second"},
-		{"Deal", "name"}:   {"first", "second"},
-		{"Query", "price"}: {"fd"},
+	for field, want := range map[[2]string][]PlannedDirective{
+		{"Query", "deal"}: {
+			{Name: "first", Args: map[string]any{"location": "type"}},
+			{Name: "second", Args: map[string]any{"note": "dflt"}},
+		},
+		{"Deal", "name"}: {
+			{Name: "first", Args: map[string]any{"location": "field"}},
+			{Name: "second", Args: map[string]any{"note": "n"}},
+		},
+		{"Query", "price"}: {{Name: "fd"}},
 	} {
 		plan, err := buildFieldPlan(schema, "agree", field[0], field[1])
 		require.NoError(t, err)
-		var planned []string
+		var planned []PlannedDirective
 		for _, d := range plan.directives {
-			planned = append(planned, d.name)
+			planned = append(planned, PlannedDirective{Name: d.name, Args: d.args})
 		}
-		got, err := FieldDirectiveNames(schema, field[0], field[1], isRuntime)
+		got, err := FieldDirectives(
+			schema,
+			field[0],
+			field[1],
+			ast.LocationFieldDefinition,
+			isRuntime,
+		)
 		require.NoError(t, err)
 		require.Equal(t, planned, got, "%s.%s", field[0], field[1])
 		require.Equal(t, want, got, "%s.%s", field[0], field[1])

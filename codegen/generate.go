@@ -26,6 +26,12 @@ func GenerateCode(data *Data) error {
 		return errors.New("missing exec config")
 	}
 
+	if data.Config.Exec.Layout == config.ExecLayoutSplitPackages {
+		if err := checkRuntimeSchemaParity(data); err != nil {
+			return err
+		}
+	}
+
 	if err := writeEmbeddedSchemaCopies(data); err != nil {
 		return err
 	}

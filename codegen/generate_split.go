@@ -77,10 +77,6 @@ type splitImportsTemplateData struct {
 }
 
 func generateSplitPackages(data *Data) error {
-	if err := checkRuntimeSchemaParity(data); err != nil {
-		return err
-	}
-
 	if err := cleanupSplitGeneratedOutputs(data); err != nil {
 		return err
 	}

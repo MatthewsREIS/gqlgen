@@ -71,15 +71,24 @@ func buildFieldPlan(schema *ast.Schema, scope, objectName, fieldName string) (*f
 	return plan, nil
 }
 
-// FieldDirectiveNames is the directive chain the runtime plans for
+// PlannedDirective is one directive the runtime will invoke on a field: its
+// name and the argument values taken from the schema, defaults included.
+type PlannedDirective struct {
+	Name string
+	Args map[string]any
+}
+
+// FieldDirectives is the directive chain the runtime plans for
 // objectName.fieldName in schema, in execution order, keeping only the names
-// isRuntime accepts. Codegen calls it to make sure that the chain it would
-// have generated is the chain the runtime will derive.
-func FieldDirectiveNames(
+// isRuntime accepts. loc is ast.LocationFieldDefinition for an object field and
+// ast.LocationInputFieldDefinition for an input field. Codegen calls it to make
+// sure that the chain it would have generated is the chain the runtime derives.
+func FieldDirectives(
 	schema *ast.Schema,
 	objectName, fieldName string,
+	loc ast.DirectiveLocation,
 	isRuntime func(name string) bool,
-) ([]string, error) {
+) ([]PlannedDirective, error) {
 	obj := schema.Types[objectName]
 	if obj == nil {
 		return nil, fmt.Errorf("type %s is not in the schema", objectName)
@@ -88,13 +97,18 @@ func FieldDirectiveNames(
 	if f == nil {
 		return nil, fmt.Errorf("field %s.%s is not in the schema", objectName, fieldName)
 	}
-	var names []string
-	for _, d := range effectiveDirectives(schema, f, ast.LocationFieldDefinition) {
-		if isRuntime(d.Name) {
-			names = append(names, d.Name)
+	var planned []PlannedDirective
+	for _, d := range effectiveDirectives(schema, f, loc) {
+		if !isRuntime(d.Name) {
+			continue
 		}
+		args, err := directiveArgs(schema, d)
+		if err != nil {
+			return nil, err
+		}
+		planned = append(planned, PlannedDirective{Name: d.Name, Args: args})
 	}
-	return names, nil
+	return planned, nil
 }
 
 func (p *fieldPlan) child(

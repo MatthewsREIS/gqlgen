@@ -1772,8 +1772,31 @@ extend type Query {
 	require.Contains(t, runtimeLine, `"second"`)
 }
 
-func TestSplitRefusesADirectiveTheSourcesDoNotDeclare(t *testing.T) {
+func splitParityField(t *testing.T, objects Objects, objName, fieldName string) *Field {
+	t.Helper()
+	obj := objects.ByName(objName)
+	require.NotNil(t, obj, objName)
+	for _, f := range obj.Fields {
+		if f.Name == fieldName {
+			return f
+		}
+	}
+	require.FailNow(t, "no field "+objName+"."+fieldName)
+	return nil
+}
+
+func TestSplitRefusesADirectiveTheSourcesDoNotApply(t *testing.T) {
 	workDir := chdirToLocalSplitFixtureWorkspace(t)
+	require.NoError(t, os.WriteFile(
+		filepath.Join(workDir, "outside.graphqls"),
+		[]byte("extend type Query {\n  outsidePing: String!\n}\n"),
+		0o644,
+	))
+	require.NoError(t, os.WriteFile(
+		filepath.Join(workDir, "gqlgen.yml"),
+		[]byte(splitEmbedSchemaDirConfig),
+		0o644,
+	))
 	require.NoError(t, os.WriteFile(
 		filepath.Join(workDir, "graph", "mutated.graphqls"),
 		[]byte("directive @mutated on FIELD_DEFINITION\n"),
@@ -1784,29 +1807,82 @@ func TestSplitRefusesADirectiveTheSourcesDoNotDeclare(t *testing.T) {
 	data := buildSplitData(t)
 	mutated := data.AllDirectives["mutated"]
 	require.NotNil(t, mutated)
-	var ping *Field
-	for _, obj := range data.Objects {
-		if obj.Name == "Query" {
-			for _, f := range obj.Fields {
-				if f.Name == "ping" {
-					ping = f
-				}
-			}
-		}
-	}
-	require.NotNil(t, ping)
+	ping := splitParityField(t, data.Objects, "Query", "ping")
 	ping.Directives = append(ping.Directives, mutated)
 
 	err := GenerateCode(data)
-	require.ErrorContains(t, err, "Query.ping has directives [mutated]")
+	require.ErrorContains(t, err, "Query.ping has directives [mutated()]")
 	require.ErrorContains(t, err, "the runtime would derive []")
 	require.NoFileExists(t, filepath.Join(workDir, "graph", "generated.go"))
+	require.NoFileExists(t, filepath.Join(workDir, "graph", "schema", ".gqlgen-embedded"))
+	require.NoFileExists(t, filepath.Join(workDir, "graph", "schema", "outside.graphqls"))
 }
 
-func TestSplitParityPassesForTheFixture(t *testing.T) {
+func TestSplitRefusesADirectiveArgumentTheSourcesDoNotApply(t *testing.T) {
 	workDir := chdirToLocalSplitFixtureWorkspace(t)
+	require.NoError(t, os.WriteFile(
+		filepath.Join(workDir, "graph", "scoped.graphqls"),
+		[]byte(`directive @scoped(scope: String!) on FIELD_DEFINITION
+directive @optional(note: String) on FIELD_DEFINITION
+
+extend type Query {
+  pong: String! @scoped(scope: "a")
+  bare: String! @optional
+  nulled: String! @optional(note: null)
+}
+`),
+		0o644,
+	))
 	cleanupSplitGeneratedFiles(workDir)
+
+	data := buildSplitData(t)
+	require.NoError(t, checkRuntimeSchemaParity(data))
+	pong := splitParityField(t, data.Objects, "Query", "pong")
+	require.Len(t, pong.Directives, 1)
+	require.Len(t, pong.Directives[0].Args, 1)
+	pong.Directives[0].Args[0].Value = "b"
+
+	require.EqualError(
+		t,
+		checkRuntimeSchemaParity(data),
+		"split-packages: Query.pong has directives [scoped(scope: b)] in the generated schema but the runtime would derive [scoped(scope: a)] from the schema sources; a SchemaMutator plugin must write its directives into the sources",
+	)
+}
+
+func TestSplitParitySkipsReservedFieldsWithoutAQuery(t *testing.T) {
+	workDir := chdirToLocalSplitFixtureWorkspace(t)
+	require.NoError(t, os.WriteFile(
+		filepath.Join(workDir, "graph", "schema.graphqls"),
+		[]byte("type Mutation {\n  ping: String!\n}\n"),
+		0o644,
+	))
+	cleanupSplitGeneratedFiles(workDir)
+
 	require.NoError(t, GenerateCode(buildSplitData(t)))
+}
+
+func TestSplitRefusesAHybridInputDirectiveTheSourcesDoNotApply(t *testing.T) {
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+	t.Chdir(filepath.Join(wd, "testserver", "splitpackages"))
+	cfg, err := config.LoadConfigFromDefaultLocations()
+	require.NoError(t, err)
+	require.NoError(t, cfg.LoadSchema())
+	ClearInlineArgsMetadata()
+	require.NoError(t, ExpandInlineArguments(cfg.Schema))
+	require.NoError(t, cfg.Init())
+	cfg.Models.Add("UUID", "github.com/99designs/gqlgen/graphql.String")
+	data, err := BuildData(cfg)
+	require.NoError(t, err)
+	require.NoError(t, checkRuntimeSchemaParity(data))
+	plain := splitParityField(t, data.Inputs, "WalkedInput", "plain")
+	plain.Directives = append(plain.Directives, data.AllDirectives["toUpper"])
+
+	require.ErrorContains(
+		t,
+		checkRuntimeSchemaParity(data),
+		"split-packages: WalkedInput.plain has directives [toUpper()] in the generated schema but the runtime would derive [] from the schema sources",
+	)
 }
 
 func TestSplitRegistrationOrderDeterministic(t *testing.T) {
@@ -2699,15 +2775,7 @@ func TestSplitRootDirectiveSelectorMatchesMonolithic(t *testing.T) {
 	}
 }
 
-func TestEmbedSchemaDirCopiesOutsideSourcesAndClearsStaleFiles(t *testing.T) {
-	workDir := chdirToLocalSplitFixtureWorkspace(t)
-
-	const outsideSDL = "extend type Query {\n  outsidePing: String!\n}\n"
-	require.NoError(
-		t,
-		os.WriteFile(filepath.Join(workDir, "outside.graphqls"), []byte(outsideSDL), 0o644),
-	)
-	require.NoError(t, os.WriteFile(filepath.Join(workDir, "gqlgen.yml"), []byte(`schema:
+const splitEmbedSchemaDirConfig = `schema:
   - graph/*.graphqls
   - "*.graphqls"
 
@@ -2727,7 +2795,24 @@ resolver:
   package: graph
 
 skip_validation: true
-`), 0o644))
+`
+
+func TestEmbedSchemaDirCopiesOutsideSourcesAndClearsStaleFiles(t *testing.T) {
+	workDir := chdirToLocalSplitFixtureWorkspace(t)
+
+	const outsideSDL = "extend type Query {\n  outsidePing: String!\n}\n"
+	require.NoError(
+		t,
+		os.WriteFile(filepath.Join(workDir, "outside.graphqls"), []byte(outsideSDL), 0o644),
+	)
+	require.NoError(
+		t,
+		os.WriteFile(
+			filepath.Join(workDir, "gqlgen.yml"),
+			[]byte(splitEmbedSchemaDirConfig),
+			0o644,
+		),
+	)
 	stale := filepath.Join(workDir, "graph", "schema", "stale.graphqls")
 	require.NoError(t, os.MkdirAll(filepath.Dir(stale), 0o755))
 	require.NoError(t, os.WriteFile(stale, []byte("type Stale { id: ID! }\n"), 0o644))
