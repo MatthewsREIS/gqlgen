@@ -1244,7 +1244,9 @@ type fakeEC struct {
 	invokeDirective      func(ctx context.Context, name string, obj any, next graphql.Resolver, args map[string]any) (any, error)
 	unmarshalCodec       func(ctx context.Context, name string, v any) (any, error)
 	invokeResolver       func(ctx context.Context, objectName, fieldName string, obj any) (any, error)
+	fieldMiddleware      func(ctx context.Context, obj any, next graphql.Resolver) graphql.Resolver
 	schema               *ast.Schema
+	errors               []error
 }
 
 func (f *fakeEC) Schema() *ast.Schema { return f.schema }
@@ -1326,10 +1328,13 @@ func (f *fakeEC) InvokeDirective(
 }
 
 func (f *fakeEC) FieldMiddleware(
-	_ context.Context,
-	_ any,
+	ctx context.Context,
+	obj any,
 	next graphql.Resolver,
 ) graphql.Resolver {
+	if f.fieldMiddleware != nil {
+		return f.fieldMiddleware(ctx, obj, next)
+	}
 	return next
 }
 
@@ -1339,7 +1344,7 @@ func (f *fakeEC) LookupFieldContextHandler(obj, field string) (FieldContextHandl
 }
 func (f *fakeEC) ProcessDeferredGroup(graphql.DeferredGroup) {}
 func (f *fakeEC) AddDeferred(int32)                          {}
-func (f *fakeEC) Error(context.Context, error)               {}
+func (f *fakeEC) Error(_ context.Context, err error)         { f.errors = append(f.errors, err) }
 func (f *fakeEC) Recover(_ context.Context, r any) error     { return fmt.Errorf("%v", r) }
 
 func TestMakeChildResolver_Scalar(t *testing.T) {
