@@ -127,7 +127,12 @@ func TestWriteEmbeddedSchemaCopies_ExtensionlessSourceKeepsForeignFiles(t *testi
 			EmbedSchemaDir: "schema",
 		}},
 		AugmentedSources: []AugmentedSource{
-			{RelativePath: "../SCHEMA", EmbedPath: "schema/SCHEMA", Embeddable: true, Source: "type Query { a: ID }\n"},
+			{
+				RelativePath: "../SCHEMA",
+				EmbedPath:    "schema/SCHEMA",
+				Embeddable:   true,
+				Source:       "type Query { a: ID }\n",
+			},
 		},
 	}
 	require.NoError(t, writeEmbeddedSchemaCopies(data))
