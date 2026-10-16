@@ -882,7 +882,8 @@ type StreamFieldDef struct {
 // RegisterStreamFieldDef registers a StreamFieldHandler + FieldContextHandler pair for the
 // given (scope, objectName, fieldName), backed by the supplied StreamFieldDef data.
 // The FieldContext side is shared with the non-streaming path via buildFieldContext.
-func RegisterStreamFieldDef(scope, objectName, fieldName string, def StreamFieldDef) {
+// The handlers close over def, which is owned by the runtime after the call.
+func RegisterStreamFieldDef(scope, objectName, fieldName string, def *StreamFieldDef) {
 	if def.MarshalCodec != "" {
 		if fn, ok := LookupCodecMarshal(scope, def.MarshalCodec); ok {
 			def.marshalFn = fn
@@ -893,7 +894,7 @@ func RegisterStreamFieldDef(scope, objectName, fieldName string, def StreamField
 	// buildFieldContext path via an adapter FieldDef.
 	fcDef := &FieldDef{IsMethod: def.IsMethod, IsResolver: def.IsResolver, ArgsKey: def.ArgsKey}
 	handler := func(ctx context.Context, ec ObjectExecutionContext, field graphql.CollectedField, obj any) func(context.Context) graphql.Marshaler {
-		return resolveStreamFromDef(ctx, ec, &def, fcDef, scope, objectName, fieldName, field, obj)
+		return resolveStreamFromDef(ctx, ec, def, fcDef, scope, objectName, fieldName, field, obj)
 	}
 	fcHandler := func(ctx context.Context, ec ObjectExecutionContext, field graphql.CollectedField) (*graphql.FieldContext, error) {
 		return buildFieldContext(ctx, ec, fcDef, scope, objectName, fieldName, field)
@@ -987,9 +988,10 @@ func adaptStreamChannel(ctx context.Context, res any, err error) (any, error) {
 
 // RegisterFieldDef registers a FieldHandler + FieldContextHandler pair for the
 // given (scope, objectName, fieldName), backed by the supplied FieldDef data.
-// Internally it wraps def in a closure and calls RegisterField / RegisterFieldContext;
-// all existing lookup paths continue to work unchanged.
-func RegisterFieldDef(scope, objectName, fieldName string, def FieldDef) {
+// The handlers close over def, which caches the field's plan, so def is not copied
+// and is owned by the runtime after the call. It calls RegisterField /
+// RegisterFieldContext; all existing lookup paths continue to work unchanged.
+func RegisterFieldDef(scope, objectName, fieldName string, def *FieldDef) {
 	if def.MarshalCodec != "" {
 		if fn, ok := LookupCodecMarshal(scope, def.MarshalCodec); ok {
 			def.marshalFn = fn
@@ -997,10 +999,10 @@ func RegisterFieldDef(scope, objectName, fieldName string, def FieldDef) {
 		// else: marshalFn stays nil; runtime falls back to ec.MarshalCodec by string.
 	}
 	handler := func(ctx context.Context, ec ObjectExecutionContext, field graphql.CollectedField, obj any) graphql.Marshaler {
-		return resolveFromDef(ctx, ec, &def, scope, objectName, fieldName, field, obj)
+		return resolveFromDef(ctx, ec, def, scope, objectName, fieldName, field, obj)
 	}
 	fcHandler := func(ctx context.Context, ec ObjectExecutionContext, field graphql.CollectedField) (*graphql.FieldContext, error) {
-		return buildFieldContext(ctx, ec, &def, scope, objectName, fieldName, field)
+		return buildFieldContext(ctx, ec, def, scope, objectName, fieldName, field)
 	}
 	RegisterField(scope, objectName, fieldName, handler)
 	RegisterFieldContext(scope, objectName, fieldName, fcHandler)

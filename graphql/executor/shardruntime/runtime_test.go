@@ -1364,7 +1364,7 @@ type Escrow {
 }
 
 type Subscription {
-  chat: Chat!
+  chat: Chat! @wrap
 }
 
 type Chat {
@@ -1398,7 +1398,7 @@ func TestResolveFromDef_NilResolveInvokesResolver(t *testing.T) {
 			return "from_resolver", nil
 		},
 	}}
-	RegisterFieldDef("scope", "Query", "plainName", FieldDef{MarshalCodec: "marshalNString", NonNull: true, PanicHandled: true, IsMethod: true, IsResolver: true})
+	RegisterFieldDef("scope", "Query", "plainName", &FieldDef{MarshalCodec: "marshalNString", NonNull: true, PanicHandled: true, IsMethod: true, IsResolver: true})
 
 	h, ok := LookupField("scope", "Query", "plainName")
 	require.True(t, ok)
@@ -1435,7 +1435,7 @@ func TestResolveFromDef_SchemaDirectivesWrapResolver(t *testing.T) {
 			return "wrapped_" + res.(string), nil
 		},
 	}}
-	RegisterFieldDef("scope", "Query", "name", FieldDef{
+	RegisterFieldDef("scope", "Query", "name", &FieldDef{
 		Resolve: func(_ context.Context, _ ObjectExecutionContext, obj any) (any, error) {
 			return obj.(string) + "_resolved", nil
 		},
@@ -1464,7 +1464,7 @@ func TestResolveFromDef_MissingSchemaFailsClosed(t *testing.T) {
 	resetCodecMarshalRegistryForTest()
 
 	ec := &fakeECNoSchema{}
-	RegisterFieldDef("scope", "Query", "plainName", FieldDef{MarshalCodec: "marshalNString", NonNull: true, PanicHandled: true, IsResolver: true})
+	RegisterFieldDef("scope", "Query", "plainName", &FieldDef{MarshalCodec: "marshalNString", NonNull: true, PanicHandled: true, IsResolver: true})
 
 	h, ok := LookupField("scope", "Query", "plainName")
 	require.True(t, ok)
@@ -1485,7 +1485,7 @@ func TestResolveFromDef_ConcurrentFirstExecution(t *testing.T) {
 		func(_ context.Context, _ ObjectExecutionContext, _ ast.SelectionSet, v any) graphql.Marshaler {
 			return graphql.MarshalString(v.(string))
 		})
-	RegisterFieldDef("scope", "Query", "name", FieldDef{
+	RegisterFieldDef("scope", "Query", "name", &FieldDef{
 		Resolve:      func(_ context.Context, _ ObjectExecutionContext, obj any) (any, error) { return obj.(string), nil },
 		MarshalCodec: "marshalNString", NonNull: true, PanicHandled: true,
 	})
@@ -1512,7 +1512,7 @@ func TestRegisterFieldDef_BasicRegistration(t *testing.T) {
 	resetFieldRegistryForTest()
 	resetFieldContextRegistryForTest()
 
-	def := FieldDef{
+	def := &FieldDef{
 		Resolve: func(ctx context.Context, _ ObjectExecutionContext, obj any) (any, error) {
 			return "value", nil
 		},
@@ -1631,7 +1631,7 @@ func TestResolveFromDef_CallsResolve(t *testing.T) {
 		},
 	)
 
-	def := FieldDef{
+	def := &FieldDef{
 		Resolve: func(_ context.Context, _ ObjectExecutionContext, obj any) (any, error) {
 			called = true
 			return obj.(string) + "_resolved", nil
@@ -1699,7 +1699,7 @@ func TestRegisterStreamFieldDef(t *testing.T) {
 		},
 	)
 
-	def := StreamFieldDef{
+	def := &StreamFieldDef{
 		Resolve: func(_ context.Context, _ ObjectExecutionContext, _ any) (any, error) {
 			return make(<-chan string), nil
 		},
@@ -1715,6 +1715,48 @@ func TestRegisterStreamFieldDef(t *testing.T) {
 	if _, ok := LookupFieldContext("scope", "Subscription", "chat"); !ok {
 		t.Fatal("expected field context handler registered (shared with non-streaming)")
 	}
+}
+
+func TestResolveStreamFromDef_NilResolveAndSchemaDirectives(t *testing.T) {
+	resetFieldRegistryForTest()
+	resetStreamFieldRegistryForTest()
+	resetFieldContextRegistryForTest()
+	resetArgsRegistryForTest()
+	resetCodecMarshalRegistryForTest()
+	resetInputDirectivePlansForTest()
+	RegisterRuntimeDirectives("scope", "wrap")
+	RegisterCodecMarshal("scope", "marshalNChat",
+		func(_ context.Context, _ ObjectExecutionContext, _ ast.SelectionSet, v any) graphql.Marshaler {
+			return graphql.MarshalString(v.(string))
+		})
+
+	ch := make(chan string, 1)
+	ch <- "msg"
+	close(ch)
+	var gotObject, gotField, gotDirective string
+	ec := &fakeECWithOpCtx{fakeEC{
+		schema: runtimeSchema(t),
+		invokeResolver: func(_ context.Context, objectName, fieldName string, _ any) (any, error) {
+			gotObject, gotField = objectName, fieldName
+			return (<-chan string)(ch), nil
+		},
+		invokeDirective: func(ctx context.Context, name string, _ any, next graphql.Resolver, _ map[string]any) (any, error) {
+			gotDirective = name
+			return next(ctx)
+		},
+	}}
+	RegisterStreamFieldDef("scope", "Subscription", "chat", &StreamFieldDef{MarshalCodec: "marshalNChat", NonNull: true, PanicHandled: true, IsMethod: true, IsResolver: true})
+
+	h, ok := LookupStreamField("scope", "Subscription", "chat")
+	require.True(t, ok)
+	next := h(context.Background(), ec, graphql.CollectedField{Field: &ast.Field{Name: "chat", Alias: "chat"}}, nil)
+	require.NotNil(t, next)
+	var buf bytes.Buffer
+	next(context.Background()).MarshalGQL(&buf)
+	require.Equal(t, `{"chat":"msg"}`, buf.String())
+	require.Equal(t, "Subscription", gotObject)
+	require.Equal(t, "chat", gotField)
+	require.Equal(t, "wrap", gotDirective)
 }
 
 // TestAdaptStreamChannel_TypedChannel covers the type-erased stream path: the
