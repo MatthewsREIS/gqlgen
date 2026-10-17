@@ -69,6 +69,8 @@ exec:
   # shard_filename_template: "{name}.generated.go"
 ```
 
+`exec.embed_schema_dir` (any layout) is a directory, relative to the exec directory. When set, schema files that sit outside the exec directory are copied under it and embedded with `go:embed` instead of being inlined into the generated code. Codegen owns the directory: it lists the copies it wrote in a `.gqlgen-embedded` manifest there, and stops the run if the directory holds any other file, so keep nothing else in it. Exclude that directory from any recursive schema glob, because the copies would otherwise be loaded as schema on the next run.
+
 Recommended migration steps:
 
 1. Update the `exec` block in `gqlgen.yml` as shown above.

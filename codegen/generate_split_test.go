@@ -506,7 +506,7 @@ func TestSplitCodecWrappersAvoidRootPackageReferences(t *testing.T) {
 	outPath := filepath.Join(t.TempDir(), "alpha.generated.go")
 	err := templates.Render(templates.Options{
 		PackageName: "alpha",
-		Template:    splitShardTemplate + "\n" + splitFieldsTemplate + "\n" + splitFieldContextTemplate + "\n" + splitArgsTemplate + "\n" + splitDirectivesTemplate + "\n" + splitComplexityTemplate + "\n" + splitInputsTemplate + "\n" + splitCodecsTemplate,
+		Template:    splitShardTemplate + "\n" + splitFieldsTemplate + "\n" + splitFieldContextTemplate + "\n" + splitArgsTemplate + "\n" + splitComplexityTemplate + "\n" + splitInputsTemplate + "\n" + splitCodecsTemplate,
 		Filename:    outPath,
 		Data: splitShardTemplateData{
 			Data:             &Data{Config: &config.Config{}},
@@ -563,7 +563,7 @@ func TestSplitShardObjectHandlersAvoidRootPackageReferences(t *testing.T) {
 	outPath := filepath.Join(t.TempDir(), "schema.generated.go")
 	err := templates.Render(templates.Options{
 		PackageName: "alpha",
-		Template:    splitShardTemplate + "\n" + splitFieldsTemplate + "\n" + splitFieldContextTemplate + "\n" + splitArgsTemplate + "\n" + splitDirectivesTemplate + "\n" + splitComplexityTemplate + "\n" + splitInputsTemplate + "\n" + splitCodecsTemplate,
+		Template:    splitShardTemplate + "\n" + splitFieldsTemplate + "\n" + splitFieldContextTemplate + "\n" + splitArgsTemplate + "\n" + splitComplexityTemplate + "\n" + splitInputsTemplate + "\n" + splitCodecsTemplate,
 		Filename:    outPath,
 		Data: splitShardTemplateData{
 			Data: &Data{
@@ -1597,8 +1597,20 @@ func TestSplitFieldsUsesRegisterFieldDef(t *testing.T) {
 	// Verify old bridge pattern is NOT used
 	require.NotContains(t, text, "ec.ResolveExecutableField")
 
-	// Verify resolver field uses InvokeResolver inside the Resolve closure
-	require.Contains(t, text, `ec.InvokeResolver(ctx, "Article", "computed", obj)`)
+	computedRegistration := ""
+	for line := range strings.SplitSeq(text, "\n") {
+		if strings.Contains(line, `RegisterFieldDef(splitScope, "Article", "computed"`) {
+			computedRegistration = line
+		}
+	}
+	require.Contains(t, computedRegistration, "IsResolver: true")
+	require.NotContains(t, computedRegistration, "Resolve:")
+
+	titleStart := strings.Index(text, `RegisterFieldDef(splitScope, "Article", "title"`)
+	require.GreaterOrEqual(t, titleStart, 0)
+	titleRegistration, _, found := strings.Cut(text[titleStart:], "\n\t})")
+	require.True(t, found)
+	require.Contains(t, titleRegistration, "PanicHandled: true")
 
 	// Verify non-resolver field uses direct field access in the Resolve closure
 	require.Contains(t, text, ".Title,")
@@ -1684,11 +1696,11 @@ func TestSplitFieldsStreamUsesRegisterStreamFieldDef(t *testing.T) {
 	// Verify old bridge pattern is NOT used
 	require.NotContains(t, text, "ec.ResolveExecutableStreamField")
 
-	// Verify InvokeResolver is used inside the Resolve closure for stream resolver fields
-	require.Contains(t, text, `ec.InvokeResolver(ctx, "Subscription", "onMessage", obj)`)
+	require.NotContains(t, text, "Resolve:")
+	require.Contains(t, text, "IsResolver: true")
 }
 
-func TestSplitDirectiveOrderParity(t *testing.T) {
+func TestSplitShardsCarryNoFieldMetadata(t *testing.T) {
 	workDir := chdirToLocalSplitFixtureWorkspace(t)
 	t.Cleanup(func() {
 		_ = os.Remove(filepath.Join(workDir, "graph", "directive_order.graphqls"))
@@ -1712,42 +1724,177 @@ extend type Query {
 	cleanupSplitGeneratedFiles(workDir)
 	snapshot := generateSplitSnapshot(t)
 
-	var directiveShard string
+	var pongRegistration string
+	shardPrefix := filepath.Join("graph", "internal", "gqlgenexec", "shards")
 	for relPath, contents := range snapshot {
-		if !strings.HasPrefix(relPath, filepath.Join("graph", "internal", "gqlgenexec", "shards")) {
+		if !strings.HasPrefix(relPath, shardPrefix) {
 			continue
 		}
-
 		text := string(contents)
-		if strings.Contains(text, "split_directives_.gotpl") &&
-			strings.Contains(text, "func __splitDirectives_Query_pong") {
-			directiveShard = text
-			break
+		require.NotContains(t, text, "__splitDirectives_", relPath)
+		require.NotContains(t, text, "var type_", relPath)
+		require.NotContains(t, text, "ObjectChildLookup", relPath)
+		require.NotContains(t, text, "Directives: func", relPath)
+		require.NotContains(t, text, "ReturnType:", relPath)
+		require.NotContains(
+			t,
+			text,
+			", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {",
+			relPath,
+		)
+		require.NotContains(
+			t,
+			text,
+			", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {",
+			relPath,
+		)
+		for line := range strings.SplitSeq(text, "\n") {
+			if strings.Contains(line, `RegisterFieldDef(splitScope, "Query", "pong"`) {
+				pongRegistration = line
+			}
 		}
 	}
 
-	require.NotEmpty(
+	require.NotEmpty(t, pongRegistration, "expected the pong field registered in a shard")
+	require.Contains(t, pongRegistration, "IsResolver: true")
+	require.Contains(t, pongRegistration, "NonNull: true")
+	require.NotContains(t, pongRegistration, "Resolve:")
+	require.Contains(t, pongRegistration, "})")
+
+	root := string(snapshot[filepath.Join("graph", "generated.go")])
+	runtimeLine := ""
+	for line := range strings.SplitSeq(root, "\n") {
+		if strings.Contains(line, "RegisterRuntimeDirectives(scope") {
+			runtimeLine = line
+		}
+	}
+	require.Contains(t, runtimeLine, `"first"`)
+	require.Contains(t, runtimeLine, `"second"`)
+}
+
+func splitParityField(t *testing.T, objects Objects, objName, fieldName string) *Field {
+	t.Helper()
+	obj := objects.ByName(objName)
+	require.NotNil(t, obj, objName)
+	for _, f := range obj.Fields {
+		if f.Name == fieldName {
+			return f
+		}
+	}
+	require.FailNow(t, "no field "+objName+"."+fieldName)
+	return nil
+}
+
+func TestSplitRefusesADirectiveTheSourcesDoNotApply(t *testing.T) {
+	workDir := chdirToLocalSplitFixtureWorkspace(t)
+	require.NoError(t, os.WriteFile(
+		filepath.Join(workDir, "outside.graphqls"),
+		[]byte("extend type Query {\n  outsidePing: String!\n}\n"),
+		0o644,
+	))
+	require.NoError(t, os.WriteFile(
+		filepath.Join(workDir, "gqlgen.yml"),
+		[]byte(splitEmbedSchemaDirConfig),
+		0o644,
+	))
+	require.NoError(t, os.WriteFile(
+		filepath.Join(workDir, "graph", "mutated.graphqls"),
+		[]byte("directive @mutated on FIELD_DEFINITION\n"),
+		0o644,
+	))
+	cleanupSplitGeneratedFiles(workDir)
+
+	data := buildSplitData(t)
+	mutated := data.AllDirectives["mutated"]
+	require.NotNil(t, mutated)
+	ping := splitParityField(t, data.Objects, "Query", "ping")
+	ping.Directives = append(ping.Directives, mutated)
+
+	err := GenerateCode(data)
+	require.ErrorContains(t, err, "Query.ping has directives [mutated()]")
+	require.ErrorContains(t, err, "the runtime would derive []")
+	require.NoFileExists(t, filepath.Join(workDir, "graph", "generated.go"))
+	require.NoFileExists(t, filepath.Join(workDir, "graph", "schema", ".gqlgen-embedded"))
+	require.NoFileExists(t, filepath.Join(workDir, "graph", "schema", "outside.graphqls"))
+}
+
+func TestSplitRefusesADirectiveArgumentTheSourcesDoNotApply(t *testing.T) {
+	workDir := chdirToLocalSplitFixtureWorkspace(t)
+	require.NoError(t, os.WriteFile(
+		filepath.Join(workDir, "graph", "scoped.graphqls"),
+		[]byte(`directive @scoped(scope: String!) on FIELD_DEFINITION
+directive @optional(note: String) on FIELD_DEFINITION
+
+extend type Query {
+  pong: String! @scoped(scope: "a")
+  bare: String! @optional
+  nulled: String! @optional(note: null)
+}
+`),
+		0o644,
+	))
+	cleanupSplitGeneratedFiles(workDir)
+
+	data := buildSplitData(t)
+	require.NoError(t, checkRuntimeSchemaParity(data))
+	pong := splitParityField(t, data.Objects, "Query", "pong")
+	require.Len(t, pong.Directives, 1)
+	require.Len(t, pong.Directives[0].Args, 1)
+	pong.Directives[0].Args[0].Value = "b"
+
+	require.EqualError(
 		t,
-		directiveShard,
-		"expected split shard directive emission from split_directives_.gotpl",
+		checkRuntimeSchemaParity(data),
+		"split-packages: Query.pong has directives [scoped(scope: b)] in the generated schema but the runtime would derive [scoped(scope: a)] from the schema sources; a SchemaMutator plugin must write its directives into the sources",
 	)
-	require.Contains(t, directiveShard, "directive0 := next")
-	require.Contains(
+}
+
+func TestSplitParitySkipsReservedFieldsWithoutAQuery(t *testing.T) {
+	workDir := chdirToLocalSplitFixtureWorkspace(t)
+	require.NoError(t, os.WriteFile(
+		filepath.Join(workDir, "graph", "schema.graphqls"),
+		[]byte("type Mutation {\n  ping: String!\n}\n"),
+		0o644,
+	))
+	cleanupSplitGeneratedFiles(workDir)
+
+	require.NoError(t, GenerateCode(buildSplitData(t)))
+}
+
+func TestSplitRefusesAHybridInputDirectiveTheSourcesDoNotApply(t *testing.T) {
+	wd, err := os.Getwd()
+	require.NoError(t, err)
+	t.Chdir(filepath.Join(wd, "testserver", "splitpackages"))
+	cfg, err := config.LoadConfigFromDefaultLocations()
+	require.NoError(t, err)
+	require.NoError(t, cfg.LoadSchema())
+	ClearInlineArgsMetadata()
+	require.NoError(t, ExpandInlineArguments(cfg.Schema))
+	require.NoError(t, cfg.Init())
+	cfg.Models.Add("UUID", "github.com/99designs/gqlgen/graphql.String")
+	data, err := BuildData(cfg)
+	require.NoError(t, err)
+	require.NoError(t, checkRuntimeSchemaParity(data))
+	plain := splitParityField(t, data.Inputs, "WalkedInput", "plain")
+	plainDirectives := plain.Directives
+	plain.Directives = append(plain.Directives, data.AllDirectives["toUpper"])
+
+	require.ErrorContains(
 		t,
-		directiveShard,
-		`return ec.InvokeDirective(ctx, "first", obj, directive0, nil)`,
-	)
-	require.Contains(
-		t,
-		directiveShard,
-		`return ec.InvokeDirective(ctx, "second", obj, directive1, nil)`,
+		checkRuntimeSchemaParity(data),
+		"split-packages: WalkedInput.plain has directives [toUpper()] in the generated schema but the runtime would derive [] from the schema sources",
 	)
 
-	firstPos := strings.Index(directiveShard, `ec.InvokeDirective(ctx, "first"`)
-	secondPos := strings.Index(directiveShard, `ec.InvokeDirective(ctx, "second"`)
-	require.NotEqual(t, -1, firstPos)
-	require.NotEqual(t, -1, secondPos)
-	require.Less(t, firstPos, secondPos)
+	plain.Directives = plainDirectives
+	ownedBy := splitParityField(t, data.Inputs, "ResolvedWhereInput", "ownedBy")
+	require.True(t, ownedBy.IsResolver)
+	ownedBy.Directives = append(ownedBy.Directives, data.AllDirectives["toUpper"])
+
+	require.ErrorContains(
+		t,
+		checkRuntimeSchemaParity(data),
+		"split-packages: ResolvedWhereInput.ownedBy has directives [toUpper() toUpper()] in the generated schema but the runtime would derive [toUpper()] from the schema sources",
+	)
 }
 
 func TestSplitRegistrationOrderDeterministic(t *testing.T) {
@@ -1784,6 +1931,39 @@ func TestSplitRegistrationOrderDeterministic(t *testing.T) {
 		registerCount,
 		"expected at least one register.generated.go file in split shards",
 	)
+}
+
+func TestSplitCodecsRegisterDirectly(t *testing.T) {
+	workDir := chdirToLocalSplitFixtureWorkspace(t)
+	cleanupSplitGeneratedFiles(workDir)
+	snapshot := generateSplitSnapshot(t)
+
+	found := false
+	for relPath, contents := range snapshot {
+		if filepath.Base(relPath) != "register.generated.go" {
+			continue
+		}
+		text := string(contents)
+		if strings.Contains(
+			text,
+			`shardruntime.RegisterCodecMarshal(splitScope, "marshalNString2string", marshalNString2string)`,
+		) {
+			found = true
+		}
+		require.NotContains(
+			t,
+			text,
+			", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {",
+			relPath,
+		)
+		require.NotContains(
+			t,
+			text,
+			", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {",
+			relPath,
+		)
+	}
+	require.True(t, found, "expected a direct codec registration")
 }
 
 func TestSplitInputRegistrationEmission(t *testing.T) {
@@ -2329,9 +2509,7 @@ func TestSplitArgsTemplateEmitsUnmarshalCodec(t *testing.T) {
 }
 
 // TestSplitDirectivesAreExecuted pins the split-packages layout to actually
-// invoking schema directives. Before this, __splitDirectives_* wrappers were
-// emitted as no-op chains (`return directive0(ctx)`) and inputs/args ignored
-// directives entirely, silently disabling authorization directives.
+// invoking schema directives.
 func TestSplitDirectivesAreExecuted(t *testing.T) {
 	workDir := chdirToLocalSplitFixtureWorkspace(t)
 
@@ -2383,7 +2561,6 @@ extend type Query {
 	require.NotEmpty(t, shards)
 
 	for _, want := range []string{
-		`ec.InvokeDirective(ctx, "fieldDirective"`,
 		`ec.InvokeDirective(ctx, "argDirective"`,
 		`ec.InvokeDirective(ctx, "inputFieldDirective"`,
 		`ec.InvokeDirective(ctx, "inputObjectDirective"`,
@@ -2393,8 +2570,19 @@ extend type Query {
 
 	// Directive arguments are passed through as the schema-declared values.
 	require.Contains(t, shards, `"max": 10`)
-	// FIELD_DEFINITION directives are wired into the field registration.
-	require.Contains(t, shards, "__splitDirectives_Query_guarded(ctx, ec, obj, next)")
+	runtimeLine := ""
+	for line := range strings.SplitSeq(string(generated), "\n") {
+		if strings.Contains(line, "RegisterRuntimeDirectives(scope") {
+			runtimeLine = line
+		}
+	}
+	require.Contains(
+		t,
+		runtimeLine,
+		`"fieldDirective"`,
+		"the field directive must be registered for the runtime plan",
+	)
+	require.NotContains(t, shards, `ec.InvokeDirective(ctx, "fieldDirective"`)
 }
 
 // The split unmarshal codec for a list type must match upstream codegen/type.gotpl:
@@ -2461,7 +2649,7 @@ func TestSplitCodecSliceUnmarshalMatchesUpstream(t *testing.T) {
 			outPath := filepath.Join(t.TempDir(), "alpha.generated.go")
 			err := templates.Render(templates.Options{
 				PackageName: "alpha",
-				Template:    splitShardTemplate + "\n" + splitFieldsTemplate + "\n" + splitFieldContextTemplate + "\n" + splitArgsTemplate + "\n" + splitDirectivesTemplate + "\n" + splitComplexityTemplate + "\n" + splitInputsTemplate + "\n" + splitCodecsTemplate,
+				Template:    splitShardTemplate + "\n" + splitFieldsTemplate + "\n" + splitFieldContextTemplate + "\n" + splitArgsTemplate + "\n" + splitComplexityTemplate + "\n" + splitInputsTemplate + "\n" + splitCodecsTemplate,
 				Filename:    outPath,
 				Data: splitShardTemplateData{
 					Data:             &Data{Config: &config.Config{}},
@@ -2537,7 +2725,7 @@ func TestSplitCodecSliceMarshalNilMatchesUpstream(t *testing.T) {
 			outPath := filepath.Join(t.TempDir(), "alpha.generated.go")
 			err := templates.Render(templates.Options{
 				PackageName: "alpha",
-				Template:    splitShardTemplate + "\n" + splitFieldsTemplate + "\n" + splitFieldContextTemplate + "\n" + splitArgsTemplate + "\n" + splitDirectivesTemplate + "\n" + splitComplexityTemplate + "\n" + splitInputsTemplate + "\n" + splitCodecsTemplate,
+				Template:    splitShardTemplate + "\n" + splitFieldsTemplate + "\n" + splitFieldContextTemplate + "\n" + splitArgsTemplate + "\n" + splitComplexityTemplate + "\n" + splitInputsTemplate + "\n" + splitCodecsTemplate,
 				Filename:    outPath,
 				Data: splitShardTemplateData{
 					Data:             &Data{Config: &config.Config{}},
@@ -2597,4 +2785,70 @@ func TestSplitRootDirectiveSelectorMatchesMonolithic(t *testing.T) {
 		require.True(t, strings.Contains(text, ".AllDirectives"),
 			"%s should reference .AllDirectives", name)
 	}
+}
+
+const splitEmbedSchemaDirConfig = `schema:
+  - graph/*.graphqls
+  - "*.graphqls"
+
+exec:
+  package: graph
+  layout: split-packages
+  filename: graph/generated.go
+  embed_schema_dir: schema
+
+model:
+  filename: graph/model/models_gen.go
+  package: model
+
+resolver:
+  layout: follow-schema
+  dir: graph
+  package: graph
+
+skip_validation: true
+`
+
+func TestEmbedSchemaDirCopiesOutsideSourcesAndClearsStaleFiles(t *testing.T) {
+	workDir := chdirToLocalSplitFixtureWorkspace(t)
+
+	const outsideSDL = "extend type Query {\n  outsidePing: String!\n}\n"
+	require.NoError(
+		t,
+		os.WriteFile(filepath.Join(workDir, "outside.graphqls"), []byte(outsideSDL), 0o644),
+	)
+	require.NoError(
+		t,
+		os.WriteFile(
+			filepath.Join(workDir, "gqlgen.yml"),
+			[]byte(splitEmbedSchemaDirConfig),
+			0o644,
+		),
+	)
+	stale := filepath.Join(workDir, "graph", "schema", "stale.graphqls")
+	require.NoError(t, os.MkdirAll(filepath.Dir(stale), 0o755))
+	require.NoError(t, os.WriteFile(stale, []byte("type Stale { id: ID! }\n"), 0o644))
+	require.NoError(t, os.WriteFile(
+		filepath.Join(workDir, "graph", "schema", ".gqlgen-embedded"),
+		[]byte("stale.graphqls\n"),
+		0o644,
+	))
+
+	cleanupSplitGeneratedFiles(workDir)
+	snapshot := generateSplitSnapshot(t)
+
+	root := string(snapshot[filepath.Join("graph", "generated.go")])
+	require.Contains(t, root, `//go:embed "schema.graphqls" "schema/outside.graphqls"`)
+	require.Contains(
+		t,
+		root,
+		`{Name: "../outside.graphqls", Input: sourceData("schema/outside.graphqls"), BuiltIn: false}`,
+	)
+	require.NotContains(t, root, "outsidePing: String!")
+
+	got, err := os.ReadFile(filepath.Join(workDir, "graph", "schema", "outside.graphqls"))
+	require.NoError(t, err)
+	require.Equal(t, outsideSDL, string(got))
+	require.NoFileExists(t, stale)
+	require.FileExists(t, filepath.Join(workDir, "graph", "schema", ".gqlgen-embedded"))
 }

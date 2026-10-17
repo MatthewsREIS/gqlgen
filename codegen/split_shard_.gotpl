@@ -8,25 +8,6 @@
 
 const splitScope = {{ .Scope | quote }}
 
-{{ if .DistinctReturnTypes }}
-{{- /* ObjectChildLookup vars: one per distinct return type used by this shard. */}}
-{{- /* Synthesizes the Child closure of graphql.FieldContext at lookup time     */}}
-{{- /* without per-field generated closures.                                    */}}
-{{- range $def := .DistinctReturnTypes }}
-var type_{{ $def.Name }} = &shardruntime.ObjectChildLookup{
-	TypeName: {{ $def.Name | quote }},
-	Kind:     ast.{{ if eq (printf "%s" $def.Kind) "OBJECT" }}Object{{ else if eq (printf "%s" $def.Kind) "SCALAR" }}Scalar{{ else if eq (printf "%s" $def.Kind) "INTERFACE" }}Interface{{ else if eq (printf "%s" $def.Kind) "UNION" }}Union{{ else if eq (printf "%s" $def.Kind) "ENUM" }}Enum{{ else if eq (printf "%s" $def.Kind) "INPUT_OBJECT" }}InputObject{{ end }},
-	{{- if eq (printf "%s" $def.Kind) "OBJECT" }}
-	Children: []string{
-		{{- range $child := $def.Fields }}
-		{{ $child.Name | quote }},
-		{{- end }}
-	},
-	{{- end }}
-}
-{{- end }}
-{{ end }}
-
 func init() {
 {{- range $object := .Objects }}
 	{{- /* Root types (Query, Mutation, Subscription) are sliced across shards by */}}
@@ -200,7 +181,6 @@ func _{{$object.Name}}(ctx context.Context, ec shardruntime.ObjectExecutionConte
 {{ template "split_fields_.gotpl" . }}
 {{ template "split_fieldcontext_.gotpl" . }}
 {{ template "split_args_.gotpl" . }}
-{{ template "split_directives_.gotpl" . }}
 {{ template "split_complexity_.gotpl" . }}
 {{ template "split_inputs_.gotpl" . }}
 {{ template "split_codecs_.gotpl" . }}

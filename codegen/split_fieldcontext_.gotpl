@@ -1,5 +1,5 @@
 {{ define "split_fieldcontext_.gotpl" }}
 {{- /* Per-field FieldContext function emission removed; data lives on FieldDef
        registered via split_register_.gotpl, synthesized at lookup time by
-       shardruntime.buildFieldContext using DistinctReturnTypes vars. */}}
+       shardruntime.buildFieldContext from the schema. */}}
 {{ end }}

@@ -13,36 +13,6 @@ import (
 
 const splitScope = "github.com/99designs/gqlgen/codegen/testserver/splitpackages"
 
-var type___Schema = &shardruntime.ObjectChildLookup{
-	TypeName: "__Schema",
-	Kind:     ast.Object,
-	Children: []string{
-		"description",
-		"types",
-		"queryType",
-		"mutationType",
-		"subscriptionType",
-		"directives",
-	},
-}
-var type___Type = &shardruntime.ObjectChildLookup{
-	TypeName: "__Type",
-	Kind:     ast.Object,
-	Children: []string{
-		"kind",
-		"name",
-		"description",
-		"specifiedByURL",
-		"fields",
-		"interfaces",
-		"possibleTypes",
-		"enumValues",
-		"inputFields",
-		"ofType",
-		"isOneOf",
-	},
-}
-
 func init() {
 }
 

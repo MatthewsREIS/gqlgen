@@ -1,0 +1,17 @@
+schema:
+  - "*.graphql"
+
+exec:
+  layout: split-packages
+  filename: exec/generated.go
+  package: exec
+  embed_schema_dir: schema
+
+model:
+  filename: model/models_gen.go
+  package: model
+
+resolver:
+  filename: resolver.go
+  package: embedschema
+  type: Resolver

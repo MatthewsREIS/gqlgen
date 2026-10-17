@@ -177,7 +177,7 @@ func applyFieldDirectives(
 		}
 		return v, nil
 	})
-	for _, d := range effectiveDirectives(schema, f) {
+	for _, d := range effectiveDirectives(schema, f, ast.LocationInputFieldDefinition) {
 		if !isRuntimeDirective(scope, d.Name) {
 			continue
 		}
@@ -196,9 +196,13 @@ func applyFieldDirectives(
 // effectiveDirectives is the list a generated arm ran for a field: the
 // directives declared on the field's named type ahead of the field's own, with
 // bindField's and Field.ImplDirectives' location filters, so an inherited
-// directive counts only if it may sit on an input field or an object and may
-// not sit on an input object.
-func effectiveDirectives(schema *ast.Schema, f *ast.FieldDefinition) []*ast.Directive {
+// directive counts only if it may sit at loc or on an object and may not sit
+// on an input object.
+func effectiveDirectives(
+	schema *ast.Schema,
+	f *ast.FieldDefinition,
+	loc ast.DirectiveLocation,
+) []*ast.Directive {
 	typ := schema.Types[f.Type.Name()]
 	if typ == nil || len(typ.Directives) == 0 {
 		return f.Directives
@@ -209,7 +213,7 @@ func effectiveDirectives(schema *ast.Schema, f *ast.FieldDefinition) []*ast.Dire
 		if def == nil || slices.Contains(def.Locations, ast.LocationInputObject) {
 			continue
 		}
-		if !slices.Contains(def.Locations, ast.LocationInputFieldDefinition) &&
+		if !slices.Contains(def.Locations, loc) &&
 			!slices.Contains(def.Locations, ast.LocationObject) {
 			continue
 		}

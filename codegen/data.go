@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -108,9 +109,65 @@ func (d *Data) UniqueChildFieldTypes() []*ChildFieldType {
 type AugmentedSource struct {
 	// path relative to Config.Exec.Filename
 	RelativePath string
-	Embeddable   bool
-	BuiltIn      bool
-	Source       string
+	// EmbedPath is the copy under Exec.EmbedSchemaDir that the generated code
+	// embeds when the source itself sits outside the exec directory.
+	EmbedPath  string
+	Embeddable bool
+	BuiltIn    bool
+	Source     string
+}
+
+func (s AugmentedSource) EmbedFile() string {
+	if s.EmbedPath != "" {
+		return s.EmbedPath
+	}
+	return s.RelativePath
+}
+
+func assignEmbedPaths(dir string, sources []AugmentedSource) error {
+	if dir == "" {
+		return nil
+	}
+	for _, s := range sources {
+		inside := s.RelativePath == dir || strings.HasPrefix(s.RelativePath, dir+"/")
+		if inside && s.Embeddable && !s.BuiltIn {
+			return fmt.Errorf(
+				"schema file %s sits inside embed_schema_dir %s, which must hold only the copies codegen writes",
+				s.RelativePath,
+				dir,
+			)
+		}
+	}
+	seen := map[string]string{}
+	for i := range sources {
+		s := &sources[i]
+		if s.Embeddable || s.BuiltIn {
+			continue
+		}
+		rel := s.RelativePath
+		for strings.HasPrefix(rel, "../") {
+			rel = rel[3:]
+		}
+		s.EmbedPath = path.Join(dir, rel)
+		if path.Base(s.EmbedPath) == embedManifest {
+			return fmt.Errorf(
+				"schema file %s would be copied to %s, which embed_schema_dir reserves for its manifest",
+				s.RelativePath,
+				s.EmbedPath,
+			)
+		}
+		if prev, dup := seen[s.EmbedPath]; dup {
+			return fmt.Errorf(
+				"schema files %s and %s both map to %s under embed_schema_dir",
+				prev,
+				s.RelativePath,
+				s.EmbedPath,
+			)
+		}
+		seen[s.EmbedPath] = s.RelativePath
+		s.Embeddable = true
+	}
+	return nil
 }
 
 type builder struct {
@@ -414,6 +471,9 @@ func BuildData(cfg *config.Config, plugins ...any) (*Data, error) {
 			BuiltIn:      s.BuiltIn,
 			Source:       s.Input,
 		})
+	}
+	if err := assignEmbedPaths(cfg.Exec.EmbedSchemaDir, aSources); err != nil {
+		return nil, err
 	}
 	s.AugmentedSources = aSources
 

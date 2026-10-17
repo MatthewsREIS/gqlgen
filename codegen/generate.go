@@ -1,10 +1,15 @@
 package codegen
 
 import (
+	"bytes"
 	"embed"
 	"errors"
 	"fmt"
+	"io/fs"
+	"maps"
+	"os"
 	"path/filepath"
+	"slices"
 	"strings"
 
 	"github.com/vektah/gqlparser/v2/ast"
@@ -21,6 +26,16 @@ func GenerateCode(data *Data) error {
 		return errors.New("missing exec config")
 	}
 
+	if data.Config.Exec.Layout == config.ExecLayoutSplitPackages {
+		if err := checkRuntimeSchemaParity(data); err != nil {
+			return err
+		}
+	}
+
+	if err := writeEmbeddedSchemaCopies(data); err != nil {
+		return err
+	}
+
 	switch data.Config.Exec.Layout {
 	case config.ExecLayoutSingleFile:
 		return generateSingleFile(data)
@@ -31,6 +46,164 @@ func GenerateCode(data *Data) error {
 	}
 
 	return fmt.Errorf("unrecognized exec layout %s", data.Config.Exec.Layout)
+}
+
+const embedManifest = ".gqlgen-embedded"
+
+// writeEmbeddedSchemaCopies keeps Exec.EmbedSchemaDir equal to the set of
+// copies the sources need. The manifest lists the copies codegen wrote, and
+// every other file in the directory stops the run, so a handwritten file is
+// never deleted or overwritten.
+func writeEmbeddedSchemaCopies(data *Data) error {
+	dir := data.Config.Exec.EmbedSchemaDir
+	if dir == "" {
+		return nil
+	}
+	root := filepath.Join(data.Config.Exec.Dir(), filepath.FromSlash(dir))
+	want := map[string][]byte{}
+	for _, s := range data.AugmentedSources {
+		if s.EmbedPath != "" {
+			want[strings.TrimPrefix(s.EmbedPath, dir+"/")] = []byte(s.Source)
+		}
+	}
+	if err := refuseSymlinkedAncestors(data.Config.Exec.Dir(), dir); err != nil {
+		return err
+	}
+	owned, err := readEmbedManifest(root)
+	if err != nil {
+		return err
+	}
+	var stale, dirs []string
+	if _, err := os.Stat(root); err == nil {
+		err = filepath.WalkDir(root, func(p string, d fs.DirEntry, walkErr error) error {
+			if walkErr != nil {
+				return walkErr
+			}
+			if d.IsDir() {
+				if p != root {
+					dirs = append(dirs, p)
+				}
+				return nil
+			}
+			rel, err := filepath.Rel(root, p)
+			if err != nil {
+				return err
+			}
+			rel = filepath.ToSlash(rel)
+			if d.Type()&fs.ModeSymlink != 0 {
+				return fmt.Errorf(
+					"embed_schema_dir %s holds a symlink at %s; codegen writes only regular files there",
+					dir,
+					rel,
+				)
+			}
+			if rel == embedManifest {
+				return nil
+			}
+			if !owned[rel] {
+				return fmt.Errorf(
+					"embed_schema_dir %s holds %s, which codegen did not write; move it out of the directory",
+					dir,
+					rel,
+				)
+			}
+			if _, keep := want[rel]; !keep {
+				stale = append(stale, p)
+			}
+			return nil
+		})
+		if err != nil {
+			return err
+		}
+	}
+	for _, p := range stale {
+		if err := os.Remove(p); err != nil {
+			return err
+		}
+	}
+	for _, p := range slices.Backward(dirs) {
+		entries, err := os.ReadDir(p)
+		if err != nil {
+			return err
+		}
+		if len(entries) == 0 {
+			if err := os.Remove(p); err != nil {
+				return err
+			}
+		}
+	}
+	for rel, content := range want {
+		target := filepath.Join(root, filepath.FromSlash(rel))
+		if current, err := os.ReadFile(target); err == nil && bytes.Equal(current, content) {
+			continue
+		}
+		if err := os.MkdirAll(filepath.Dir(target), 0o755); err != nil {
+			return fmt.Errorf("create embed_schema_dir for %s: %w", target, err)
+		}
+		if err := os.WriteFile(target, content, 0o644); err != nil {
+			return fmt.Errorf("copy schema to %s: %w", target, err)
+		}
+	}
+	return writeEmbedManifest(root, want)
+}
+
+func refuseSymlinkedAncestors(execDir, dir string) error {
+	current := execDir
+	parts := strings.Split(dir, "/")
+	for i, part := range parts {
+		current = filepath.Join(current, part)
+		info, err := os.Lstat(current)
+		if errors.Is(err, fs.ErrNotExist) {
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		if info.Mode()&fs.ModeSymlink != 0 {
+			return fmt.Errorf(
+				"embed_schema_dir %s passes through a symlink at %s; codegen writes only through real directories",
+				dir,
+				strings.Join(parts[:i+1], "/"),
+			)
+		}
+	}
+	return nil
+}
+
+func readEmbedManifest(root string) (map[string]bool, error) {
+	raw, err := os.ReadFile(filepath.Join(root, embedManifest))
+	if errors.Is(err, fs.ErrNotExist) {
+		return map[string]bool{}, nil
+	}
+	if err != nil {
+		return nil, fmt.Errorf("read %s: %w", embedManifest, err)
+	}
+	owned := map[string]bool{}
+	for line := range strings.SplitSeq(strings.TrimSpace(string(raw)), "\n") {
+		if line = strings.TrimSpace(line); line != "" {
+			owned[line] = true
+		}
+	}
+	return owned, nil
+}
+
+func writeEmbedManifest(root string, want map[string][]byte) error {
+	if len(want) == 0 {
+		err := os.Remove(filepath.Join(root, embedManifest))
+		if errors.Is(err, fs.ErrNotExist) {
+			return nil
+		}
+		return err
+	}
+	rels := slices.Sorted(maps.Keys(want))
+	if err := os.MkdirAll(root, 0o755); err != nil {
+		return err
+	}
+	return os.WriteFile(
+		filepath.Join(root, embedManifest),
+		[]byte(strings.Join(rels, "\n")+"\n"),
+		0o644,
+	)
 }
 
 func generateSingleFile(data *Data) error {

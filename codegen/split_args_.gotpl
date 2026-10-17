@@ -90,3 +90,24 @@ func __splitArgs_{{ $key }}_{{ $arg.Name | go }}(ctx context.Context, ec shardru
 {{- end }}
 {{- end }}
 {{ end }}
+
+{{- /* splitDirectiveArgs renders the schema-side argument values for one
+       directive placement as a map literal keyed by argument name. Arguments
+       with no value (an omitted nullable argument with no default) are left
+       out, so InvokeDirective passes the typed zero value — matching
+       Directive.ResolveArgs emitting a bare nil in the monolithic layout. */}}
+{{ define "splitDirectiveArgs" }}
+{{- if .Args -}}
+map[string]any{
+	{{- range $arg := .Args }}
+	{{- if notNil "Value" $arg }}
+	{{ $arg.Name | quote }}: {{ $arg.Value | dump }},
+	{{- else if notNil "Default" $arg }}
+	{{ $arg.Name | quote }}: {{ $arg.Default | dump }},
+	{{- end }}
+	{{- end }}
+}
+{{- else -}}
+nil
+{{- end }}
+{{- end }}

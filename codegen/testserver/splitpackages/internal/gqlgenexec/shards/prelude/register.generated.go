@@ -8,547 +8,238 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/executor/shardruntime"
 	"github.com/99designs/gqlgen/graphql/introspection"
-	"github.com/vektah/gqlparser/v2/ast"
 )
 
 func init() {
-	shardruntime.RegisterFieldDef(splitScope, "__Directive", "args", shardruntime.FieldDef{
+	shardruntime.RegisterFieldDef(splitScope, "__Directive", "args", &shardruntime.FieldDef{
 		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 			return obj.(*introspection.Directive).Args, nil
 		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalN__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ",
-		NonNull:      true,
-		PanicHandled: true,
-		IsMethod:     false,
-		IsResolver:   false,
-		ArgsKey:      "field___Directive_args_args",
-		ReturnType:   type___InputValue,
+		MarshalCodec: "marshalN__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ", NonNull: true, PanicHandled: true, ArgsKey: "field___Directive_args_args",
 	})
-	shardruntime.RegisterFieldDef(splitScope, "__Directive", "description", shardruntime.FieldDef{
+	shardruntime.RegisterFieldDef(splitScope, "__Directive", "description", &shardruntime.FieldDef{
 		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 			return obj.(*introspection.Directive).Description(), nil
 		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalOString2ᚖstring",
-		NonNull:      false,
-		PanicHandled: true,
-		IsMethod:     true,
-		IsResolver:   false,
-		ReturnType:   type_String,
+		MarshalCodec: "marshalOString2ᚖstring", PanicHandled: true, IsMethod: true,
 	})
-	shardruntime.RegisterFieldDef(splitScope, "__Directive", "isRepeatable", shardruntime.FieldDef{
+	shardruntime.RegisterFieldDef(splitScope, "__Directive", "isRepeatable", &shardruntime.FieldDef{
 		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 			return obj.(*introspection.Directive).IsRepeatable, nil
 		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalNBoolean2bool",
-		NonNull:      true,
-		PanicHandled: true,
-		IsMethod:     false,
-		IsResolver:   false,
-		ReturnType:   type_Boolean,
+		MarshalCodec: "marshalNBoolean2bool", NonNull: true, PanicHandled: true,
 	})
-	shardruntime.RegisterFieldDef(splitScope, "__Directive", "locations", shardruntime.FieldDef{
+	shardruntime.RegisterFieldDef(splitScope, "__Directive", "locations", &shardruntime.FieldDef{
 		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 			return obj.(*introspection.Directive).Locations, nil
 		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalN__DirectiveLocation2ᚕstringᚄ",
-		NonNull:      true,
-		PanicHandled: true,
-		IsMethod:     false,
-		IsResolver:   false,
-		ReturnType:   type___DirectiveLocation,
+		MarshalCodec: "marshalN__DirectiveLocation2ᚕstringᚄ", NonNull: true, PanicHandled: true,
 	})
-	shardruntime.RegisterFieldDef(splitScope, "__Directive", "name", shardruntime.FieldDef{
+	shardruntime.RegisterFieldDef(splitScope, "__Directive", "name", &shardruntime.FieldDef{
 		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 			return obj.(*introspection.Directive).Name, nil
 		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalNString2string",
-		NonNull:      true,
-		PanicHandled: true,
-		IsMethod:     false,
-		IsResolver:   false,
-		ReturnType:   type_String,
+		MarshalCodec: "marshalNString2string", NonNull: true, PanicHandled: true,
 	})
-	shardruntime.RegisterFieldDef(splitScope, "__EnumValue", "deprecationReason", shardruntime.FieldDef{
+	shardruntime.RegisterFieldDef(splitScope, "__EnumValue", "deprecationReason", &shardruntime.FieldDef{
 		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 			return obj.(*introspection.EnumValue).DeprecationReason(), nil
 		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalOString2ᚖstring",
-		NonNull:      false,
-		PanicHandled: true,
-		IsMethod:     true,
-		IsResolver:   false,
-		ReturnType:   type_String,
+		MarshalCodec: "marshalOString2ᚖstring", PanicHandled: true, IsMethod: true,
 	})
-	shardruntime.RegisterFieldDef(splitScope, "__EnumValue", "description", shardruntime.FieldDef{
+	shardruntime.RegisterFieldDef(splitScope, "__EnumValue", "description", &shardruntime.FieldDef{
 		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 			return obj.(*introspection.EnumValue).Description(), nil
 		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalOString2ᚖstring",
-		NonNull:      false,
-		PanicHandled: true,
-		IsMethod:     true,
-		IsResolver:   false,
-		ReturnType:   type_String,
+		MarshalCodec: "marshalOString2ᚖstring", PanicHandled: true, IsMethod: true,
 	})
-	shardruntime.RegisterFieldDef(splitScope, "__EnumValue", "isDeprecated", shardruntime.FieldDef{
+	shardruntime.RegisterFieldDef(splitScope, "__EnumValue", "isDeprecated", &shardruntime.FieldDef{
 		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 			return obj.(*introspection.EnumValue).IsDeprecated(), nil
 		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalNBoolean2bool",
-		NonNull:      true,
-		PanicHandled: true,
-		IsMethod:     true,
-		IsResolver:   false,
-		ReturnType:   type_Boolean,
+		MarshalCodec: "marshalNBoolean2bool", NonNull: true, PanicHandled: true, IsMethod: true,
 	})
-	shardruntime.RegisterFieldDef(splitScope, "__EnumValue", "name", shardruntime.FieldDef{
+	shardruntime.RegisterFieldDef(splitScope, "__EnumValue", "name", &shardruntime.FieldDef{
 		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 			return obj.(*introspection.EnumValue).Name, nil
 		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalNString2string",
-		NonNull:      true,
-		PanicHandled: true,
-		IsMethod:     false,
-		IsResolver:   false,
-		ReturnType:   type_String,
+		MarshalCodec: "marshalNString2string", NonNull: true, PanicHandled: true,
 	})
-	shardruntime.RegisterFieldDef(splitScope, "__Field", "args", shardruntime.FieldDef{
+	shardruntime.RegisterFieldDef(splitScope, "__Field", "args", &shardruntime.FieldDef{
 		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 			return obj.(*introspection.Field).Args, nil
 		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalN__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ",
-		NonNull:      true,
-		PanicHandled: true,
-		IsMethod:     false,
-		IsResolver:   false,
-		ArgsKey:      "field___Field_args_args",
-		ReturnType:   type___InputValue,
+		MarshalCodec: "marshalN__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ", NonNull: true, PanicHandled: true, ArgsKey: "field___Field_args_args",
 	})
-	shardruntime.RegisterFieldDef(splitScope, "__Field", "deprecationReason", shardruntime.FieldDef{
+	shardruntime.RegisterFieldDef(splitScope, "__Field", "deprecationReason", &shardruntime.FieldDef{
 		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 			return obj.(*introspection.Field).DeprecationReason(), nil
 		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalOString2ᚖstring",
-		NonNull:      false,
-		PanicHandled: true,
-		IsMethod:     true,
-		IsResolver:   false,
-		ReturnType:   type_String,
+		MarshalCodec: "marshalOString2ᚖstring", PanicHandled: true, IsMethod: true,
 	})
-	shardruntime.RegisterFieldDef(splitScope, "__Field", "description", shardruntime.FieldDef{
+	shardruntime.RegisterFieldDef(splitScope, "__Field", "description", &shardruntime.FieldDef{
 		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 			return obj.(*introspection.Field).Description(), nil
 		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalOString2ᚖstring",
-		NonNull:      false,
-		PanicHandled: true,
-		IsMethod:     true,
-		IsResolver:   false,
-		ReturnType:   type_String,
+		MarshalCodec: "marshalOString2ᚖstring", PanicHandled: true, IsMethod: true,
 	})
-	shardruntime.RegisterFieldDef(splitScope, "__Field", "isDeprecated", shardruntime.FieldDef{
+	shardruntime.RegisterFieldDef(splitScope, "__Field", "isDeprecated", &shardruntime.FieldDef{
 		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 			return obj.(*introspection.Field).IsDeprecated(), nil
 		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalNBoolean2bool",
-		NonNull:      true,
-		PanicHandled: true,
-		IsMethod:     true,
-		IsResolver:   false,
-		ReturnType:   type_Boolean,
+		MarshalCodec: "marshalNBoolean2bool", NonNull: true, PanicHandled: true, IsMethod: true,
 	})
-	shardruntime.RegisterFieldDef(splitScope, "__Field", "name", shardruntime.FieldDef{
+	shardruntime.RegisterFieldDef(splitScope, "__Field", "name", &shardruntime.FieldDef{
 		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 			return obj.(*introspection.Field).Name, nil
 		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalNString2string",
-		NonNull:      true,
-		PanicHandled: true,
-		IsMethod:     false,
-		IsResolver:   false,
-		ReturnType:   type_String,
+		MarshalCodec: "marshalNString2string", NonNull: true, PanicHandled: true,
 	})
-	shardruntime.RegisterFieldDef(splitScope, "__Field", "type", shardruntime.FieldDef{
+	shardruntime.RegisterFieldDef(splitScope, "__Field", "type", &shardruntime.FieldDef{
 		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 			return obj.(*introspection.Field).Type, nil
 		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalN__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType",
-		NonNull:      true,
-		PanicHandled: true,
-		IsMethod:     false,
-		IsResolver:   false,
-		ReturnType:   type___Type,
+		MarshalCodec: "marshalN__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType", NonNull: true, PanicHandled: true,
 	})
-	shardruntime.RegisterFieldDef(splitScope, "__InputValue", "defaultValue", shardruntime.FieldDef{
+	shardruntime.RegisterFieldDef(splitScope, "__InputValue", "defaultValue", &shardruntime.FieldDef{
 		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 			return obj.(*introspection.InputValue).DefaultValue, nil
 		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalOString2ᚖstring",
-		NonNull:      false,
-		PanicHandled: true,
-		IsMethod:     false,
-		IsResolver:   false,
-		ReturnType:   type_String,
+		MarshalCodec: "marshalOString2ᚖstring", PanicHandled: true,
 	})
-	shardruntime.RegisterFieldDef(splitScope, "__InputValue", "deprecationReason", shardruntime.FieldDef{
+	shardruntime.RegisterFieldDef(splitScope, "__InputValue", "deprecationReason", &shardruntime.FieldDef{
 		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 			return obj.(*introspection.InputValue).DeprecationReason(), nil
 		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalOString2ᚖstring",
-		NonNull:      false,
-		PanicHandled: true,
-		IsMethod:     true,
-		IsResolver:   false,
-		ReturnType:   type_String,
+		MarshalCodec: "marshalOString2ᚖstring", PanicHandled: true, IsMethod: true,
 	})
-	shardruntime.RegisterFieldDef(splitScope, "__InputValue", "description", shardruntime.FieldDef{
+	shardruntime.RegisterFieldDef(splitScope, "__InputValue", "description", &shardruntime.FieldDef{
 		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 			return obj.(*introspection.InputValue).Description(), nil
 		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalOString2ᚖstring",
-		NonNull:      false,
-		PanicHandled: true,
-		IsMethod:     true,
-		IsResolver:   false,
-		ReturnType:   type_String,
+		MarshalCodec: "marshalOString2ᚖstring", PanicHandled: true, IsMethod: true,
 	})
-	shardruntime.RegisterFieldDef(splitScope, "__InputValue", "isDeprecated", shardruntime.FieldDef{
+	shardruntime.RegisterFieldDef(splitScope, "__InputValue", "isDeprecated", &shardruntime.FieldDef{
 		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 			return obj.(*introspection.InputValue).IsDeprecated(), nil
 		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalNBoolean2bool",
-		NonNull:      true,
-		PanicHandled: true,
-		IsMethod:     true,
-		IsResolver:   false,
-		ReturnType:   type_Boolean,
+		MarshalCodec: "marshalNBoolean2bool", NonNull: true, PanicHandled: true, IsMethod: true,
 	})
-	shardruntime.RegisterFieldDef(splitScope, "__InputValue", "name", shardruntime.FieldDef{
+	shardruntime.RegisterFieldDef(splitScope, "__InputValue", "name", &shardruntime.FieldDef{
 		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 			return obj.(*introspection.InputValue).Name, nil
 		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalNString2string",
-		NonNull:      true,
-		PanicHandled: true,
-		IsMethod:     false,
-		IsResolver:   false,
-		ReturnType:   type_String,
+		MarshalCodec: "marshalNString2string", NonNull: true, PanicHandled: true,
 	})
-	shardruntime.RegisterFieldDef(splitScope, "__InputValue", "type", shardruntime.FieldDef{
+	shardruntime.RegisterFieldDef(splitScope, "__InputValue", "type", &shardruntime.FieldDef{
 		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 			return obj.(*introspection.InputValue).Type, nil
 		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalN__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType",
-		NonNull:      true,
-		PanicHandled: true,
-		IsMethod:     false,
-		IsResolver:   false,
-		ReturnType:   type___Type,
+		MarshalCodec: "marshalN__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType", NonNull: true, PanicHandled: true,
 	})
-	shardruntime.RegisterFieldDef(splitScope, "__Schema", "description", shardruntime.FieldDef{
+	shardruntime.RegisterFieldDef(splitScope, "__Schema", "description", &shardruntime.FieldDef{
 		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 			return obj.(*introspection.Schema).Description(), nil
 		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalOString2ᚖstring",
-		NonNull:      false,
-		PanicHandled: true,
-		IsMethod:     true,
-		IsResolver:   false,
-		ReturnType:   type_String,
+		MarshalCodec: "marshalOString2ᚖstring", PanicHandled: true, IsMethod: true,
 	})
-	shardruntime.RegisterFieldDef(splitScope, "__Schema", "directives", shardruntime.FieldDef{
+	shardruntime.RegisterFieldDef(splitScope, "__Schema", "directives", &shardruntime.FieldDef{
 		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 			return obj.(*introspection.Schema).Directives(), nil
 		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalN__Directive2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirectiveᚄ",
-		NonNull:      true,
-		PanicHandled: true,
-		IsMethod:     true,
-		IsResolver:   false,
-		ReturnType:   type___Directive,
+		MarshalCodec: "marshalN__Directive2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirectiveᚄ", NonNull: true, PanicHandled: true, IsMethod: true,
 	})
-	shardruntime.RegisterFieldDef(splitScope, "__Schema", "mutationType", shardruntime.FieldDef{
+	shardruntime.RegisterFieldDef(splitScope, "__Schema", "mutationType", &shardruntime.FieldDef{
 		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 			return obj.(*introspection.Schema).MutationType(), nil
 		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType",
-		NonNull:      false,
-		PanicHandled: true,
-		IsMethod:     true,
-		IsResolver:   false,
-		ReturnType:   type___Type,
+		MarshalCodec: "marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType", PanicHandled: true, IsMethod: true,
 	})
-	shardruntime.RegisterFieldDef(splitScope, "__Schema", "queryType", shardruntime.FieldDef{
+	shardruntime.RegisterFieldDef(splitScope, "__Schema", "queryType", &shardruntime.FieldDef{
 		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 			return obj.(*introspection.Schema).QueryType(), nil
 		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalN__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType",
-		NonNull:      true,
-		PanicHandled: true,
-		IsMethod:     true,
-		IsResolver:   false,
-		ReturnType:   type___Type,
+		MarshalCodec: "marshalN__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType", NonNull: true, PanicHandled: true, IsMethod: true,
 	})
-	shardruntime.RegisterFieldDef(splitScope, "__Schema", "subscriptionType", shardruntime.FieldDef{
+	shardruntime.RegisterFieldDef(splitScope, "__Schema", "subscriptionType", &shardruntime.FieldDef{
 		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 			return obj.(*introspection.Schema).SubscriptionType(), nil
 		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType",
-		NonNull:      false,
-		PanicHandled: true,
-		IsMethod:     true,
-		IsResolver:   false,
-		ReturnType:   type___Type,
+		MarshalCodec: "marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType", PanicHandled: true, IsMethod: true,
 	})
-	shardruntime.RegisterFieldDef(splitScope, "__Schema", "types", shardruntime.FieldDef{
+	shardruntime.RegisterFieldDef(splitScope, "__Schema", "types", &shardruntime.FieldDef{
 		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 			return obj.(*introspection.Schema).Types(), nil
 		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalN__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ",
-		NonNull:      true,
-		PanicHandled: true,
-		IsMethod:     true,
-		IsResolver:   false,
-		ReturnType:   type___Type,
+		MarshalCodec: "marshalN__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ", NonNull: true, PanicHandled: true, IsMethod: true,
 	})
-	shardruntime.RegisterFieldDef(splitScope, "__Type", "description", shardruntime.FieldDef{
+	shardruntime.RegisterFieldDef(splitScope, "__Type", "description", &shardruntime.FieldDef{
 		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 			return obj.(*introspection.Type).Description(), nil
 		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalOString2ᚖstring",
-		NonNull:      false,
-		PanicHandled: true,
-		IsMethod:     true,
-		IsResolver:   false,
-		ReturnType:   type_String,
+		MarshalCodec: "marshalOString2ᚖstring", PanicHandled: true, IsMethod: true,
 	})
-	shardruntime.RegisterFieldDef(splitScope, "__Type", "enumValues", shardruntime.FieldDef{
+	shardruntime.RegisterFieldDef(splitScope, "__Type", "enumValues", &shardruntime.FieldDef{
 		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
 			return obj.(*introspection.Type).EnumValues(fc.Args["includeDeprecated"].(bool)), nil
 		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ",
-		NonNull:      false,
-		PanicHandled: true,
-		IsMethod:     true,
-		IsResolver:   false,
-		ArgsKey:      "field___Type_enumValues_args",
-		ReturnType:   type___EnumValue,
+		MarshalCodec: "marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ", PanicHandled: true, IsMethod: true, ArgsKey: "field___Type_enumValues_args",
 	})
-	shardruntime.RegisterFieldDef(splitScope, "__Type", "fields", shardruntime.FieldDef{
+	shardruntime.RegisterFieldDef(splitScope, "__Type", "fields", &shardruntime.FieldDef{
 		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 			fc := graphql.GetFieldContext(ctx)
 			return obj.(*introspection.Type).Fields(fc.Args["includeDeprecated"].(bool)), nil
 		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalO__Field2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐFieldᚄ",
-		NonNull:      false,
-		PanicHandled: true,
-		IsMethod:     true,
-		IsResolver:   false,
-		ArgsKey:      "field___Type_fields_args",
-		ReturnType:   type___Field,
+		MarshalCodec: "marshalO__Field2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐFieldᚄ", PanicHandled: true, IsMethod: true, ArgsKey: "field___Type_fields_args",
 	})
-	shardruntime.RegisterFieldDef(splitScope, "__Type", "inputFields", shardruntime.FieldDef{
+	shardruntime.RegisterFieldDef(splitScope, "__Type", "inputFields", &shardruntime.FieldDef{
 		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 			return obj.(*introspection.Type).InputFields(), nil
 		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalO__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ",
-		NonNull:      false,
-		PanicHandled: true,
-		IsMethod:     true,
-		IsResolver:   false,
-		ReturnType:   type___InputValue,
+		MarshalCodec: "marshalO__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ", PanicHandled: true, IsMethod: true,
 	})
-	shardruntime.RegisterFieldDef(splitScope, "__Type", "interfaces", shardruntime.FieldDef{
+	shardruntime.RegisterFieldDef(splitScope, "__Type", "interfaces", &shardruntime.FieldDef{
 		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 			return obj.(*introspection.Type).Interfaces(), nil
 		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalO__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ",
-		NonNull:      false,
-		PanicHandled: true,
-		IsMethod:     true,
-		IsResolver:   false,
-		ReturnType:   type___Type,
+		MarshalCodec: "marshalO__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ", PanicHandled: true, IsMethod: true,
 	})
-	shardruntime.RegisterFieldDef(splitScope, "__Type", "isOneOf", shardruntime.FieldDef{
+	shardruntime.RegisterFieldDef(splitScope, "__Type", "isOneOf", &shardruntime.FieldDef{
 		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 			return obj.(*introspection.Type).IsOneOf(), nil
 		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalOBoolean2bool",
-		NonNull:      false,
-		PanicHandled: true,
-		IsMethod:     true,
-		IsResolver:   false,
-		ReturnType:   type_Boolean,
+		MarshalCodec: "marshalOBoolean2bool", PanicHandled: true, IsMethod: true,
 	})
-	shardruntime.RegisterFieldDef(splitScope, "__Type", "kind", shardruntime.FieldDef{
+	shardruntime.RegisterFieldDef(splitScope, "__Type", "kind", &shardruntime.FieldDef{
 		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 			return obj.(*introspection.Type).Kind(), nil
 		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalN__TypeKind2string",
-		NonNull:      true,
-		PanicHandled: true,
-		IsMethod:     true,
-		IsResolver:   false,
-		ReturnType:   type___TypeKind,
+		MarshalCodec: "marshalN__TypeKind2string", NonNull: true, PanicHandled: true, IsMethod: true,
 	})
-	shardruntime.RegisterFieldDef(splitScope, "__Type", "name", shardruntime.FieldDef{
+	shardruntime.RegisterFieldDef(splitScope, "__Type", "name", &shardruntime.FieldDef{
 		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 			return obj.(*introspection.Type).Name(), nil
 		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalOString2ᚖstring",
-		NonNull:      false,
-		PanicHandled: true,
-		IsMethod:     true,
-		IsResolver:   false,
-		ReturnType:   type_String,
+		MarshalCodec: "marshalOString2ᚖstring", PanicHandled: true, IsMethod: true,
 	})
-	shardruntime.RegisterFieldDef(splitScope, "__Type", "ofType", shardruntime.FieldDef{
+	shardruntime.RegisterFieldDef(splitScope, "__Type", "ofType", &shardruntime.FieldDef{
 		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 			return obj.(*introspection.Type).OfType(), nil
 		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType",
-		NonNull:      false,
-		PanicHandled: true,
-		IsMethod:     true,
-		IsResolver:   false,
-		ReturnType:   type___Type,
+		MarshalCodec: "marshalO__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType", PanicHandled: true, IsMethod: true,
 	})
-	shardruntime.RegisterFieldDef(splitScope, "__Type", "possibleTypes", shardruntime.FieldDef{
+	shardruntime.RegisterFieldDef(splitScope, "__Type", "possibleTypes", &shardruntime.FieldDef{
 		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 			return obj.(*introspection.Type).PossibleTypes(), nil
 		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalO__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ",
-		NonNull:      false,
-		PanicHandled: true,
-		IsMethod:     true,
-		IsResolver:   false,
-		ReturnType:   type___Type,
+		MarshalCodec: "marshalO__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ", PanicHandled: true, IsMethod: true,
 	})
-	shardruntime.RegisterFieldDef(splitScope, "__Type", "specifiedByURL", shardruntime.FieldDef{
+	shardruntime.RegisterFieldDef(splitScope, "__Type", "specifiedByURL", &shardruntime.FieldDef{
 		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 			return obj.(*introspection.Type).SpecifiedByURL(), nil
 		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalOString2ᚖstring",
-		NonNull:      false,
-		PanicHandled: true,
-		IsMethod:     true,
-		IsResolver:   false,
-		ReturnType:   type_String,
+		MarshalCodec: "marshalOString2ᚖstring", PanicHandled: true, IsMethod: true,
 	})
 }
 
@@ -557,61 +248,23 @@ func init() {
 	shardruntime.RegisterArgs(splitScope, "field___Field_args_args", __splitArgs_field___Field_args_args)
 	shardruntime.RegisterArgs(splitScope, "field___Type_enumValues_args", __splitArgs_field___Type_enumValues_args)
 	shardruntime.RegisterArgs(splitScope, "field___Type_fields_args", __splitArgs_field___Type_fields_args)
-	shardruntime.RegisterCodecMarshal(splitScope, "marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
-		return marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective(ctx, ec, sel, value)
-	})
-	shardruntime.RegisterCodecMarshal(splitScope, "marshalN__Directive2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirectiveᚄ", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
-		return marshalN__Directive2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirectiveᚄ(ctx, ec, sel, value)
-	})
-	shardruntime.RegisterCodecMarshal(splitScope, "marshalN__DirectiveLocation2string", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
-		return marshalN__DirectiveLocation2string(ctx, ec, sel, value)
-	})
-	shardruntime.RegisterCodecMarshal(splitScope, "marshalN__DirectiveLocation2ᚕstringᚄ", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
-		return marshalN__DirectiveLocation2ᚕstringᚄ(ctx, ec, sel, value)
-	})
-	shardruntime.RegisterCodecMarshal(splitScope, "marshalN__EnumValue2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValue", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
-		return marshalN__EnumValue2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValue(ctx, ec, sel, value)
-	})
-	shardruntime.RegisterCodecMarshal(splitScope, "marshalN__Field2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐField", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
-		return marshalN__Field2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐField(ctx, ec, sel, value)
-	})
-	shardruntime.RegisterCodecMarshal(splitScope, "marshalN__InputValue2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValue", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
-		return marshalN__InputValue2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValue(ctx, ec, sel, value)
-	})
-	shardruntime.RegisterCodecMarshal(splitScope, "marshalN__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
-		return marshalN__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ(ctx, ec, sel, value)
-	})
-	shardruntime.RegisterCodecMarshal(splitScope, "marshalN__Type2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
-		return marshalN__Type2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, ec, sel, value)
-	})
-	shardruntime.RegisterCodecMarshal(splitScope, "marshalN__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
-		return marshalN__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ(ctx, ec, sel, value)
-	})
-	shardruntime.RegisterCodecMarshal(splitScope, "marshalN__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
-		return marshalN__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType(ctx, ec, sel, value)
-	})
-	shardruntime.RegisterCodecMarshal(splitScope, "marshalN__TypeKind2string", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
-		return marshalN__TypeKind2string(ctx, ec, sel, value)
-	})
-	shardruntime.RegisterCodecMarshal(splitScope, "marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
-		return marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ(ctx, ec, sel, value)
-	})
-	shardruntime.RegisterCodecMarshal(splitScope, "marshalO__Field2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐFieldᚄ", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
-		return marshalO__Field2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐFieldᚄ(ctx, ec, sel, value)
-	})
-	shardruntime.RegisterCodecMarshal(splitScope, "marshalO__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
-		return marshalO__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ(ctx, ec, sel, value)
-	})
-	shardruntime.RegisterCodecMarshal(splitScope, "marshalO__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
-		return marshalO__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ(ctx, ec, sel, value)
-	})
-	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalN__DirectiveLocation2string", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
-		return unmarshalN__DirectiveLocation2string(ctx, ec, value)
-	})
-	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalN__DirectiveLocation2ᚕstringᚄ", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
-		return unmarshalN__DirectiveLocation2ᚕstringᚄ(ctx, ec, value)
-	})
-	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalN__TypeKind2string", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
-		return unmarshalN__TypeKind2string(ctx, ec, value)
-	})
+	shardruntime.RegisterCodecMarshal(splitScope, "marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective", marshalN__Directive2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirective)
+	shardruntime.RegisterCodecMarshal(splitScope, "marshalN__Directive2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirectiveᚄ", marshalN__Directive2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐDirectiveᚄ)
+	shardruntime.RegisterCodecMarshal(splitScope, "marshalN__DirectiveLocation2string", marshalN__DirectiveLocation2string)
+	shardruntime.RegisterCodecMarshal(splitScope, "marshalN__DirectiveLocation2ᚕstringᚄ", marshalN__DirectiveLocation2ᚕstringᚄ)
+	shardruntime.RegisterCodecMarshal(splitScope, "marshalN__EnumValue2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValue", marshalN__EnumValue2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValue)
+	shardruntime.RegisterCodecMarshal(splitScope, "marshalN__Field2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐField", marshalN__Field2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐField)
+	shardruntime.RegisterCodecMarshal(splitScope, "marshalN__InputValue2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValue", marshalN__InputValue2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValue)
+	shardruntime.RegisterCodecMarshal(splitScope, "marshalN__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ", marshalN__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ)
+	shardruntime.RegisterCodecMarshal(splitScope, "marshalN__Type2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType", marshalN__Type2githubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType)
+	shardruntime.RegisterCodecMarshal(splitScope, "marshalN__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ", marshalN__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ)
+	shardruntime.RegisterCodecMarshal(splitScope, "marshalN__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType", marshalN__Type2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐType)
+	shardruntime.RegisterCodecMarshal(splitScope, "marshalN__TypeKind2string", marshalN__TypeKind2string)
+	shardruntime.RegisterCodecMarshal(splitScope, "marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ", marshalO__EnumValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐEnumValueᚄ)
+	shardruntime.RegisterCodecMarshal(splitScope, "marshalO__Field2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐFieldᚄ", marshalO__Field2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐFieldᚄ)
+	shardruntime.RegisterCodecMarshal(splitScope, "marshalO__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ", marshalO__InputValue2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐInputValueᚄ)
+	shardruntime.RegisterCodecMarshal(splitScope, "marshalO__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ", marshalO__Type2ᚕgithubᚗcomᚋ99designsᚋgqlgenᚋgraphqlᚋintrospectionᚐTypeᚄ)
+	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalN__DirectiveLocation2string", unmarshalN__DirectiveLocation2string)
+	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalN__DirectiveLocation2ᚕstringᚄ", unmarshalN__DirectiveLocation2ᚕstringᚄ)
+	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalN__TypeKind2string", unmarshalN__TypeKind2string)
 }
