@@ -1818,6 +1818,41 @@ func TestSplitRefusesADirectiveTheSourcesDoNotApply(t *testing.T) {
 	require.NoFileExists(t, filepath.Join(workDir, "graph", "schema", "outside.graphqls"))
 }
 
+func TestSplitRefusesADirectiveTheEmbeddedFileDoesNotApply(t *testing.T) {
+	workDir := chdirToLocalSplitFixtureWorkspace(t)
+	require.NoError(t, os.WriteFile(
+		filepath.Join(workDir, "graph", "mutated.graphqls"),
+		[]byte("directive @mutated on FIELD_DEFINITION\n"),
+		0o644,
+	))
+	cleanupSplitGeneratedFiles(workDir)
+
+	data := buildSplitData(t)
+	mutated := data.AllDirectives["mutated"]
+	require.NotNil(t, mutated)
+	ping := splitParityField(t, data.Objects, "Query", "ping")
+	ping.Directives = append(ping.Directives, mutated)
+	rewritten := false
+	for i := range data.AugmentedSources {
+		source := &data.AugmentedSources[i]
+		if source.Embeddable && source.EmbedPath == "" &&
+			strings.Contains(source.Source, "ping: String!") {
+			source.Source = strings.Replace(
+				source.Source,
+				"ping: String!",
+				"ping: String! @mutated",
+				1,
+			)
+			rewritten = true
+		}
+	}
+	require.True(t, rewritten)
+
+	err := checkRuntimeSchemaParity(data)
+	require.ErrorContains(t, err, "Query.ping has directives [mutated()]")
+	require.ErrorContains(t, err, "the runtime would derive []")
+}
+
 func TestSplitRefusesADirectiveArgumentTheSourcesDoNotApply(t *testing.T) {
 	workDir := chdirToLocalSplitFixtureWorkspace(t)
 	require.NoError(t, os.WriteFile(

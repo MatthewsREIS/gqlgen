@@ -3,6 +3,8 @@ package codegen
 import (
 	"fmt"
 	"maps"
+	"os"
+	"path/filepath"
 	"reflect"
 	"slices"
 	"strings"
@@ -20,9 +22,23 @@ import (
 func checkRuntimeSchemaParity(data *Data) error {
 	sources := make([]*ast.Source, 0, len(data.AugmentedSources))
 	for _, s := range data.AugmentedSources {
+		input := s.Source
+		if s.Embeddable && s.EmbedPath == "" && !s.BuiltIn {
+			raw, err := os.ReadFile(
+				filepath.Join(data.Config.Exec.Dir(), filepath.FromSlash(s.RelativePath)),
+			)
+			if err != nil {
+				return fmt.Errorf(
+					"read the schema file %s the generated root embeds: %w",
+					s.RelativePath,
+					err,
+				)
+			}
+			input = string(raw)
+		}
 		sources = append(
 			sources,
-			&ast.Source{Name: s.RelativePath, Input: s.Source, BuiltIn: s.BuiltIn},
+			&ast.Source{Name: s.RelativePath, Input: input, BuiltIn: s.BuiltIn},
 		)
 	}
 	runtimeSchema, gqlErr := gqlparser.LoadSchema(sources...)
