@@ -3,9 +3,11 @@ package codegen
 import (
 	"errors"
 	"fmt"
+	"maps"
 	"os"
 	"path"
 	"path/filepath"
+	"slices"
 	"sort"
 	"strings"
 
@@ -149,7 +151,7 @@ func assignEmbedPaths(dir string, sources []AugmentedSource) error {
 			rel = rel[3:]
 		}
 		s.EmbedPath = path.Join(dir, rel)
-		if path.Base(s.EmbedPath) == embedManifest {
+		if rel == embedManifest || strings.HasPrefix(rel, embedManifest+"/") {
 			return fmt.Errorf(
 				"schema file %s would be copied to %s, which embed_schema_dir reserves for its manifest",
 				s.RelativePath,
@@ -166,6 +168,20 @@ func assignEmbedPaths(dir string, sources []AugmentedSource) error {
 		}
 		seen[s.EmbedPath] = s.RelativePath
 		s.Embeddable = true
+	}
+	copies := slices.SortedFunc(maps.Keys(seen), func(a, b string) int {
+		return strings.Compare(a+"/", b+"/")
+	})
+	for i := 1; i < len(copies); i++ {
+		if strings.HasPrefix(copies[i], copies[i-1]+"/") {
+			return fmt.Errorf(
+				"schema files %s and %s map to %s and %s under embed_schema_dir, and one is a directory of the other",
+				seen[copies[i-1]],
+				seen[copies[i]],
+				copies[i-1],
+				copies[i],
+			)
+		}
 	}
 	return nil
 }

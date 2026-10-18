@@ -54,6 +54,40 @@ func TestAssignEmbedPaths_RejectsTheManifestName(t *testing.T) {
 	)
 }
 
+func TestAssignEmbedPaths_RejectsACopyBeneathTheManifest(t *testing.T) {
+	sources := []AugmentedSource{{RelativePath: "../.gqlgen-embedded/types.graphql"}}
+	require.EqualError(
+		t,
+		assignEmbedPaths("schema", sources),
+		"schema file ../.gqlgen-embedded/types.graphql would be copied to schema/.gqlgen-embedded/types.graphql, which embed_schema_dir reserves for its manifest",
+	)
+}
+
+func TestAssignEmbedPaths_RejectsAnAncestorCollision(t *testing.T) {
+	sources := []AugmentedSource{
+		{RelativePath: "../shared"},
+		{RelativePath: "../../shared/types.graphql"},
+	}
+	require.EqualError(
+		t,
+		assignEmbedPaths("schema", sources),
+		"schema files ../shared and ../../shared/types.graphql map to schema/shared and schema/shared/types.graphql under embed_schema_dir, and one is a directory of the other",
+	)
+}
+
+func TestAssignEmbedPaths_AncestorCollisionSurvivesASiblingBetween(t *testing.T) {
+	sources := []AugmentedSource{
+		{RelativePath: "../shared"},
+		{RelativePath: "../shared-x/types.graphql"},
+		{RelativePath: "../../shared/types.graphql"},
+	}
+	require.EqualError(
+		t,
+		assignEmbedPaths("schema", sources),
+		"schema files ../shared and ../../shared/types.graphql map to schema/shared and schema/shared/types.graphql under embed_schema_dir, and one is a directory of the other",
+	)
+}
+
 func TestAssignEmbedPaths_Unset(t *testing.T) {
 	sources := []AugmentedSource{{RelativePath: "../x.graphql"}}
 	require.NoError(t, assignEmbedPaths("", sources))
