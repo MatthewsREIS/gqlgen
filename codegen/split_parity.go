@@ -72,7 +72,7 @@ func checkRuntimeSchemaParity(data *Data) error {
 		}
 		if !reflect.DeepEqual(want, got) {
 			return fmt.Errorf(
-				"split-packages: %s.%s has directives [%s] in the generated schema but the runtime would derive [%s] from the schema sources; a SchemaMutator plugin must write its directives into the sources",
+				"split-packages: %s.%s has directives [%s] in the generated schema but the runtime would derive [%s] from the schema sources; a plugin that adds directives must write them into the schema files the generated root embeds",
 				objName,
 				f.Name,
 				formatDirectiveChain(want),

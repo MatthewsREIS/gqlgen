@@ -1880,7 +1880,7 @@ extend type Query {
 	require.EqualError(
 		t,
 		checkRuntimeSchemaParity(data),
-		"split-packages: Query.pong has directives [scoped(scope: b)] in the generated schema but the runtime would derive [scoped(scope: a)] from the schema sources; a SchemaMutator plugin must write its directives into the sources",
+		"split-packages: Query.pong has directives [scoped(scope: b)] in the generated schema but the runtime would derive [scoped(scope: a)] from the schema sources; a plugin that adds directives must write them into the schema files the generated root embeds",
 	)
 }
 
