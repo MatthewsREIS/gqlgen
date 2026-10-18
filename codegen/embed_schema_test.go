@@ -259,6 +259,22 @@ func TestWriteEmbeddedSchemaCopies_ReadsCRLFManifest(t *testing.T) {
 	require.NoError(t, err)
 }
 
+func TestReadEmbedManifest_KeepsFilenameWhitespace(t *testing.T) {
+	root := t.TempDir()
+	require.NoError(t, os.WriteFile(
+		filepath.Join(root, ".gqlgen-embedded"),
+		[]byte(" a.graphql\r\nb.graphql\n"),
+		0o644,
+	))
+
+	owned, err := readEmbedManifest(root)
+
+	require.NoError(t, err)
+	assert.Len(t, owned, 2)
+	assert.True(t, owned[" a.graphql"])
+	assert.True(t, owned["b.graphql"])
+}
+
 func TestWriteEmbeddedSchemaCopies_RefusesSymlinks(t *testing.T) {
 	for _, name := range []string{"a.graphql", ".gqlgen-embedded"} {
 		t.Run(name, func(t *testing.T) {

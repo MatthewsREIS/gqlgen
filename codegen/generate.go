@@ -179,8 +179,8 @@ func readEmbedManifest(root string) (map[string]bool, error) {
 		return nil, fmt.Errorf("read %s: %w", embedManifest, err)
 	}
 	owned := map[string]bool{}
-	for line := range strings.SplitSeq(strings.TrimSpace(string(raw)), "\n") {
-		if line = strings.TrimSpace(line); line != "" {
+	for line := range strings.SplitSeq(string(raw), "\n") {
+		if line = strings.TrimSuffix(line, "\r"); line != "" {
 			owned[line] = true
 		}
 	}
