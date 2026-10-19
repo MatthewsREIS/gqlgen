@@ -225,29 +225,7 @@ func generatePerSchema(data *Data) error {
 		return err
 	}
 
-	builds := map[string]*Data{}
-
-	err = addObjects(data, &builds)
-	if err != nil {
-		return err
-	}
-
-	err = addInputs(data, &builds)
-	if err != nil {
-		return err
-	}
-
-	err = addInterfaces(data, &builds)
-	if err != nil {
-		return err
-	}
-
-	err = addReferencedTypes(data, &builds)
-	if err != nil {
-		return err
-	}
-
-	err = addDirectives(data, &builds)
+	builds, err := perSchemaBuilds(data)
 	if err != nil {
 		return err
 	}
@@ -278,20 +256,39 @@ func generatePerSchema(data *Data) error {
 	return nil
 }
 
-func filename(p *ast.Position, config *config.Config) string {
-	if p != nil && p.Src != nil {
-		return ExecFilename(p.Src.Name, config)
+func perSchemaBuilds(data *Data) (map[string]*Data, error) {
+	builds := map[string]*Data{}
+	for _, add := range []func(*Data, *map[string]*Data) error{
+		addObjects, addInputs, addInterfaces, addReferencedTypes, addDirectives,
+	} {
+		if err := add(data, &builds); err != nil {
+			return nil, err
+		}
 	}
-	return ExecFilename("", config)
+	return builds, nil
 }
 
-// ExecFilename is the follow-schema exec output file for one schema source,
-// or the shared file when srcName is empty.
-func ExecFilename(srcName string, config *config.Config) string {
+// ExecOutputFiles lists every file the follow-schema exec layout writes for data.
+func ExecOutputFiles(data *Data) ([]string, error) {
+	builds, err := perSchemaBuilds(data)
+	if err != nil {
+		return nil, err
+	}
+	dir := data.Config.Exec.DirName
+	files := []string{filepath.Join(dir, "root_.generated.go")}
+	for filename := range builds {
+		if filename != "" {
+			files = append(files, filepath.Join(dir, filename))
+		}
+	}
+	return files, nil
+}
+
+func filename(p *ast.Position, config *config.Config) string {
 	name := "common!"
-	if srcName != "" {
-		gqlname := filepath.Base(srcName)
-		ext := filepath.Ext(srcName)
+	if p != nil && p.Src != nil {
+		gqlname := filepath.Base(p.Src.Name)
+		ext := filepath.Ext(p.Src.Name)
 		name = strings.TrimSuffix(gqlname, ext)
 	}
 
