@@ -164,3 +164,21 @@ func TestResolverConfig(t *testing.T) {
 		)
 	})
 }
+
+func TestResolverConfigRootType(t *testing.T) {
+	t.Run("defaults off", func(t *testing.T) {
+		p := ResolverConfig{Layout: LayoutFollowSchema, DirName: "testdata"}
+		require.NoError(t, p.Check())
+		require.Empty(t, p.RootType)
+	})
+
+	t.Run("must differ from the resolver type", func(t *testing.T) {
+		p := ResolverConfig{Layout: LayoutFollowSchema, DirName: "testdata", RootType: "Resolver"}
+		require.EqualError(t, p.Check(), `resolver root_type must differ from type "Resolver"`)
+	})
+
+	t.Run("must be a Go identifier", func(t *testing.T) {
+		p := ResolverConfig{Layout: LayoutFollowSchema, DirName: "testdata", RootType: "my root"}
+		require.EqualError(t, p.Check(), `resolver root_type "my root" must be a Go identifier`)
+	})
+}

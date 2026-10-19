@@ -65,6 +65,9 @@ func (m *Plugin) generateSingleFile(data *codegen.Data) error {
 	if err != nil {
 		return err
 	}
+	if root := data.Config.Resolver.RootType; root != "" {
+		rewriter.MarkStructCopied(root)
+	}
 
 	for _, o := range data.Objects {
 		if o.HasResolvers() {
@@ -73,6 +76,9 @@ func (m *Plugin) generateSingleFile(data *codegen.Data) error {
 				templates.LcFirst(o.Name) + templates.UcFirst(data.Config.Resolver.Type),
 			)
 			rewriter.GetMethodBody(data.Config.Resolver.Type, caser.String(o.Name))
+			if root := data.Config.Resolver.RootType; root != "" {
+				rewriter.GetMethodBody(root, caser.String(o.Name))
+			}
 
 			file.Objects = append(file.Objects, o)
 		}
@@ -114,6 +120,7 @@ func (m *Plugin) generateSingleFile(data *codegen.Data) error {
 		File:                &file,
 		PackageName:         data.Config.Resolver.Package,
 		ResolverType:        data.Config.Resolver.Type,
+		RootType:            data.Config.Resolver.RootType,
 		HasRoot:             true,
 		OmitTemplateComment: data.Config.Resolver.OmitTemplateComment,
 	}
@@ -144,6 +151,9 @@ func (m *Plugin) generatePerSchema(data *codegen.Data) error {
 	if err != nil {
 		return err
 	}
+	if root := data.Config.Resolver.RootType; root != "" {
+		rewriter.MarkStructCopied(root)
+	}
 
 	files := map[string]*File{}
 
@@ -170,6 +180,9 @@ func (m *Plugin) generatePerSchema(data *codegen.Data) error {
 				templates.LcFirst(o.Name) + templates.UcFirst(data.Config.Resolver.Type),
 			)
 			rewriter.GetMethodBody(data.Config.Resolver.Type, caser.String(o.Name))
+			if root := data.Config.Resolver.RootType; root != "" {
+				rewriter.GetMethodBody(root, caser.String(o.Name))
+			}
 			files[fn].Objects = append(files[fn].Objects, o)
 		}
 		for _, f := range o.Fields {
@@ -245,6 +258,7 @@ func (m *Plugin) generatePerSchema(data *codegen.Data) error {
 			File:                file,
 			PackageName:         data.Config.Resolver.Package,
 			ResolverType:        data.Config.Resolver.Type,
+			RootType:            data.Config.Resolver.RootType,
 			OmitTemplateComment: data.Config.Resolver.OmitTemplateComment,
 		}
 
@@ -270,6 +284,21 @@ func (m *Plugin) generatePerSchema(data *codegen.Data) error {
 			Packages:     data.Config.Packages,
 			Template:     newResolverTemplate,
 			PruneOptions: data.Config.GetPruneOptions(),
+		})
+		if err != nil {
+			return err
+		}
+	}
+
+	if root := data.Config.Resolver.RootType; root != "" {
+		err := templates.Render(templates.Options{
+			PackageName:     data.Config.Resolver.Package,
+			GeneratedHeader: true,
+			Template:        `type {{.RootType}} struct { *{{.Type}} }`,
+			Filename:        strings.TrimSuffix(data.Config.Resolver.Filename, ".go") + "_root.go",
+			Data:            data.Config.Resolver,
+			Packages:        data.Config.Packages,
+			PruneOptions:    data.Config.GetPruneOptions(),
 		})
 		if err != nil {
 			return err
@@ -302,6 +331,7 @@ type ResolverBuild struct {
 	HasRoot             bool
 	PackageName         string
 	ResolverType        string
+	RootType            string
 	OmitTemplateComment bool
 }
 

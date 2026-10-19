@@ -18,6 +18,10 @@
 	type {{.ResolverType}} struct {}
 {{ end }}
 
+{{ if and .HasRoot .RootType }}
+	type {{.RootType}} struct { *{{.ResolverType}} }
+{{ end }}
+
 {{ range $resolver := .Resolvers -}}
 	{{- if $resolver.Field.IsBatch }}
 	{{ if not $.OmitTemplateComment -}}
@@ -42,7 +46,11 @@
 	{{ if not $.OmitTemplateComment -}}
 		// {{ucFirst $object.Name}} returns {{ $object.ResolverInterface | ref }} implementation.
 	{{- end }}
+	{{ if $.RootType -}}
+	func (r {{$.RootType}}) {{ucFirst $object.Name}}() {{ $object.ResolverInterface | ref }} { return &{{lcFirst $object.Name}}{{ucFirst $.ResolverType}}{r.{{$.ResolverType}}} }
+	{{- else -}}
 	func (r *{{$.ResolverType}}) {{ucFirst $object.Name}}() {{ $object.ResolverInterface | ref }} { return &{{lcFirst $object.Name}}{{ucFirst $.ResolverType}}{r} }
+	{{- end }}
 {{ end }}
 
 {{ range $object := .Objects -}}

@@ -1,6 +1,7 @@
 package resolvergen
 
 import (
+	"go/types"
 	"os"
 	"strings"
 	"syscall"
@@ -223,4 +224,60 @@ type implementorTest struct{}
 
 func (i *implementorTest) Implement(_ string, _ *codegen.Field) string {
 	return "panic(\"implementor implemented me\")"
+}
+
+func TestLayoutFollowSchemaWithRootType(t *testing.T) {
+	_ = syscall.Unlink("testdata/root_type/out/resolver.go")
+
+	cfg, err := config.LoadConfig("testdata/root_type/gqlgen.yml")
+	require.NoError(t, err)
+	require.NoError(t, cfg.Init())
+	p := Plugin{}
+
+	data, err := codegen.BuildData(cfg)
+	require.NoError(t, err)
+	require.NoError(t, p.GenerateCode(data))
+
+	first, err := os.ReadFile("testdata/root_type/out/schema.resolvers.go")
+	require.NoError(t, err)
+	source := string(first)
+	require.Contains(t, source, "func (r ResolverRoot) Query() ")
+	require.Contains(t, source, "return &queryCustomResolverType{r.CustomResolverType}")
+	require.NotContains(t, source, "func (r *CustomResolverType) Query()")
+	require.NotContains(t, source, "!!! WARNING !!!")
+
+	root, err := os.ReadFile("testdata/root_type/out/resolver_root.go")
+	require.NoError(t, err)
+	require.Contains(t, string(root), "type ResolverRoot struct{ *CustomResolverType }")
+
+	pkg := "github.com/99designs/gqlgen/plugin/resolvergen/testdata/root_type/out"
+	assertNoErrors(t, pkg)
+	methods := pointerMethodNames(t, pkg, "queryCustomResolverType")
+	require.Contains(t, methods, "Resolver")
+	require.NotContains(t, methods, "Query")
+
+	data, err = codegen.BuildData(cfg)
+	require.NoError(t, err)
+	require.NoError(t, p.GenerateCode(data))
+	second, err := os.ReadFile("testdata/root_type/out/schema.resolvers.go")
+	require.NoError(t, err)
+	require.Equal(t, string(first), string(second))
+}
+
+func pointerMethodNames(t *testing.T, pkgPath, typeName string) []string {
+	t.Helper()
+	pkgs, err := packages.Load(
+		&packages.Config{Mode: packages.NeedName | packages.NeedTypes},
+		pkgPath,
+	)
+	require.NoError(t, err)
+	require.Len(t, pkgs, 1)
+	obj := pkgs[0].Types.Scope().Lookup(typeName)
+	require.NotNil(t, obj, "type %s not found in %s", typeName, pkgPath)
+	set := types.NewMethodSet(types.NewPointer(obj.Type()))
+	names := make([]string, 0, set.Len())
+	for sel := range set.Methods() {
+		names = append(names, sel.Obj().Name())
+	}
+	return names
 }
