@@ -225,29 +225,7 @@ func generatePerSchema(data *Data) error {
 		return err
 	}
 
-	builds := map[string]*Data{}
-
-	err = addObjects(data, &builds)
-	if err != nil {
-		return err
-	}
-
-	err = addInputs(data, &builds)
-	if err != nil {
-		return err
-	}
-
-	err = addInterfaces(data, &builds)
-	if err != nil {
-		return err
-	}
-
-	err = addReferencedTypes(data, &builds)
-	if err != nil {
-		return err
-	}
-
-	err = addDirectives(data, &builds)
+	builds, err := perSchemaBuilds(data)
 	if err != nil {
 		return err
 	}
@@ -276,6 +254,34 @@ func generatePerSchema(data *Data) error {
 	}
 
 	return nil
+}
+
+func perSchemaBuilds(data *Data) (map[string]*Data, error) {
+	builds := map[string]*Data{}
+	for _, add := range []func(*Data, *map[string]*Data) error{
+		addObjects, addInputs, addInterfaces, addReferencedTypes, addDirectives,
+	} {
+		if err := add(data, &builds); err != nil {
+			return nil, err
+		}
+	}
+	return builds, nil
+}
+
+// ExecOutputFiles lists every file the follow-schema exec layout writes for data.
+func ExecOutputFiles(data *Data) ([]string, error) {
+	builds, err := perSchemaBuilds(data)
+	if err != nil {
+		return nil, err
+	}
+	dir := data.Config.Exec.DirName
+	files := []string{filepath.Join(dir, "root_.generated.go")}
+	for filename := range builds {
+		if filename != "" {
+			files = append(files, filepath.Join(dir, filename))
+		}
+	}
+	return files, nil
 }
 
 func filename(p *ast.Position, config *config.Config) string {

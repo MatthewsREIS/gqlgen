@@ -162,6 +162,10 @@
         "preserve_resolver": {
           "type": "boolean"
         },
+        "root_type": {
+          "type": "string",
+          "description": "The name of a generated struct that wraps the resolver type and carries the ResolverRoot accessor methods, so the per-object resolver structs do not inherit them"
+        },
         "type": {
           "type": "string",
           "description": "The name of the resolver struct type",

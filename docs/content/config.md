@@ -77,6 +77,12 @@ resolver:
   # resolver_template: [your/path/resolver.gotpl]
   # Optional: turn on to avoid rewriting existing resolver(s) when generating
   # preserve_resolver: false
+  # Optional: name a generated struct that wraps the resolver type and carries the ResolverRoot
+  # accessor methods. The per-object resolver structs embed the resolver type, so without this
+  # every one of them inherits one promoted method per resolver object. Pick a name that is free
+  # in the resolver package: when exec and resolver share a package, ResolverRoot is already the
+  # generated interface.
+  # root_type: RootResolver
 
 # Optional: turn on use ` + "`" + `gqlgen:"fieldName"` + "`" + ` tags in your models
 # struct_tag: json
