@@ -50,6 +50,10 @@
           "default": "{name}.generated.go",
           "description": "Template for split shard filenames (only for split-packages layout)"
         },
+        "embed_schema_dir": {
+          "type": "string",
+          "description": "Directory, relative to the exec directory, that receives a copy of every schema file outside the exec directory so generated code can go:embed it"
+        },
         "worker_limit": {
           "type": "integer",
           "description": "Maximum number of goroutines in concurrency to use per child resolvers",

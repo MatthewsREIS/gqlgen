@@ -25,6 +25,11 @@ type ExecConfig struct {
 	ShardDir              string `yaml:"shard_dir,omitempty"`
 	ShardFilenameTemplate string `yaml:"shard_filename_template,omitempty"` // String template with {name} as placeholder for base name.
 
+	// EmbedSchemaDir, relative to the exec directory, receives a copy of every
+	// schema file that sits outside that directory so the generated code can
+	// go:embed it instead of inlining the SDL as a string literal.
+	EmbedSchemaDir string `yaml:"embed_schema_dir,omitempty"`
+
 	// Maximum number of goroutines in concurrency to use when running multiple child resolvers
 	// Suppressing the number of goroutines generated can reduce memory consumption per request,
 	// but processing time may increase due to the reduced number of concurrences
@@ -102,6 +107,18 @@ func (r *ExecConfig) Check() error {
 		}
 	default:
 		return fmt.Errorf("invalid layout %s", r.Layout)
+	}
+
+	if r.EmbedSchemaDir != "" {
+		cleaned := filepath.ToSlash(filepath.Clean(r.EmbedSchemaDir))
+		if filepath.IsAbs(r.EmbedSchemaDir) || strings.HasPrefix(cleaned, "/") ||
+			cleaned == "." || cleaned == ".." || strings.HasPrefix(cleaned, "../") {
+			return fmt.Errorf(
+				"embed_schema_dir must be a relative path inside the exec directory, got %q",
+				r.EmbedSchemaDir,
+			)
+		}
+		r.EmbedSchemaDir = cleaned
 	}
 
 	if strings.ContainsAny(r.Package, "./\\") {

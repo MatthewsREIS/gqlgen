@@ -3,43 +3,12 @@
 package hybrid_input
 
 import (
-	"context"
-
-	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/executor/shardruntime"
 )
 
 func init() {
-	shardruntime.RegisterFieldDef(splitScope, "Query", "hybridInput", shardruntime.FieldDef{
-		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
-			return ec.InvokeResolver(ctx, "Query", "hybridInput", obj)
-		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalNString2string",
-		NonNull:      true,
-		PanicHandled: true,
-		IsMethod:     true,
-		IsResolver:   true,
-		ArgsKey:      "field_Query_hybridInput_args",
-		ReturnType:   type_String,
-	})
-	shardruntime.RegisterFieldDef(splitScope, "Query", "hybridInputNullable", shardruntime.FieldDef{
-		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
-			return ec.InvokeResolver(ctx, "Query", "hybridInputNullable", obj)
-		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalNString2string",
-		NonNull:      true,
-		PanicHandled: true,
-		IsMethod:     true,
-		IsResolver:   true,
-		ArgsKey:      "field_Query_hybridInputNullable_args",
-		ReturnType:   type_String,
-	})
+	shardruntime.RegisterFieldDef(splitScope, "Query", "hybridInput", &shardruntime.FieldDef{MarshalCodec: "marshalNString2string", NonNull: true, PanicHandled: true, IsMethod: true, IsResolver: true, ArgsKey: "field_Query_hybridInput_args"})
+	shardruntime.RegisterFieldDef(splitScope, "Query", "hybridInputNullable", &shardruntime.FieldDef{MarshalCodec: "marshalNString2string", NonNull: true, PanicHandled: true, IsMethod: true, IsResolver: true, ArgsKey: "field_Query_hybridInputNullable_args"})
 }
 
 func init() {
@@ -51,34 +20,14 @@ func init() {
 		{Name: "resolved", UnmarshalCodec: "unmarshalNString2string"},
 	})
 	shardruntime.RegisterInputUnmarshaler(splitScope, "HybridNested", __splitInput_HybridNested)
-	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalNHybridInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐHybridInput", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
-		return unmarshalNHybridInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐHybridInput(ctx, ec, value)
-	})
-	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalNHybridInput2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐHybridInput", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
-		return unmarshalNHybridInput2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐHybridInput(ctx, ec, value)
-	})
-	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalNHybridNested2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐHybridNested", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
-		return unmarshalNHybridNested2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐHybridNested(ctx, ec, value)
-	})
-	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalNHybridNested2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐHybridNested", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
-		return unmarshalNHybridNested2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐHybridNested(ctx, ec, value)
-	})
-	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOHybridInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐHybridInput", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
-		return unmarshalOHybridInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐHybridInput(ctx, ec, value)
-	})
-	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOHybridInput2ᚕᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐHybridInputᚄ", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
-		return unmarshalOHybridInput2ᚕᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐHybridInputᚄ(ctx, ec, value)
-	})
-	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOHybridInput2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐHybridInput", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
-		return unmarshalOHybridInput2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐHybridInput(ctx, ec, value)
-	})
-	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOHybridNested2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐHybridNested", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
-		return unmarshalOHybridNested2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐHybridNested(ctx, ec, value)
-	})
-	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOHybridNested2ᚕᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐHybridNestedᚄ", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
-		return unmarshalOHybridNested2ᚕᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐHybridNestedᚄ(ctx, ec, value)
-	})
-	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOHybridNested2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐHybridNested", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
-		return unmarshalOHybridNested2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐHybridNested(ctx, ec, value)
-	})
+	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalNHybridInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐHybridInput", unmarshalNHybridInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐHybridInput)
+	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalNHybridInput2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐHybridInput", unmarshalNHybridInput2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐHybridInput)
+	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalNHybridNested2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐHybridNested", unmarshalNHybridNested2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐHybridNested)
+	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalNHybridNested2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐHybridNested", unmarshalNHybridNested2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐHybridNested)
+	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOHybridInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐHybridInput", unmarshalOHybridInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐHybridInput)
+	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOHybridInput2ᚕᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐHybridInputᚄ", unmarshalOHybridInput2ᚕᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐHybridInputᚄ)
+	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOHybridInput2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐHybridInput", unmarshalOHybridInput2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐHybridInput)
+	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOHybridNested2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐHybridNested", unmarshalOHybridNested2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐHybridNested)
+	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOHybridNested2ᚕᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐHybridNestedᚄ", unmarshalOHybridNested2ᚕᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐHybridNestedᚄ)
+	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOHybridNested2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐHybridNested", unmarshalOHybridNested2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐHybridNested)
 }

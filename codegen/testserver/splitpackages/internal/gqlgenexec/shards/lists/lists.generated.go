@@ -16,36 +16,6 @@ import (
 
 const splitScope = "github.com/99designs/gqlgen/codegen/testserver/splitpackages"
 
-var type_Boolean = &shardruntime.ObjectChildLookup{
-	TypeName: "Boolean",
-	Kind:     ast.Scalar,
-}
-var type_Bytes = &shardruntime.ObjectChildLookup{
-	TypeName: "Bytes",
-	Kind:     ast.Scalar,
-}
-var type_PtrToSliceContainer = &shardruntime.ObjectChildLookup{
-	TypeName: "PtrToSliceContainer",
-	Kind:     ast.Object,
-	Children: []string{
-		"ptrToSlice",
-	},
-}
-var type_Slices = &shardruntime.ObjectChildLookup{
-	TypeName: "Slices",
-	Kind:     ast.Object,
-	Children: []string{
-		"test1",
-		"test2",
-		"test3",
-		"test4",
-	},
-}
-var type_String = &shardruntime.ObjectChildLookup{
-	TypeName: "String",
-	Kind:     ast.Scalar,
-}
-
 func init() {
 	shardruntime.RegisterObject(splitScope, "PtrToSliceContainer", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, obj any) graphql.Marshaler {
 		return _PtrToSliceContainer(ctx, ec, sel, obj)

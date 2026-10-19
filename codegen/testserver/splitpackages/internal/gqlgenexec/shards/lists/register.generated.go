@@ -6,168 +6,45 @@ import (
 	"context"
 
 	"github.com/99designs/gqlgen/codegen/testserver/splitpackages/model"
-	"github.com/99designs/gqlgen/graphql"
 	"github.com/99designs/gqlgen/graphql/executor/shardruntime"
-	"github.com/vektah/gqlparser/v2/ast"
 )
 
 func init() {
-	shardruntime.RegisterFieldDef(splitScope, "PtrToSliceContainer", "ptrToSlice", shardruntime.FieldDef{
+	shardruntime.RegisterFieldDef(splitScope, "PtrToSliceContainer", "ptrToSlice", &shardruntime.FieldDef{
 		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 			return obj.(*model.PtrToSliceContainer).PtrToSlice, nil
 		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalOString2ᚖᚕstringᚄ",
-		NonNull:      false,
-		PanicHandled: true,
-		IsMethod:     false,
-		IsResolver:   false,
-		ReturnType:   type_String,
+		MarshalCodec: "marshalOString2ᚖᚕstringᚄ", PanicHandled: true,
 	})
-	shardruntime.RegisterFieldDef(splitScope, "Query", "inputListField", shardruntime.FieldDef{
-		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
-			return ec.InvokeResolver(ctx, "Query", "inputListField", obj)
-		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalNString2string",
-		NonNull:      true,
-		PanicHandled: true,
-		IsMethod:     true,
-		IsResolver:   true,
-		ArgsKey:      "field_Query_inputListField_args",
-		ReturnType:   type_String,
-	})
-	shardruntime.RegisterFieldDef(splitScope, "Query", "inputNullableSlice", shardruntime.FieldDef{
-		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
-			return ec.InvokeResolver(ctx, "Query", "inputNullableSlice", obj)
-		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalNBoolean2bool",
-		NonNull:      true,
-		PanicHandled: true,
-		IsMethod:     true,
-		IsResolver:   true,
-		ArgsKey:      "field_Query_inputNullableSlice_args",
-		ReturnType:   type_Boolean,
-	})
-	shardruntime.RegisterFieldDef(splitScope, "Query", "inputSlice", shardruntime.FieldDef{
-		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
-			return ec.InvokeResolver(ctx, "Query", "inputSlice", obj)
-		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalNBoolean2bool",
-		NonNull:      true,
-		PanicHandled: true,
-		IsMethod:     true,
-		IsResolver:   true,
-		ArgsKey:      "field_Query_inputSlice_args",
-		ReturnType:   type_Boolean,
-	})
-	shardruntime.RegisterFieldDef(splitScope, "Query", "ptrToSliceContainer", shardruntime.FieldDef{
-		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
-			return ec.InvokeResolver(ctx, "Query", "ptrToSliceContainer", obj)
-		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalOPtrToSliceContainer2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐPtrToSliceContainer",
-		NonNull:      false,
-		PanicHandled: true,
-		IsMethod:     true,
-		IsResolver:   true,
-		ReturnType:   type_PtrToSliceContainer,
-	})
-	shardruntime.RegisterFieldDef(splitScope, "Query", "scalarSlice", shardruntime.FieldDef{
-		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
-			return ec.InvokeResolver(ctx, "Query", "scalarSlice", obj)
-		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalNBytes2ᚕbyte",
-		NonNull:      true,
-		PanicHandled: true,
-		IsMethod:     true,
-		IsResolver:   true,
-		ReturnType:   type_Bytes,
-	})
-	shardruntime.RegisterFieldDef(splitScope, "Query", "slices", shardruntime.FieldDef{
-		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
-			return ec.InvokeResolver(ctx, "Query", "slices", obj)
-		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalOSlices2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐSlices",
-		NonNull:      false,
-		PanicHandled: true,
-		IsMethod:     true,
-		IsResolver:   true,
-		ReturnType:   type_Slices,
-	})
-	shardruntime.RegisterFieldDef(splitScope, "Slices", "test1", shardruntime.FieldDef{
+	shardruntime.RegisterFieldDef(splitScope, "Query", "inputListField", &shardruntime.FieldDef{MarshalCodec: "marshalNString2string", NonNull: true, PanicHandled: true, IsMethod: true, IsResolver: true, ArgsKey: "field_Query_inputListField_args"})
+	shardruntime.RegisterFieldDef(splitScope, "Query", "inputNullableSlice", &shardruntime.FieldDef{MarshalCodec: "marshalNBoolean2bool", NonNull: true, PanicHandled: true, IsMethod: true, IsResolver: true, ArgsKey: "field_Query_inputNullableSlice_args"})
+	shardruntime.RegisterFieldDef(splitScope, "Query", "inputSlice", &shardruntime.FieldDef{MarshalCodec: "marshalNBoolean2bool", NonNull: true, PanicHandled: true, IsMethod: true, IsResolver: true, ArgsKey: "field_Query_inputSlice_args"})
+	shardruntime.RegisterFieldDef(splitScope, "Query", "ptrToSliceContainer", &shardruntime.FieldDef{MarshalCodec: "marshalOPtrToSliceContainer2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐPtrToSliceContainer", PanicHandled: true, IsMethod: true, IsResolver: true})
+	shardruntime.RegisterFieldDef(splitScope, "Query", "scalarSlice", &shardruntime.FieldDef{MarshalCodec: "marshalNBytes2ᚕbyte", NonNull: true, PanicHandled: true, IsMethod: true, IsResolver: true})
+	shardruntime.RegisterFieldDef(splitScope, "Query", "slices", &shardruntime.FieldDef{MarshalCodec: "marshalOSlices2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐSlices", PanicHandled: true, IsMethod: true, IsResolver: true})
+	shardruntime.RegisterFieldDef(splitScope, "Slices", "test1", &shardruntime.FieldDef{
 		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 			return obj.(*model.Slices).Test1, nil
 		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalOString2ᚕᚖstring",
-		NonNull:      false,
-		PanicHandled: true,
-		IsMethod:     false,
-		IsResolver:   false,
-		ReturnType:   type_String,
+		MarshalCodec: "marshalOString2ᚕᚖstring", PanicHandled: true,
 	})
-	shardruntime.RegisterFieldDef(splitScope, "Slices", "test2", shardruntime.FieldDef{
+	shardruntime.RegisterFieldDef(splitScope, "Slices", "test2", &shardruntime.FieldDef{
 		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 			return obj.(*model.Slices).Test2, nil
 		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalOString2ᚕstringᚄ",
-		NonNull:      false,
-		PanicHandled: true,
-		IsMethod:     false,
-		IsResolver:   false,
-		ReturnType:   type_String,
+		MarshalCodec: "marshalOString2ᚕstringᚄ", PanicHandled: true,
 	})
-	shardruntime.RegisterFieldDef(splitScope, "Slices", "test3", shardruntime.FieldDef{
+	shardruntime.RegisterFieldDef(splitScope, "Slices", "test3", &shardruntime.FieldDef{
 		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 			return obj.(*model.Slices).Test3, nil
 		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalNString2ᚕᚖstring",
-		NonNull:      true,
-		PanicHandled: true,
-		IsMethod:     false,
-		IsResolver:   false,
-		ReturnType:   type_String,
+		MarshalCodec: "marshalNString2ᚕᚖstring", NonNull: true, PanicHandled: true,
 	})
-	shardruntime.RegisterFieldDef(splitScope, "Slices", "test4", shardruntime.FieldDef{
+	shardruntime.RegisterFieldDef(splitScope, "Slices", "test4", &shardruntime.FieldDef{
 		Resolve: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any) (any, error) {
 			return obj.(*model.Slices).Test4, nil
 		},
-		Directives: func(ctx context.Context, ec shardruntime.ObjectExecutionContext, obj any, next graphql.Resolver) graphql.Resolver {
-			return ec.FieldMiddleware(ctx, obj, next)
-		},
-		MarshalCodec: "marshalNString2ᚕstringᚄ",
-		NonNull:      true,
-		PanicHandled: true,
-		IsMethod:     false,
-		IsResolver:   false,
-		ReturnType:   type_String,
+		MarshalCodec: "marshalNString2ᚕstringᚄ", NonNull: true, PanicHandled: true,
 	})
 }
 
@@ -176,55 +53,21 @@ func init() {
 	shardruntime.RegisterArgs(splitScope, "field_Query_inputNullableSlice_args", __splitArgs_field_Query_inputNullableSlice_args)
 	shardruntime.RegisterArgs(splitScope, "field_Query_inputSlice_args", __splitArgs_field_Query_inputSlice_args)
 	shardruntime.RegisterInputUnmarshaler(splitScope, "ListFieldInput", __splitInput_ListFieldInput)
-	shardruntime.RegisterCodecMarshal(splitScope, "marshalNBoolean2bool", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
-		return marshalNBoolean2bool(ctx, ec, sel, value)
-	})
-	shardruntime.RegisterCodecMarshal(splitScope, "marshalNBytes2ᚕbyte", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
-		return marshalNBytes2ᚕbyte(ctx, ec, sel, value)
-	})
-	shardruntime.RegisterCodecMarshal(splitScope, "marshalNString2ᚕᚖstring", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
-		return marshalNString2ᚕᚖstring(ctx, ec, sel, value)
-	})
-	shardruntime.RegisterCodecMarshal(splitScope, "marshalOPtrToSliceContainer2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐPtrToSliceContainer", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
-		return marshalOPtrToSliceContainer2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐPtrToSliceContainer(ctx, ec, sel, value)
-	})
-	shardruntime.RegisterCodecMarshal(splitScope, "marshalOPtrToSliceContainer2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐPtrToSliceContainer", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
-		return marshalOPtrToSliceContainer2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐPtrToSliceContainer(ctx, ec, sel, value)
-	})
-	shardruntime.RegisterCodecMarshal(splitScope, "marshalOSlices2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐSlices", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
-		return marshalOSlices2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐSlices(ctx, ec, sel, value)
-	})
-	shardruntime.RegisterCodecMarshal(splitScope, "marshalOSlices2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐSlices", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
-		return marshalOSlices2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐSlices(ctx, ec, sel, value)
-	})
-	shardruntime.RegisterCodecMarshal(splitScope, "marshalOString2ᚕstringᚄ", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
-		return marshalOString2ᚕstringᚄ(ctx, ec, sel, value)
-	})
-	shardruntime.RegisterCodecMarshal(splitScope, "marshalOString2ᚕᚖstring", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
-		return marshalOString2ᚕᚖstring(ctx, ec, sel, value)
-	})
-	shardruntime.RegisterCodecMarshal(splitScope, "marshalOString2ᚖᚕstringᚄ", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, sel ast.SelectionSet, value any) graphql.Marshaler {
-		return marshalOString2ᚖᚕstringᚄ(ctx, ec, sel, value)
-	})
-	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalNBoolean2bool", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
-		return unmarshalNBoolean2bool(ctx, ec, value)
-	})
-	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalNBytes2ᚕbyte", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
-		return unmarshalNBytes2ᚕbyte(ctx, ec, value)
-	})
-	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalNListFieldInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐListFieldInput", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
-		return unmarshalNListFieldInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐListFieldInput(ctx, ec, value)
-	})
-	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalNString2ᚕᚖstring", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
-		return unmarshalNString2ᚕᚖstring(ctx, ec, value)
-	})
-	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOString2ᚕstringᚄ", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
-		return unmarshalOString2ᚕstringᚄ(ctx, ec, value)
-	})
-	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOString2ᚕᚖstring", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
-		return unmarshalOString2ᚕᚖstring(ctx, ec, value)
-	})
-	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOString2ᚖᚕstringᚄ", func(ctx context.Context, ec shardruntime.ObjectExecutionContext, value any) (any, error) {
-		return unmarshalOString2ᚖᚕstringᚄ(ctx, ec, value)
-	})
+	shardruntime.RegisterCodecMarshal(splitScope, "marshalNBoolean2bool", marshalNBoolean2bool)
+	shardruntime.RegisterCodecMarshal(splitScope, "marshalNBytes2ᚕbyte", marshalNBytes2ᚕbyte)
+	shardruntime.RegisterCodecMarshal(splitScope, "marshalNString2ᚕᚖstring", marshalNString2ᚕᚖstring)
+	shardruntime.RegisterCodecMarshal(splitScope, "marshalOPtrToSliceContainer2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐPtrToSliceContainer", marshalOPtrToSliceContainer2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐPtrToSliceContainer)
+	shardruntime.RegisterCodecMarshal(splitScope, "marshalOPtrToSliceContainer2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐPtrToSliceContainer", marshalOPtrToSliceContainer2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐPtrToSliceContainer)
+	shardruntime.RegisterCodecMarshal(splitScope, "marshalOSlices2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐSlices", marshalOSlices2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐSlices)
+	shardruntime.RegisterCodecMarshal(splitScope, "marshalOSlices2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐSlices", marshalOSlices2ᚖgithubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐSlices)
+	shardruntime.RegisterCodecMarshal(splitScope, "marshalOString2ᚕstringᚄ", marshalOString2ᚕstringᚄ)
+	shardruntime.RegisterCodecMarshal(splitScope, "marshalOString2ᚕᚖstring", marshalOString2ᚕᚖstring)
+	shardruntime.RegisterCodecMarshal(splitScope, "marshalOString2ᚖᚕstringᚄ", marshalOString2ᚖᚕstringᚄ)
+	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalNBoolean2bool", unmarshalNBoolean2bool)
+	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalNBytes2ᚕbyte", unmarshalNBytes2ᚕbyte)
+	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalNListFieldInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐListFieldInput", unmarshalNListFieldInput2githubᚗcomᚋ99designsᚋgqlgenᚋcodegenᚋtestserverᚋsplitpackagesᚋmodelᚐListFieldInput)
+	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalNString2ᚕᚖstring", unmarshalNString2ᚕᚖstring)
+	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOString2ᚕstringᚄ", unmarshalOString2ᚕstringᚄ)
+	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOString2ᚕᚖstring", unmarshalOString2ᚕᚖstring)
+	shardruntime.RegisterCodecUnmarshal(splitScope, "unmarshalOString2ᚖᚕstringᚄ", unmarshalOString2ᚖᚕstringᚄ)
 }
