@@ -279,10 +279,19 @@ func generatePerSchema(data *Data) error {
 }
 
 func filename(p *ast.Position, config *config.Config) string {
-	name := "common!"
 	if p != nil && p.Src != nil {
-		gqlname := filepath.Base(p.Src.Name)
-		ext := filepath.Ext(p.Src.Name)
+		return ExecFilename(p.Src.Name, config)
+	}
+	return ExecFilename("", config)
+}
+
+// ExecFilename is the follow-schema exec output file for one schema source,
+// or the shared file when srcName is empty.
+func ExecFilename(srcName string, config *config.Config) string {
+	name := "common!"
+	if srcName != "" {
+		gqlname := filepath.Base(srcName)
+		ext := filepath.Ext(srcName)
 		name = strings.TrimSuffix(gqlname, ext)
 	}
 

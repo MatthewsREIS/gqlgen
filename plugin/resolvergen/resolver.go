@@ -396,15 +396,42 @@ func checkRootType(data *codegen.Data) error {
 	if cfg.RootType == "" {
 		return nil
 	}
+	for _, objects := range []codegen.Objects{data.Objects, data.Inputs} {
+		for _, o := range objects {
+			if o.HasResolvers() && templates.UcFirst(o.Name) == cfg.Type {
+				return fmt.Errorf(
+					"resolver root_type: the %s accessor would share its name with the %s field embedded in %s; rename resolver.type",
+					templates.UcFirst(o.Name),
+					cfg.Type,
+					cfg.RootType,
+				)
+			}
+		}
+	}
+	if cfg.Layout != config.LayoutFollowSchema {
+		return nil
+	}
 	rootFile := rootFilename(cfg.Filename)
 	samePath := func(a, b string) bool {
 		return strings.EqualFold(filepath.ToSlash(a), filepath.ToSlash(b))
 	}
-	for _, out := range []struct{ name, path string }{
-		{"exec", data.Config.Exec.Filename},
+	type output struct{ name, path string }
+	outputs := []output{
 		{"model", data.Config.Model.Filename},
 		{"federation", data.Config.Federation.Filename},
-	} {
+	}
+	if data.Config.Exec.Layout == config.ExecLayoutFollowSchema {
+		execDir := data.Config.Exec.Dir()
+		shared := filepath.Join(execDir, codegen.ExecFilename("", data.Config))
+		outputs = append(outputs, output{"exec", shared})
+		for _, s := range data.Config.Sources {
+			perSchema := filepath.Join(execDir, codegen.ExecFilename(s.Name, data.Config))
+			outputs = append(outputs, output{"exec", perSchema})
+		}
+	} else {
+		outputs = append(outputs, output{"exec", data.Config.Exec.Filename})
+	}
+	for _, out := range outputs {
 		if out.path != "" && samePath(out.path, rootFile) {
 			return fmt.Errorf(
 				"resolver root_type: its file %s is also the %s output file; change resolver.filename",
@@ -414,27 +441,16 @@ func checkRootType(data *codegen.Data) error {
 		}
 	}
 	collides := func(src string) bool {
-		return cfg.Layout == config.LayoutFollowSchema &&
-			samePath(gqlToResolverName(cfg.Dir(), src, cfg.FilenameTemplate), rootFile)
+		return samePath(gqlToResolverName(cfg.Dir(), src, cfg.FilenameTemplate), rootFile)
 	}
 	for _, objects := range []codegen.Objects{data.Objects, data.Inputs} {
 		for _, o := range objects {
-			if o.HasResolvers() {
-				if templates.UcFirst(o.Name) == cfg.Type {
-					return fmt.Errorf(
-						"resolver root_type: the %s accessor would share its name with the %s field embedded in %s; rename resolver.type",
-						templates.UcFirst(o.Name),
-						cfg.Type,
-						cfg.RootType,
-					)
-				}
-				if collides(o.Position.Src.Name) {
-					return fmt.Errorf(
-						"resolver root_type: its file %s is also the resolver file for schema %s; change filename_template or resolver.filename",
-						rootFile,
-						o.Position.Src.Name,
-					)
-				}
+			if o.HasResolvers() && collides(o.Position.Src.Name) {
+				return fmt.Errorf(
+					"resolver root_type: its file %s is also the resolver file for schema %s; change filename_template or resolver.filename",
+					rootFile,
+					o.Position.Src.Name,
+				)
 			}
 			for _, f := range o.Fields {
 				if f.IsResolver && collides(f.Position.Src.Name) {

@@ -362,3 +362,30 @@ func TestRootTypeRejectsAWrapperFileThatIsTheExecFile(t *testing.T) {
 		"resolver_root.go is also the exec output file",
 	)
 }
+
+func TestRootTypeRejectsAWrapperFileThatIsAFollowSchemaExecFile(t *testing.T) {
+	cfg, err := config.LoadConfig("testdata/root_type_exec_fs_collision/gqlgen.yml")
+	require.NoError(t, err)
+	require.NoError(t, cfg.Init())
+
+	data, err := codegen.BuildData(cfg)
+	require.NoError(t, err)
+	require.ErrorContains(
+		t,
+		(&Plugin{}).GenerateCode(data),
+		"resolver_root.go is also the exec output file",
+	)
+}
+
+func TestRootTypeIgnoresOutputFilesInSingleFileLayout(t *testing.T) {
+	cfg := &config.Config{
+		Resolver: config.ResolverConfig{
+			Layout:   config.LayoutSingleFile,
+			Filename: "graph/resolver.go",
+			Type:     "Resolver",
+			RootType: "RootResolver",
+		},
+		Exec: config.ExecConfig{Filename: "graph/resolver_root.go"},
+	}
+	require.NoError(t, checkRootType(&codegen.Data{Config: cfg}))
+}
