@@ -348,3 +348,17 @@ func TestRootTypeRejectsAWrapperFileThatIsAResolverFile(t *testing.T) {
 		"resolver_root.go is also the resolver file for schema testdata/root_type_path_collision/resolver_root.graphqls",
 	)
 }
+
+func TestRootTypeRejectsAWrapperFileThatIsTheExecFile(t *testing.T) {
+	cfg, err := config.LoadConfig("testdata/root_type_exec_collision/gqlgen.yml")
+	require.NoError(t, err)
+	require.NoError(t, cfg.Init())
+
+	data, err := codegen.BuildData(cfg)
+	require.NoError(t, err)
+	require.ErrorContains(
+		t,
+		(&Plugin{}).GenerateCode(data),
+		"resolver_root.go is also the exec output file",
+	)
+}

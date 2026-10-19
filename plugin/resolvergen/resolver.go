@@ -396,10 +396,26 @@ func checkRootType(data *codegen.Data) error {
 	if cfg.RootType == "" {
 		return nil
 	}
-	rootFile := strings.ToLower(rootFilename(cfg.Filename))
+	rootFile := rootFilename(cfg.Filename)
+	samePath := func(a, b string) bool {
+		return strings.EqualFold(filepath.ToSlash(a), filepath.ToSlash(b))
+	}
+	for _, out := range []struct{ name, path string }{
+		{"exec", data.Config.Exec.Filename},
+		{"model", data.Config.Model.Filename},
+		{"federation", data.Config.Federation.Filename},
+	} {
+		if out.path != "" && samePath(out.path, rootFile) {
+			return fmt.Errorf(
+				"resolver root_type: its file %s is also the %s output file; change resolver.filename",
+				rootFile,
+				out.name,
+			)
+		}
+	}
 	collides := func(src string) bool {
 		return cfg.Layout == config.LayoutFollowSchema &&
-			strings.EqualFold(gqlToResolverName(cfg.Dir(), src, cfg.FilenameTemplate), rootFile)
+			samePath(gqlToResolverName(cfg.Dir(), src, cfg.FilenameTemplate), rootFile)
 	}
 	for _, objects := range []codegen.Objects{data.Objects, data.Inputs} {
 		for _, o := range objects {
@@ -415,7 +431,7 @@ func checkRootType(data *codegen.Data) error {
 				if collides(o.Position.Src.Name) {
 					return fmt.Errorf(
 						"resolver root_type: its file %s is also the resolver file for schema %s; change filename_template or resolver.filename",
-						rootFilename(cfg.Filename),
+						rootFile,
 						o.Position.Src.Name,
 					)
 				}
@@ -424,7 +440,7 @@ func checkRootType(data *codegen.Data) error {
 				if f.IsResolver && collides(f.Position.Src.Name) {
 					return fmt.Errorf(
 						"resolver root_type: its file %s is also the resolver file for schema %s; change filename_template or resolver.filename",
-						rootFilename(cfg.Filename),
+						rootFile,
 						f.Position.Src.Name,
 					)
 				}
