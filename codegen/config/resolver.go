@@ -39,8 +39,12 @@ func (r *ResolverConfig) Check() error {
 		r.Type = "Resolver"
 	}
 	if r.RootType != "" {
-		if !token.IsIdentifier(r.RootType) {
-			return fmt.Errorf("resolver root_type %q must be a Go identifier", r.RootType)
+		reserved := r.RootType == "_" || r.RootType == "init"
+		if reserved || !token.IsIdentifier(r.RootType) {
+			return fmt.Errorf(
+				"resolver root_type %q must be a Go identifier that can name a type",
+				r.RootType,
+			)
 		}
 		if r.RootType == r.Type {
 			return fmt.Errorf("resolver root_type must differ from type %q", r.Type)

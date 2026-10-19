@@ -39,6 +39,9 @@ func (m *Plugin) GenerateCode(data *codegen.Data) error {
 	if !data.Config.Resolver.IsDefined() {
 		return nil
 	}
+	if err := checkRootType(data); err != nil {
+		return err
+	}
 
 	switch data.Config.Resolver.Layout {
 	case config.LayoutSingleFile:
@@ -295,7 +298,7 @@ func (m *Plugin) generatePerSchema(data *codegen.Data) error {
 			PackageName:     data.Config.Resolver.Package,
 			GeneratedHeader: true,
 			Template:        `type {{.RootType}} struct { *{{.Type}} }`,
-			Filename:        strings.TrimSuffix(data.Config.Resolver.Filename, ".go") + "_root.go",
+			Filename:        rootFilename(data.Config.Resolver.Filename),
 			Data:            data.Config.Resolver,
 			Packages:        data.Config.Packages,
 			PruneOptions:    data.Config.GetPruneOptions(),
@@ -382,6 +385,53 @@ func (r *Resolver) Implementation() string {
 	}
 	// use previously used implementation
 	return r.ImplementationStr
+}
+
+func rootFilename(resolverFilename string) string {
+	return strings.TrimSuffix(resolverFilename, ".go") + "_root.go"
+}
+
+func checkRootType(data *codegen.Data) error {
+	cfg := data.Config.Resolver
+	if cfg.RootType == "" {
+		return nil
+	}
+	rootFile := strings.ToLower(rootFilename(cfg.Filename))
+	collides := func(src string) bool {
+		return cfg.Layout == config.LayoutFollowSchema &&
+			strings.EqualFold(gqlToResolverName(cfg.Dir(), src, cfg.FilenameTemplate), rootFile)
+	}
+	for _, objects := range []codegen.Objects{data.Objects, data.Inputs} {
+		for _, o := range objects {
+			if o.HasResolvers() {
+				if templates.UcFirst(o.Name) == cfg.Type {
+					return fmt.Errorf(
+						"resolver root_type: the %s accessor would share its name with the %s field embedded in %s; rename resolver.type",
+						templates.UcFirst(o.Name),
+						cfg.Type,
+						cfg.RootType,
+					)
+				}
+				if collides(o.Position.Src.Name) {
+					return fmt.Errorf(
+						"resolver root_type: its file %s is also the resolver file for schema %s; change filename_template or resolver.filename",
+						rootFilename(cfg.Filename),
+						o.Position.Src.Name,
+					)
+				}
+			}
+			for _, f := range o.Fields {
+				if f.IsResolver && collides(f.Position.Src.Name) {
+					return fmt.Errorf(
+						"resolver root_type: its file %s is also the resolver file for schema %s; change filename_template or resolver.filename",
+						rootFilename(cfg.Filename),
+						f.Position.Src.Name,
+					)
+				}
+			}
+		}
+	}
+	return nil
 }
 
 func gqlToResolverName(base, gqlname, filenameTmpl string) string {

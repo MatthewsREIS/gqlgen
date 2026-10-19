@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"path/filepath"
 	"testing"
 
@@ -177,8 +178,17 @@ func TestResolverConfigRootType(t *testing.T) {
 		require.EqualError(t, p.Check(), `resolver root_type must differ from type "Resolver"`)
 	})
 
-	t.Run("must be a Go identifier", func(t *testing.T) {
-		p := ResolverConfig{Layout: LayoutFollowSchema, DirName: "testdata", RootType: "my root"}
-		require.EqualError(t, p.Check(), `resolver root_type "my root" must be a Go identifier`)
+	t.Run("must be a Go identifier that can name a type", func(t *testing.T) {
+		for _, name := range []string{"my root", "_", "init"} {
+			p := ResolverConfig{Layout: LayoutFollowSchema, DirName: "testdata", RootType: name}
+			require.EqualError(
+				t,
+				p.Check(),
+				fmt.Sprintf(
+					"resolver root_type %q must be a Go identifier that can name a type",
+					name,
+				),
+			)
+		}
 	})
 }

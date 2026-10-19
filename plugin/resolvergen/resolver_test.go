@@ -228,6 +228,7 @@ func (i *implementorTest) Implement(_ string, _ *codegen.Field) string {
 
 func TestLayoutFollowSchemaWithRootType(t *testing.T) {
 	_ = syscall.Unlink("testdata/root_type/out/resolver.go")
+	_ = syscall.Unlink("testdata/root_type/out/resolver_root.go")
 
 	cfg, err := config.LoadConfig("testdata/root_type/gqlgen.yml")
 	require.NoError(t, err)
@@ -280,4 +281,70 @@ func pointerMethodNames(t *testing.T, pkgPath, typeName string) []string {
 		names = append(names, sel.Obj().Name())
 	}
 	return names
+}
+
+func TestLayoutSingleFileWithRootType(t *testing.T) {
+	_ = syscall.Unlink("testdata/root_type_singlefile/out/resolver.go")
+
+	cfg, err := config.LoadConfig("testdata/root_type_singlefile/gqlgen.yml")
+	require.NoError(t, err)
+	require.NoError(t, cfg.Init())
+	p := Plugin{}
+
+	data, err := codegen.BuildData(cfg)
+	require.NoError(t, err)
+	require.NoError(t, p.GenerateCode(data))
+
+	first, err := os.ReadFile("testdata/root_type_singlefile/out/resolver.go")
+	require.NoError(t, err)
+	source := string(first)
+	require.Contains(t, source, "type ResolverRoot struct{ *CustomResolverType }")
+	require.Contains(t, source, "func (r ResolverRoot) Query() ")
+	require.NotContains(t, source, "func (r *CustomResolverType) Query()")
+
+	pkg := "github.com/99designs/gqlgen/plugin/resolvergen/testdata/root_type_singlefile/out"
+	assertNoErrors(t, pkg)
+	methods := pointerMethodNames(t, pkg, "queryCustomResolverType")
+	require.Contains(t, methods, "Resolver")
+	require.NotContains(t, methods, "Query")
+
+	data, err = codegen.BuildData(cfg)
+	require.NoError(t, err)
+	require.NoError(t, p.GenerateCode(data))
+	second, err := os.ReadFile("testdata/root_type_singlefile/out/resolver.go")
+	require.NoError(t, err)
+	require.Equal(
+		t,
+		1,
+		strings.Count(string(second), "type ResolverRoot struct{ *CustomResolverType }"),
+	)
+	require.Equal(t, 1, strings.Count(string(second), "func (r ResolverRoot) Query() "))
+}
+
+func TestRootTypeRejectsAnAccessorNamedLikeTheResolverType(t *testing.T) {
+	cfg, err := config.LoadConfig("testdata/root_type_name_collision/gqlgen.yml")
+	require.NoError(t, err)
+	require.NoError(t, cfg.Init())
+
+	data, err := codegen.BuildData(cfg)
+	require.NoError(t, err)
+	require.EqualError(
+		t,
+		(&Plugin{}).GenerateCode(data),
+		"resolver root_type: the Resolver accessor would share its name with the Resolver field embedded in ResolverRoot; rename resolver.type",
+	)
+}
+
+func TestRootTypeRejectsAWrapperFileThatIsAResolverFile(t *testing.T) {
+	cfg, err := config.LoadConfig("testdata/root_type_path_collision/gqlgen.yml")
+	require.NoError(t, err)
+	require.NoError(t, cfg.Init())
+
+	data, err := codegen.BuildData(cfg)
+	require.NoError(t, err)
+	require.ErrorContains(
+		t,
+		(&Plugin{}).GenerateCode(data),
+		"resolver_root.go is also the resolver file for schema testdata/root_type_path_collision/resolver_root.graphqls",
+	)
 }
