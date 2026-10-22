@@ -329,6 +329,8 @@ func generateSplitShardPackages(data *Data, scope string) ([]string, error) {
 
 	var imports []string
 	usedShardNames := map[string]string{}
+	inputByName := buildInputLookupMap(data)
+	codecByFunc := buildCodecLookupMap(data)
 
 	for _, filename := range filenames {
 		build := builds[filename]
@@ -362,8 +364,8 @@ func generateSplitShardPackages(data *Data, scope string) ([]string, error) {
 				Ownership:        ownership,
 				FieldByLookupKey: buildFieldLookupMap(build),
 				FieldByArgsFunc:  buildArgsFuncLookupMap(build),
-				InputByName:      buildInputLookupMap(data),
-				CodecByFunc:      buildCodecLookupMap(data),
+				InputByName:      inputByName,
+				CodecByFunc:      codecByFunc,
 			},
 			RegionTags:      false,
 			GeneratedHeader: true,
@@ -384,8 +386,8 @@ func generateSplitShardPackages(data *Data, scope string) ([]string, error) {
 				Ownership:           ownership,
 				FieldByLookupKey:    buildFieldLookupMap(build),
 				FieldByArgsFunc:     buildArgsFuncLookupMap(build),
-				InputByName:         buildInputLookupMap(data),
-				CodecByFunc:         buildCodecLookupMap(data),
+				InputByName:         inputByName,
+				CodecByFunc:         codecByFunc,
 				OwnedFieldKeyChunks: buildOwnedFieldKeyChunksForShard(ownership, shardName, 50),
 			},
 			RegionTags:      false,
