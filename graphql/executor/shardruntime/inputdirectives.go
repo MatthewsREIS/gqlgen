@@ -172,6 +172,7 @@ func applyFieldDirectives(
 		if !descend {
 			return v, nil
 		}
+		v := cloneValue(v)
 		if err := walkNested(ctx, ec, scope, schema, f.Type, v); err != nil {
 			return nil, err
 		}

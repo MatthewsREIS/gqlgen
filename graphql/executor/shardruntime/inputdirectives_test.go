@@ -273,7 +273,7 @@ func TestApplyInputDirectives_RecursesIntoPlannedNestedInputs(t *testing.T) {
 		t,
 		"i!",
 		raw["kid"].(map[string]any)["inner"],
-		"nested values are rewritten in place",
+		"the rewritten nested value lands in the caller's top-level map",
 	)
 	require.Equal(t, "dd!", raw["kid"].(map[string]any)["deeper"].(map[string]any)["inner"])
 }
@@ -362,4 +362,24 @@ func TestApplyInputDirectives_SkipsDirectivesOutsideTheRuntimeSet(t *testing.T) 
 			"a skip_runtime directive has no implementation to call",
 		)
 	}
+}
+
+// A nested value can be a request variable that every sibling field resolving
+// in parallel holds the same map of, so the walk must never write into it.
+func TestApplyInputDirectives_LeavesCallerOwnedNestedValuesUntouched(t *testing.T) {
+	setupWalkerPlans(t)
+	var calls []directiveCall
+	ec := newWalkerEC(t, &calls)
+	variable := map[string]any{"inner": "i", "deeper": map[string]any{"inner": "dd"}}
+	list := []any{map[string]any{"inner": "k0"}}
+	raw := map[string]any{"kid": variable, "kids": list}
+
+	err := ApplyInputDirectives(context.Background(), ec, "s", "Top", maps.Clone(raw), raw)
+
+	require.NoError(t, err)
+	require.Equal(t, map[string]any{"inner": "i", "deeper": map[string]any{"inner": "dd"}}, variable)
+	require.Equal(t, []any{map[string]any{"inner": "k0"}}, list)
+	require.Equal(t, "i!", raw["kid"].(map[string]any)["inner"])
+	require.Equal(t, "dd!", raw["kid"].(map[string]any)["deeper"].(map[string]any)["inner"])
+	require.Equal(t, "k0!", raw["kids"].([]any)[0].(map[string]any)["inner"])
 }
