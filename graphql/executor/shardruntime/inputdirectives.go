@@ -172,10 +172,7 @@ func applyFieldDirectives(
 		if !descend {
 			return v, nil
 		}
-		if err := walkNested(ctx, ec, scope, schema, f.Type, v); err != nil {
-			return nil, err
-		}
-		return v, nil
+		return walkNested(ctx, ec, scope, schema, f.Type, v)
 	})
 	for _, d := range effectiveDirectives(schema, f, ast.LocationInputFieldDefinition) {
 		if !isRuntimeDirective(scope, d.Name) {
@@ -260,32 +257,47 @@ func walkNested(
 	schema *ast.Schema,
 	t *ast.Type,
 	v any,
-) error {
+) (any, error) {
 	named := t.Name()
 	def := schema.Types[named]
 	if def == nil || def.Kind != ast.InputObject {
-		return nil
+		return v, nil
 	}
 	if _, ok := lookupInputDirectivePlan(scope, named); !ok {
-		return nil
+		return v, nil
 	}
 	return walkValue(ctx, ec, scope, named, v)
 }
 
-// walkValue recurses into a nested input value. A nested map is mutated in
-// place; the directives of its fields receive a copy taken before that, which
-// is what the nested generated unmarshaler was handed.
-func walkValue(ctx context.Context, ec ObjectExecutionContext, scope, named string, v any) error {
+// walkValue returns a rewritten copy of a nested input value and never writes
+// v: it belongs to the request's variables, which every field passed the same
+// variable shares while the executor resolves them concurrently. The
+// directives of a nested field receive v itself, which is what the nested
+// generated unmarshaler was handed.
+func walkValue(
+	ctx context.Context,
+	ec ObjectExecutionContext,
+	scope, named string,
+	v any,
+) (any, error) {
 	switch x := v.(type) {
 	case map[string]any:
-		return ApplyInputDirectives(ctx, ec, scope, named, maps.Clone(x), x)
+		out := maps.Clone(x)
+		if err := ApplyInputDirectives(ctx, ec, scope, named, x, out); err != nil {
+			return nil, err
+		}
+		return out, nil
 	case []any:
+		out := make([]any, len(x))
 		for i, e := range x {
 			ictx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-			if err := walkValue(ictx, ec, scope, named, e); err != nil {
-				return err
+			res, err := walkValue(ictx, ec, scope, named, e)
+			if err != nil {
+				return nil, err
 			}
+			out[i] = res
 		}
+		return out, nil
 	}
-	return nil
+	return v, nil
 }

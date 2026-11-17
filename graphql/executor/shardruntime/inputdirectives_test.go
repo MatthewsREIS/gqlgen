@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"maps"
+	"sync"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -273,9 +274,58 @@ func TestApplyInputDirectives_RecursesIntoPlannedNestedInputs(t *testing.T) {
 		t,
 		"i!",
 		raw["kid"].(map[string]any)["inner"],
-		"nested values are rewritten in place",
+		"nested values are rewritten",
 	)
 	require.Equal(t, "dd!", raw["kid"].(map[string]any)["deeper"].(map[string]any)["inner"])
+}
+
+// One request variable passed to several fields puts the same nested map in
+// every field's arguments, and the executor resolves those fields concurrently.
+func TestApplyInputDirectives_ConcurrentWalksOfASharedNestedInputDoNotWriteIt(t *testing.T) {
+	setupWalkerPlans(t)
+	ec := &fakeEC{
+		schema: gqlparser.MustLoadSchema(&ast.Source{Name: "walker.graphql", Input: walkerSchema}),
+		invokeDirective: func(
+			ctx context.Context,
+			_ string,
+			_ any,
+			next graphql.Resolver,
+			_ map[string]any,
+		) (any, error) {
+			res, err := next(ctx)
+			if s, ok := res.(string); ok {
+				return s + "!", err
+			}
+			return res, err
+		},
+	}
+	shared := map[string]any{"inner": "i", "deeper": map[string]any{"inner": "d"}}
+	walks := make([]map[string]any, 16)
+	errs := make([]error, len(walks))
+	var wg sync.WaitGroup
+	for i := range walks {
+		wg.Go(func() {
+			raw := map[string]any{"kid": shared, "kids": []any{shared}}
+			ctx := context.Background()
+			errs[i] = ApplyInputDirectives(ctx, ec, "s", "Top", maps.Clone(raw), raw)
+			walks[i] = raw
+		})
+	}
+	wg.Wait()
+
+	require.Equal(
+		t,
+		map[string]any{"inner": "i", "deeper": map[string]any{"inner": "d"}},
+		shared,
+		"the request's own map still holds the request's values",
+	)
+	for i, raw := range walks {
+		require.NoError(t, errs[i])
+		kid := raw["kid"].(map[string]any)
+		require.Equal(t, "i!", kid["inner"], "each walk rewrites its own copy exactly once")
+		require.Equal(t, "d!", kid["deeper"].(map[string]any)["inner"])
+		require.Equal(t, "i!", raw["kids"].([]any)[0].(map[string]any)["inner"])
+	}
 }
 
 func TestApplyInputDirectives_DoesNotWalkUnplannedNestedInputs(t *testing.T) {
